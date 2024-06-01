@@ -12,6 +12,7 @@
     "sv": "node back-end/src/server.js"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "mongodb": "^6.7.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
