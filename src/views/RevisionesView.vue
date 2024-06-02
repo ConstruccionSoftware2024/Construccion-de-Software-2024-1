@@ -33,6 +33,7 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
             <th>Apellido</th>
             <th>Mail</th>
             <th>Faltas</th>
+            <th>Detalle de Faltas</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -41,7 +42,32 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
             <td>{{ student.name }}</td>
             <td>{{ student.lastName }}</td>
             <td>{{ student.email }}</td>
-            <td>{{ student.faltas }}</td>
+            <td @click="student.showDetalleFaltas = !student.showDetalleFaltas">
+              {{ student.faltas }}
+            </td>
+
+            <td class="detalle-container">
+              <button @click="student.showDetalleFaltas = !student.showDetalleFaltas">
+                {{ student.showDetalleFaltas ? 'Ocultar' : 'Mostrar' }}
+              </button>
+
+              <div v-if="student.showDetalleFaltas">
+                <table class="detalle-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Motivo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(detalle, index) in student.detalleFaltas" :key="index">
+                      <td>{{ detalle.fecha }}</td>
+                      <td>{{ detalle.motivo }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                </div>
+            </td>
             <td>
               <select v-model="student.estado">
                 <option>No peligroso</option>
@@ -70,6 +96,7 @@ export default {
           lastName: 'Perez',
           faltas: 3,
           estado: 'No peligroso',
+          showDetalleFaltas: false,
           detalleFaltas: [
             {
               fecha: '2021-10-01',
@@ -91,6 +118,7 @@ export default {
           lastName: 'Gonzalez',
           faltas: 5,
           estado: 'No peligroso',
+          showDetalleFaltas: false,
           detalleFaltas: [
             {
               fecha: '2021-10-01',
@@ -120,6 +148,7 @@ export default {
           lastName: 'Lopez',
           faltas: 1,
           estado: 'No peligroso',
+          showDetalleFaltas: false,
           detalleFaltas: [
             {
               fecha: '2021-10-01',
@@ -186,6 +215,7 @@ export default {
 .styled-table th,
 .styled-table td {
   padding: 12px 15px;
+  border: 1px solid #e0e0e0;
 }
 
 .styled-table tbody tr {
@@ -205,6 +235,10 @@ export default {
   cursor: pointer;
 }
 
+.detalle-table {
+  width: 100%;
+}
+
 .delete-button:hover {
   background-color: rgba(220, 53, 69, 0.2);
 }
@@ -212,4 +246,11 @@ export default {
 .delete-button:hover i {
   color: #dc3545;
 }
+
+.detalle-container{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 </style>
