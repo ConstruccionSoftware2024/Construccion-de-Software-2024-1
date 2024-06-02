@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Header />
-    <Navbar />
     <main class="content">
+      <Navbar />
+      <!-- <Header/> -->
       <RouterView />
     </main>
   </div>
@@ -10,13 +10,13 @@
 
 <script>
 import { RouterView } from 'vue-router'
-import Header from './components/Header.vue'
+/* import Header from './components/Header.vue' */
 import Navbar from './components/Navbar.vue'
 
 export default {
   components: {
-    Header,
     Navbar
+    /* Header,*/
   }
 }
 </script>
@@ -29,16 +29,9 @@ export default {
 }
 
 .content {
+  background-color: #c8cbd0;
   display: flex;
-  justify-content: center;
   align-items: center;
   flex-grow: 1;
-  padding: 20px;
-}
-
-.content > * {
-  max-width: 600px;
-  width: 100%;
-  box-sizing: border-box;
 }
 </style>

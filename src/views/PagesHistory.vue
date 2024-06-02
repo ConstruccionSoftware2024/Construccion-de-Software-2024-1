@@ -3,7 +3,7 @@
     <h2>Historial de Páginas Visitadas</h2>
     <div class="card-container">
       <div class="card" v-for="(student, index) in students" :key="index">
-        <h3>Alumno {{ index + 1 }}</h3>
+        <h3>Alumno: {{ index + 1 }}</h3>
         <p>Paginas visitadas:</p>
         <ul>
           <li v-for="(page, pageIndex) in student.pages" :key="pageIndex">{{ page }}</li>
@@ -29,6 +29,9 @@ export default {
 
 <style scoped>
 .history {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
   padding: 20px;
   text-align: center;
 }
@@ -40,7 +43,7 @@ export default {
 }
 
 .card {
-  border: 1px solid #ccc;
+  border: 1px solid #000000;
   padding: 15px;
   margin: 10px 0;
   width: 100%;
