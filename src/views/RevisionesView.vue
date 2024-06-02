@@ -90,73 +90,46 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
   </div>
 </template>
 
-<script>
-import axios from 'axios'
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 
-export default {
-  data() {
-    return {
-      searchName: '',
-      searchLastName: '',
-      searchEmail: '',
-      searchRut: '',
-      students: []
-    }
-  },
-  computed: {
-    filteredStudents() {
-      return this.students.filter((student) => {
-        return (
-          student.name.toLowerCase().includes(this.searchName.toLowerCase()) &&
-          student.lastName.toLowerCase().includes(this.searchLastName.toLowerCase()) &&
-          student.email.toLowerCase().includes(this.searchEmail.toLowerCase()) &&
-          student.rut.toLowerCase().includes(this.searchRut.toLowerCase())
-        )
-      })
-    }
-  },
-  watch: {
-    searchName() {
-      this.searchLastName = ''
-      this.searchEmail = ''
-      this.searchRut = ''
-    },
-    searchLastName() {
-      this.searchName = ''
-      this.searchEmail = ''
-      this.searchRut = ''
-    },
-    searchEmail() {
-      this.searchName = ''
-      this.searchLastName = ''
-      this.searchRut = ''
-    },
-    searchRut() {
-      this.searchName = ''
-      this.searchLastName = ''
-      this.searchEmail = ''
-    }
-  },
-  methods: {
-    async updateStudentStatus(student) {
-      try {
-        await axios.post(`http://localhost:8080/faltas/${student.id}`, {
-          estado: student.estado
-        })
-      } catch (error) {
-        console.error(error)
-      }
-    }
-  },
-  async created() {
-    try {
-      const response = await axios.get('http://localhost:8080/faltas')
-      this.students = response.data
-    } catch (error) {
-      console.error(error)
-    }
+const searchName = ref('');
+const searchLastName = ref('');
+const searchEmail = ref('');
+const searchRut = ref('');
+const students = ref([]);
+
+const filteredStudents = computed(() => {
+  return students.value.filter((student) => {
+    return (
+      student.name.toLowerCase().includes(searchName.value.toLowerCase()) &&
+      student.lastName.toLowerCase().includes(searchLastName.value.toLowerCase()) &&
+      student.email.toLowerCase().includes(searchEmail.value.toLowerCase()) &&
+      student.rut.toLowerCase().includes(searchRut.value.toLowerCase())
+    )
+  })
+});
+
+const updateStudentStatus = async (student) => {
+  try {
+    await axios.post(`http://localhost:8080/faltas/${student.id}`, {
+      estado: student.estado
+    });
+  } catch (error) {
+    console.error(error);
   }
-}
+};
+
+onMounted(async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/faltas');
+    students.value = response.data;
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 </script>
 
 <style scoped>

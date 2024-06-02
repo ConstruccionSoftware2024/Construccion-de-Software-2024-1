@@ -67,13 +67,10 @@ app.post('/faltas/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
-    console.log(req.params.id)
-    console.log(req.body.estado)
     const result = await collection.updateOne(
       { id: Number(req.params.id) },
       { $set: { estado: req.body.estado } }
     )
-    console.log(result)
     res.send(result)
   } catch (error) {
     res.status(500).send(error.message)
