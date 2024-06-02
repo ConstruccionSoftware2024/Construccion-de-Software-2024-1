@@ -29,6 +29,8 @@ client
     console.error('Failed to connect to database', error)
   })
 
+const server = http.createServer(app)
+
 // Iniciar el servidor
 const PORT = 8080
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
