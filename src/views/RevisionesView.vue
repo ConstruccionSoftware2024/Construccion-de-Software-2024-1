@@ -32,22 +32,24 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
             <th>Nombre</th>
             <th>Apellido</th>
             <th>Mail</th>
+            <th>RUT</th>
             <th>Faltas</th>
             <th>Detalle de Faltas</th>
             <th>Estado</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(student, index) in students" :key="index">
+          <tr v-for="(student, index) in filteredStudents" :key="index">
             <td>{{ student.name }}</td>
             <td>{{ student.lastName }}</td>
             <td>{{ student.email }}</td>
+            <td>{{ student.rut }}</td>
             <td @click="student.showDetalleFaltas = !student.showDetalleFaltas">
               {{ student.faltas }}
             </td>
 
             <td class="detalle-container">
-              <button @click="student.showDetalleFaltas = !student.showDetalleFaltas">
+              <button class="button-detalle" @click="student.showDetalleFaltas = !student.showDetalleFaltas">
                 {{ student.showDetalleFaltas ? 'Ocultar' : 'Mostrar' }}
               </button>
 
@@ -69,9 +71,9 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
                 </div>
             </td>
             <td>
-              <select v-model="student.estado">
-                <option>No peligroso</option>
-                <option>Peligroso</option>
+              <select v-model="student.estado" class="selector-peligro">
+                <option class="opcion-peligro">No peligroso</option>
+                <option class="opcion-peligro">Peligroso</option>
               </select>
             </td>
           </tr>
@@ -94,6 +96,8 @@ export default {
           id: 1,
           name: 'Juan',
           lastName: 'Perez',
+          email: 'example@gmail.com',
+          rut: '12345678-9',
           faltas: 3,
           estado: 'No peligroso',
           showDetalleFaltas: false,
@@ -116,6 +120,8 @@ export default {
           id: 2,
           name: 'Pedro',
           lastName: 'Gonzalez',
+          email: 'hola@gmail.com',
+          rut: '111111111-1',
           faltas: 5,
           estado: 'No peligroso',
           showDetalleFaltas: false,
@@ -146,6 +152,8 @@ export default {
           id: 3,
           name: 'Maria',
           lastName: 'Lopez',
+          email: 'nose@gmail.com',
+          rut: '222222222-2',
           faltas: 1,
           estado: 'No peligroso',
           showDetalleFaltas: false,
@@ -157,6 +165,45 @@ export default {
           ]
         }
       ]
+    }
+  },
+  computed: {
+    filteredStudents() {
+      return this.students.filter(student => {
+        return (
+          student.name.toLowerCase().includes(this.searchName.toLowerCase()) &&
+          student.lastName.toLowerCase().includes(this.searchLastName.toLowerCase()) &&
+          student.email.toLowerCase().includes(this.searchEmail.toLowerCase()) &&
+          student.rut.toLowerCase().includes(this.searchRut.toLowerCase())
+        )
+      })
+    }
+  },
+  watch: {
+    searchName() {
+      this.searchLastName = ''
+      this.searchEmail = ''
+      this.searchRut = ''
+    },
+    searchLastName() {
+      this.searchName = ''
+      this.searchEmail = ''
+      this.searchRut = ''
+    },
+    searchEmail() {
+      this.searchName = ''
+      this.searchLastName = ''
+      this.searchRut = ''
+    },
+    searchRut() {
+      this.searchName = ''
+      this.searchLastName = ''
+      this.searchEmail = ''
+    }
+  },
+  methods: {
+    deleteStudent(index) {
+      this.students.splice(index, 1)
     }
   }
 }
@@ -251,6 +298,22 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.button-detalle{
+    padding: 8px;
+    background-color: #08cccc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.selector-peligro{
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    width: 100%;
 }
 
 </style>
