@@ -3,16 +3,18 @@
     class="flex flex-col items-center w-16 h-screen py-8 overflow-y-auto border-r rtl:border-l rtl:border-r-0 dark:bg-gray-900 dark:border-gray-700 bg-navbar"
   >
     <nav class="flex flex-col flex-1 space-y-6">
-      <a href="#">
-        <img
-          class="w-auto h-6"
-          src="https://i.ibb.co/syHGH2Q/logo-M-removebg-preview-1.png"
-          alt=""
-        />
+      <a href="/Home">
+        <button>
+          <img
+            class="w-auto h-6"
+            src="https://i.ibb.co/syHGH2Q/logo-M-removebg-preview-1.png"
+            alt=""
+          />
+        </button>
       </a>
 
       <a
-        href="#"
+        href="/Home"
         class="p-1.5 text-gray-700 focus:outline-nones transition-colors duration-200 rounded-lg dark:text-gray-200 dark:hover:bg-gray-800 hover:bg-gray-100"
       >
         <svg
@@ -32,9 +34,12 @@
       </a>
 
       <a
-        href="#"
+        href="/PagesHistory"
         class="p-1.5 text-gray-700 focus:outline-nones transition-colors duration-200 rounded-lg dark:text-gray-200 dark:hover:bg-gray-800 hover:bg-gray-100"
       >
+        <img />
+
+        <img />
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -118,7 +123,7 @@
         </svg>
       </a>
 
-      <a href="#">
+      <a href="/Perfil">
         <img
           class="object-cover w-8 h-8 rounded-full"
           src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=4&w=880&h=880&q=100"

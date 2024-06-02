@@ -2,7 +2,7 @@
   <div class="history">
     <h2>Historial de Páginas Visitadas</h2>
     <div class="card-container">
-      <div class="card" v-for="(student, index) in students" :key="index">
+      <div class="card bg-navbar" v-for="(student, index) in students" :key="index">
         <h3>Alumno: {{ index + 1 }}</h3>
         <p>Paginas visitadas:</p>
         <ul>

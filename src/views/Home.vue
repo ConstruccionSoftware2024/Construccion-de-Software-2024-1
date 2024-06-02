@@ -1,8 +1,8 @@
 <template>
-  <div class="Home">
-    <h2 class="title">Bienvenido a tu aplicación de monitoreo</h2>
-    <div>
-      <div class="card-container">
+  <div class="Home flex-1">
+    <div class="title">Bienvenido a tu aplicación de monitoreo</div>
+    <div class="content">
+      <div class="card-container bg-navbar">
         <p>¡Hola nuevo usuario!</p>
         <p>Estamos encantados de tenerte con nosotros. En esta aplicación de monitoreo podrás:</p>
         <ul>
@@ -18,16 +18,17 @@
 </template>
 
 <style>
+.Home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh; /* Esto hace que el contenedor ocupe el 100% de la altura de la ventana */
+}
+
 .title {
   margin-bottom: 20px;
 }
 
-.card {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 20px;
-  margin: 20px;
-}
 .card-container {
   border: 1px solid #000000;
   padding: 15px;
@@ -35,9 +36,5 @@
   width: 100%;
   max-width: 400px;
   text-align: left;
-}
-
-.card-body {
-  margin-top: 10px;
 }
 </style>

@@ -30,6 +30,7 @@ export default {
 
 .content {
   background-color: #c8cbd0;
+  /* DARK MODE background-color: #2F2F33; */
   display: flex;
   align-items: center;
   flex-grow: 1;

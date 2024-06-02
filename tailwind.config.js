@@ -7,7 +7,8 @@ export default {
     colors: {
       navbar: '#987394',
       header: '#987394',
-      cards: '#C2B6AD'
+      textoDM: '#F4F0F3',
+      cardDM: '#52463D'
     }
   },
   variants: {
