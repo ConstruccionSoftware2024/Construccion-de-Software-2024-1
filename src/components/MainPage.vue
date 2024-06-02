@@ -40,7 +40,7 @@
           </div>
           <button type="submit" class="loginButton">Iniciar Sesión</button>
         </form>
-        <form @submit.prevent="register" v-else key="register">
+        <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
               <label for="email">Correo Electrónico</label>
@@ -170,7 +170,7 @@
               </div>
             </div>
           </div>
-          <button type="submit" class="loginButton">Registrarse</button>
+          <button type="submit" class="loginButton" @click.prevent="register">Registrarse</button>
         </form>
       </transition>
       <div class="signUp">
@@ -184,6 +184,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -214,18 +216,34 @@ export default {
       console.log('Correo Electrónico:', this.email)
       console.log('Contraseña:', this.password)
     },
-    register() {
-      // Lógica de registro
-      console.log('Correo Electrónico:', this.email)
-      console.log('Nombre de Usuario:', this.username)
-      console.log('Nombre:', this.firstName)
-      console.log('Apellido:', this.lastName)
-      console.log('Segundo Apellido:', this.secondLastName)
-      console.log('Campus:', this.campus)
-      console.log('Carrera:', this.major)
-      console.log('Contraseña:', this.password)
-      console.log('Confirmar Contraseña:', this.confirmPassword)
-    },
+    async register() {
+    try {
+      const response = await axios.post('http://localhost:8080/register', {
+        email: this.email,
+        username: this.username,
+        password: this.password,
+        confirmPassword: this.confirmPassword,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        secondLastName: this.secondLastName,
+        campus: this.campus,
+        major: this.major
+      });
+      if (response.data.success) {
+        this.email = '';
+        this.username = '';
+        this.password = '';
+        this.confirmPassword = '';
+        this.firstName = '';
+        this.lastName = '';
+        this.secondLastName = '';
+        this.campus = '';
+        this.major = '';
+      }
+    } catch (error) {
+      console.error('error in register function:', error);
+    }
+  },
     togglePasswordVisibility() {
       this.passwordVisible = !this.passwordVisible
     },

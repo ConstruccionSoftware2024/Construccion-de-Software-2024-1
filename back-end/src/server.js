@@ -19,7 +19,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 }
 app.use(cors(corsOptions))
-
+app.use(express.json())
 // Conexión a la base de datos de MongoDB
 client
   .connect()
@@ -45,3 +45,16 @@ app.get('/', async (req, res) => {
   const users = await collection.find({}).toArray()
   res.json(users)
 })
+
+app.post('/register', async (req, res) => {
+  try{
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    await collection.insertOne(req.body);
+    res.send({ success: true, message: 'Registro exitoso' })
+  }
+  catch(error){
+    console.log(error)
+  }
+  
+});
