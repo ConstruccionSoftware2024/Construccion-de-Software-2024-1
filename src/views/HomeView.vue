@@ -1,9 +1,11 @@
 <script setup>
-import TheWelcome from '../components/TheWelcome.vue'
+import ListaAlumnos from '@/components/ListaAlumnos.vue'
+import BarraNavegacion from '@/components/BarraNavegacion.vue'
 </script>
 
 <template>
+  <BarraNavegacion />
   <main>
-    <TheWelcome />
+    <ListaAlumnos />
   </main>
 </template>
