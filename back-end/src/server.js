@@ -9,6 +9,7 @@ dotenv.config()
 // Configuración de la aplicación
 const app = express()
 const url = process.env.MONGODB_URI
+
 const client = new MongoClient(url)
 let db
 
@@ -34,6 +35,7 @@ client
 // Iniciar el servidor
 const PORT = process.env.PORT || 8080
 const server = http.createServer(app)
+
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
