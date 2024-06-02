@@ -49,7 +49,10 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
             </td>
 
             <td class="detalle-container">
-              <button class="button-detalle" @click="student.showDetalleFaltas = !student.showDetalleFaltas">
+              <button
+                class="button-detalle"
+                @click="student.showDetalleFaltas = !student.showDetalleFaltas"
+              >
                 {{ student.showDetalleFaltas ? 'Ocultar' : 'Mostrar' }}
               </button>
 
@@ -68,10 +71,14 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
                     </tr>
                   </tbody>
                 </table>
-                </div>
+              </div>
             </td>
             <td>
-              <select v-model="student.estado" class="selector-peligro">
+              <select
+                v-model="student.estado"
+                class="selector-peligro"
+                @change="updateStudentStatus(student)"
+              >
                 <option class="opcion-peligro">No peligroso</option>
                 <option class="opcion-peligro">Peligroso</option>
               </select>
@@ -84,6 +91,8 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
@@ -91,85 +100,12 @@ export default {
       searchLastName: '',
       searchEmail: '',
       searchRut: '',
-      students: [
-        {
-          id: 1,
-          name: 'Juan',
-          lastName: 'Perez',
-          email: 'example@gmail.com',
-          rut: '12345678-9',
-          faltas: 3,
-          estado: 'No peligroso',
-          showDetalleFaltas: false,
-          detalleFaltas: [
-            {
-              fecha: '2021-10-01',
-              motivo: 'No asistió a clases'
-            },
-            {
-              fecha: '2021-10-02',
-              motivo: 'Le pego al profesor'
-            },
-            {
-              fecha: '2021-10-03',
-              motivo: 'No asistió a clases'
-            }
-          ]
-        },
-        {
-          id: 2,
-          name: 'Pedro',
-          lastName: 'Gonzalez',
-          email: 'hola@gmail.com',
-          rut: '111111111-1',
-          faltas: 5,
-          estado: 'No peligroso',
-          showDetalleFaltas: false,
-          detalleFaltas: [
-            {
-              fecha: '2021-10-01',
-              motivo: 'No asistió a clases'
-            },
-            {
-              fecha: '2021-10-02',
-              motivo: 'No asistió a clases'
-            },
-            {
-              fecha: '2021-10-03',
-              motivo: 'No asistió a clases'
-            },
-            {
-              fecha: '2021-10-04',
-              motivo: 'No asistió a clases'
-            },
-            {
-              fecha: '2021-10-05',
-              motivo: 'No asistió a clases'
-            }
-          ]
-        },
-        {
-          id: 3,
-          name: 'Maria',
-          lastName: 'Lopez',
-          email: 'nose@gmail.com',
-          rut: '222222222-2',
-          faltas: 1,
-          estado: 'No peligroso',
-          showDetalleFaltas: false,
-          detalleFaltas: [
-            {
-              fecha: '2021-10-01',
-              motivo: 'No asistió a clases'
-            }
-          ]
-        }
-      ]
+      students: []
     }
   },
   computed: {
     filteredStudents() {
-      return this.students.filter(student => {
+      return this.students.filter((student) => {
         return (
           student.name.toLowerCase().includes(this.searchName.toLowerCase()) &&
           student.lastName.toLowerCase().includes(this.searchLastName.toLowerCase()) &&
@@ -202,8 +138,22 @@ export default {
     }
   },
   methods: {
-    deleteStudent(index) {
-      this.students.splice(index, 1)
+    async updateStudentStatus(student) {
+      try {
+        await axios.post(`http://localhost:8080/faltas/${student.id}`, {
+          estado: student.estado
+        })
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  },
+  async created() {
+    try {
+      const response = await axios.get('http://localhost:8080/faltas')
+      this.students = response.data
+    } catch (error) {
+      console.error(error)
     }
   }
 }
@@ -294,26 +244,25 @@ export default {
   color: #dc3545;
 }
 
-.detalle-container{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.detalle-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.button-detalle{
-    padding: 8px;
-    background-color: #08cccc;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.button-detalle {
+  padding: 8px;
+  background-color: #08cccc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-.selector-peligro{
-    padding: 8px;
-    border: 1px solid #e0e0e0;
-    border-radius: 5px;
-    width: 100%;
+.selector-peligro {
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  width: 100%;
 }
-
 </style>
