@@ -2,11 +2,14 @@ import express from 'express'
 import cors from 'cors'
 import { MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 // Configuración de la aplicación
 const app = express()
-const url =
-  'mongodb+srv://dbAdmin:%40Admin1234@cluster0.0a2i7lq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+const url = process.env.MONGODB_URI
+
 const client = new MongoClient(url)
 let db
 
@@ -29,10 +32,10 @@ client
     console.error('Failed to connect to database', error)
   })
 
+// Iniciar el servidor
+const PORT = process.env.PORT || 8080
 const server = http.createServer(app)
 
-// Iniciar el servidor
-const PORT = 8080
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
