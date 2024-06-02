@@ -58,3 +58,20 @@ app.post('/register', async (req, res) => {
   }
   
 });
+
+app.post('/checkEmail', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: req.body.email });
+
+    if (user) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});

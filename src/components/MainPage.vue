@@ -218,6 +218,15 @@ export default {
     },
     async register() {
     try {
+      // Verificar si el correo electrónico ya existe
+      const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
+        email: this.email
+      });
+
+      if (checkEmailResponse.data.exists) {
+        alert('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+        return;
+      }
       const response = await axios.post('http://localhost:8080/register', {
         email: this.email,
         username: this.username,
