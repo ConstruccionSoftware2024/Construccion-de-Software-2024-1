@@ -5,6 +5,7 @@ import InvitarAlumnos from '@/components/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/FaltaAlumnos.vue'
 import EstadoAlumnos from '@/views/EstadoAlumnos.vue'
 
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [

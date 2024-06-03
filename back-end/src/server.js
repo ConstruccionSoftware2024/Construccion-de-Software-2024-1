@@ -101,6 +101,18 @@ app.get('/faltas', async (req, res) => {
   }
 })
 
+// Obtener faltas de los alumnos
+app.get('/faltas', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('faltas')
+    const faltas = await collection.find({}).toArray()
+    res.send(faltas)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
 // Cambiar estado de alumno (Peligroso / No Peligroso)
 app.post('/faltas/:id', async (req, res) => {
   try {
