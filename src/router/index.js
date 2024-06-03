@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RevisionesView from '../views/RevisionesView.vue'
 import InvitarAlumnos from '@/components/InvitarAlumnos.vue'
+import FaltaAlumnos from '@/views/FaltaAlumnos.vue'
+import EstadoAlumnos from '@/views/EstadoAlumnos.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +47,16 @@ const router = createRouter({
       name: 'sesionid',
       component: () => import('../views/Sesion.vue'),
       props:true
+    },
+    {
+      path: '/faltaAlumnos',
+      name: 'FaltasAlumnos',
+      component: FaltaAlumnos
+    },
+    {
+      path: '/estadoAlumnos',
+      name: 'EstadoAlumnos',
+      component: EstadoAlumnos
     }
   ]
 })
