@@ -1,6 +1,6 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div class="perfil">
+    <h1>Esta es la página para acceder al perfil</h1>
   </div>
 </template>
 
