@@ -7,7 +7,7 @@ export default {
     setup() {
         const formulario = reactive({
             nombre: '',
-            mensaje: ''
+            descripcion: ''
         })
         let info = ref({})
         let finish = ref({
@@ -17,11 +17,9 @@ export default {
 
         const enviarFormulario = async () => {
 
-
-            console.log(formulario.nombre, formulario.mensaje)
-            return
+            console.log(formulario.nombre, formulario.descripcion)
             try {
-                const respuesta = await fetch('http://locahost:8080/probarcuandonosecaigalabd', {
+                const respuesta = await fetch('http://localhost:8080/sesion', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -30,8 +28,8 @@ export default {
                 });
 
                 if (respuesta.ok) {
-                    const datos = await respuesta.json();
-                    console.log('Datos enviados:', datos);
+                    //const datos = await respuesta.json();
+                    console.log('Datos enviados y subidos');
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText);
                 }
@@ -89,14 +87,14 @@ export default {
                 </div>
                 <div>
                     <label for="mensaje">Descripción:</label>
-                    <textarea id="mensaje" v-model="formulario.mensaje"></textarea>
+                    <textarea id="mensaje" v-model="formulario.descripcion"></textarea>
                 </div>
                 <button type="submit">Crear</button>
             </form>
         </div>
 
         <h2>Lista de sesiones </h2>
-        <div v-if="finish">
+        <div class="cont" v-if="finish">
             <div v-for="(sesion, index) in info" :key="index">
                 <a :href="'/session/' + sesion._id" class="card">
                     <div>
@@ -173,5 +171,10 @@ form>div>input {
 form>button {
     padding: .5rem 1rem;
     width: 100%;
+}
+
+.cont {
+    display: flex;
+    gap: 1rem;
 }
 </style>

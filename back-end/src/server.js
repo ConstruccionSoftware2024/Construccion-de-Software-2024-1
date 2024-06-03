@@ -120,3 +120,22 @@ app.get('/user/:id',async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+// crear una nueva sesión
+app.post('/sesion', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const newSession = {
+      nombre: req.body.nombre,
+      descripcion: req.body.descripcion,
+      participantes: []
+    };
+    console.log("enviando", newSession.nombre, newSession.descripcion)
+    const result = await collection.insertOne(newSession);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error inserting document:', error);
+    res.status(500).send('Error inserting document');
+  }
+});
