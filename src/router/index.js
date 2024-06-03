@@ -33,6 +33,11 @@ const router = createRouter({
       path:'/newsession',
       name: 'create',
       component: () => import('../views/CrearSesion.vue')
+    },
+    {
+      path:'/session',
+      name: 'sesion',
+      component: () => import('../views/Sesion.vue')
     }
   ]
 })
