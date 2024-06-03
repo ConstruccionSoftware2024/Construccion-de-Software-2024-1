@@ -26,7 +26,6 @@ client
   .connect()
   .then(() => {
     db = client.db('construDatabase')
-    console.log('Connected to database')
   })
   .catch((error) => {
     console.error('Failed to connect to database', error)
@@ -40,10 +39,15 @@ server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
 
-app.get('/', async (req, res) => {
-  // Metodo para verificar DB
-  const database = client.db('construccion')
-  const collection = database.collection('users')
-  const users = await collection.find({}).toArray()
-  res.json(users)
+app.get('/users', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const users = await collection.find().toArray()
+    console.log('Users fetched from database:', users)
+    res.send(users)
+  } catch (error) {
+    console.error('Failed to fetch users from database', error)
+    res.status(500).send('Failed to fetch users from database')
+  }
 })
