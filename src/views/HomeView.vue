@@ -1,9 +1,9 @@
 <script setup>
-import TheWelcome from '../components/TheWelcome.vue'
+import ListaAlumnos from '@/components/ListaAlumnos.vue';
 </script>
 
 <template>
   <main>
-    <TheWelcome />
+    <ListaAlumnos/>
   </main>
 </template>
