@@ -1,5 +1,9 @@
-<script setup></script>
+<script setup>
+import ListaAlumnos from '@/components/ListaAlumnos.vue';
+</script>
 
 <template>
-  <main></main>
+  <main>
+    <ListaAlumnos/>
+  </main>
 </template>

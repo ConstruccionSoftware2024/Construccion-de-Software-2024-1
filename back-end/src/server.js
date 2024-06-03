@@ -3,12 +3,13 @@ import cors from 'cors'
 import { MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
 import dotenv from 'dotenv'
+import { log } from 'console'
 
 dotenv.config()
 
 // Configuración de la aplicación
-const app = express()
 const url = process.env.MONGODB_URI
+const app = express()
 
 const client = new MongoClient(url)
 let db
@@ -87,3 +88,93 @@ app.post('/faltas-post', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+// Obtener faltas de los alumnos
+app.get('/faltas', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('faltas')
+    const faltas = await collection.find({}).toArray()
+    res.send(faltas)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Cambiar estado de alumno (Peligroso / No Peligroso)
+app.post('/faltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('faltas')
+    const result = await collection.updateOne(
+      { id: Number(req.params.id) },
+      { $set: { estado: req.body.estado } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Obtener lista de sesiones
+app.get('/sesion', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const sesion = await collection.find({}).toArray()
+    res.send(sesion)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Obtener sesion especifica
+app.get('/sesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = {_id: new ObjectId(req.params.id)}
+    const result = await collection.findOne(consulta)
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+//obtener usuario especifico
+app.get('/user/:id',async (req, res) => {
+  try {
+    console.log("here")
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = {_id: new ObjectId(req.params.id)}
+    const result = await collection.findOne(consulta)
+    if(result){
+      res.send(result)
+    }
+    else{
+      res.status(404).send('user not found')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// crear una nueva sesión
+app.post('/sesion', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const newSession = {
+      nombre: req.body.nombre,
+      descripcion: req.body.descripcion,
+      participantes: []
+    };
+    console.log("enviando", newSession.nombre, newSession.descripcion)
+    const result = await collection.insertOne(newSession);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error inserting document:', error);
+    res.status(500).send('Error inserting document');
+  }
+});
