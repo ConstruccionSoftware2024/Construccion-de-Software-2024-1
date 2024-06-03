@@ -1,10 +1,15 @@
 <template>
   <div>
-    <router-link to="/home">
-      <button v-for="(subject, index) in subjects" :key="index">
-        {{ subject }}
-      </button></router-link
-    >
+    <ul class="subject-list">
+      <h2>Historial de evaluaciones</h2>
+      <li v-for="(subject, index) in subjects" :key="index">
+        <router-link to="/lista-alumnos">
+          <button class="subject-button">
+            {{ subject }}
+          </button>
+        </router-link>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -23,3 +28,27 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.subject-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.subject-list li {
+  margin-bottom: 10px;
+}
+
+.subject-button {
+  background-color: #FFE0B5;
+  border: none;
+  color: #92642c;
+  padding: 12px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>

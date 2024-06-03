@@ -13,11 +13,15 @@
         </div>
         <div>
           <router-link to="/modulos">
-            <button class="modern-button" type="submit">Iniciar sesión</button>
+            <div class="button-container">
+              <button class="modern-button">Iniciar sesión</button>
+            </div>
           </router-link>
         </div>
         <div class="forgot-password">
-          <router-link to="/forgot-password">¿Olvidaste tu contraseña?</router-link>
+          <router-link to="/forgot-password" class="forgot-password-link"
+            >¿Olvidaste tu contraseña?</router-link
+          >
         </div>
       </form>
     </div>
@@ -39,7 +43,22 @@ export default {
   }
 }
 </script>
+
 <style scoped>
+
+.login-form {
+  width: 300px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  background-color: #f0f0f0; 
+}
+
+.forgot-password-link {
+  color: #00aeff; 
+}
+
 .container {
   display: flex;
   justify-content: center;
@@ -57,22 +76,29 @@ export default {
 .input-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  margin-bottom: 35px; 
+}
+
+.button-container { 
+  display: flex;
+  justify-content: center;
 }
 
 .modern-button {
   padding: 10px 40px;
-
+  font-weight: bold;
   border-radius: 5px;
   border: none;
-  background-color: #c58940;
-  color: white;
+  background-color: #ffe0b5;
+  color: #775225;
   font-size: 16px;
   transition: background-color 0.3s ease;
+  margin-bottom: 15px;
 }
 
 .modern-button:hover {
   background-color: #b46300;
+  color: #ffe0b5;
 }
 .forgot-password {
   margin-top: 10px;
