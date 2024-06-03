@@ -32,6 +32,7 @@
                 <a href="#">Ver alumno</a>
                 <a href="#">Enviar mensaje</a>
                 <a href="#">Bloquear</a>
+                <a href="#" @click="banearAlumno(alumno)">Banear alumno</a>
               </div>
             </div>
           </td>
@@ -45,7 +46,8 @@
 export default {
   data() {
     return {
-      alumnos: []
+      alumnos: [],
+      matriculaABanear: ''
     }
   },
   methods: {
@@ -58,6 +60,11 @@ export default {
           riesgo: ['Bajo', 'Medio', 'Alto'][Math.floor(Math.random() * 3)]
         })
       }
+    },
+    banearAlumno(alumno) {
+      // Placeholder para banear a un alumno sin lógica, dada la falta de la lógica de otros componentes
+      console.log(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
+      alert(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
     }
   },
   created() {
@@ -81,7 +88,7 @@ h3 {
   position: absolute;
   background-color: #f9f9f9;
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
 }
 
@@ -92,14 +99,16 @@ h3 {
   display: block;
 }
 
-.dropdown-content a:hover {background-color: #f1f1f1}
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
 
 .dropdown:hover .dropdown-content {
   display: block;
 }
 
 .dropbtn {
-  background-color: #E5BA73;
+  background-color: #e5ba73;
   color: black;
   padding: 12px;
   font-size: 12px;
