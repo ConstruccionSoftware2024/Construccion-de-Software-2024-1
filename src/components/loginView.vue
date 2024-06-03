@@ -1,6 +1,6 @@
 <template>
   <div class="loginContainer">
-    <div class="loginForm">
+    <div :class="['loginForm', { login: isLogin, register: !isLogin }]">
       <h2>{{ isLogin ? 'Bienvenido Utalino' : 'Registro' }}</h2>
       <transition name="fade" mode="out-in">
         <form @submit.prevent="login" v-if="isLogin" key="login">
@@ -174,10 +174,8 @@
         </form>
       </transition>
       <div class="signUp">
-        <span>{{ isLogin ? 'No tienes una cuenta?' : 'Ya tienes una cuenta?' }}</span>
-        <a href="#" @click.prevent="toggleForm">{{
-          isLogin ? ' REGISTRARSE' : ' INICIAR SESIÓN'
-        }}</a>
+        <span>{{ isLogin ? 'No tienes una cuenta? ' : 'Ya tienes una cuenta? ' }}</span>
+        <a href="#" @click.prevent="toggleForm">{{ isLogin ? 'REGISTRARSE' : 'INICIAR SESIÓN' }}</a>
       </div>
     </div>
   </div>
@@ -273,7 +271,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #1c1c1c;
 }
 
@@ -283,8 +281,15 @@ export default {
   border-radius: 15px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 700px;
   transition: all 0.3s ease;
+}
+
+.loginForm.login {
+  width: 400px;
+}
+
+.loginForm.register {
+  width: 700px;
 }
 
 input[type='password']::-ms-reveal,
@@ -399,11 +404,6 @@ input:focus {
   text-decoration: underline;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
@@ -413,5 +413,17 @@ input:focus {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .loginForm.login {
+    width: 90%;
+  }
+  .loginForm.register {
+    width: 90%;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
