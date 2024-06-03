@@ -10,7 +10,7 @@ dotenv.config()
 // Configuración de la aplicación
 const url = process.env.MONGODB_URI
 const app = express()
-
+const url = process.env.MONGODB_URI
 const client = new MongoClient(url)
 let db
 
@@ -22,7 +22,6 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 app.use(express.json())
-
 // Conexión a la base de datos de MongoDB
 client
   .connect()
@@ -37,7 +36,6 @@ client
 // Iniciar el servidor
 const PORT = process.env.PORT || 8080
 const server = http.createServer(app)
-
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
@@ -50,29 +48,32 @@ app.get('/', async (req, res) => {
   res.json(users)
 })
 
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
-  } catch (error) {
-    res.status(500).send(error.message)
+app.post('/register', async (req, res) => {
+  try{
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    await collection.insertOne(req.body);
+    res.send({ success: true, message: 'Registro exitoso' })
   }
-})
+  catch(error){
+    console.log(error)
+  }
+  
+});
 
-// Cambiar estado de alumno (Peligroso / No Peligroso)
-app.post('/faltas/:id', async (req, res) => {
+app.post('/checkEmail', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const result = await collection.updateOne(
-      { id: Number(req.params.id) },
-      { $set: { estado: req.body.estado } }
-    )
-    res.send(result)
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: req.body.email });
+
+    if (user) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
   } catch (error) {
-    res.status(500).send(error.message)
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
   }
-})
+});

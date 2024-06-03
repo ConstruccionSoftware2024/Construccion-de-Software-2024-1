@@ -1,16 +1,26 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import Navbar from './components/navBar.vue'
 </script>
 
 <template>
-  <header></header>
-  <RouterView />
+  <div id="app">
+    <Navbar />
+    <div class="main-content">
+      <RouterView />
+    </div>
+  </div>
 </template>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+<style scoped>
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 
-body {
-  font-family: 'Roboto', sans-serif;
+.main-content {
+  flex: 1 0 auto;
+  height: 90vh;
 }
 </style>
