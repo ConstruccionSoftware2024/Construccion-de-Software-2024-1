@@ -38,6 +38,7 @@ export default {
   display: flex;
   justify-content: space-between;
   height: 100px;
+  width: 100%;
   border: none;
   color: white;
 }

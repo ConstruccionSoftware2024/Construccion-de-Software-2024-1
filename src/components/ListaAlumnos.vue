@@ -101,8 +101,8 @@ h3 {
 }
 
 .dropbtn {
-  background-color: #E5BA73;
-  color: black;
+  background-color: #FFE0B5;
+  color: #92642c;
   padding: 12px;
   font-size: 12px;
   border: none;
