@@ -4,6 +4,9 @@ decisión. /*
 <template>
   <div class="general-container">
     <h1>Estado Alumnos</h1>
+
+    <router-link to="/faltas-alumnos">Falta alumnos</router-link>
+
     <table class="lista-alumnos">
       <thead>
         <tr>
@@ -102,9 +105,9 @@ export default {
       if (!alumno.descripcion) {
         return
       }
-      console.log('Applying description for:', alumno)
       this.needsDescription.splice(index, 1, false)
       if (alumno.decision === 'ban') {
+        this.alumnos.splice(index, 1)
         alert('Alumno eliminado')
       } else if (alumno.decision === 'avisar') {
         alert('Advertencia aplicada')

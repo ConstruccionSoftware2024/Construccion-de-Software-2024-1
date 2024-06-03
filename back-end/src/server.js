@@ -44,10 +44,56 @@ app.get('/users', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('users')
     const users = await collection.find().toArray()
-    console.log('Users fetched from database:', users)
     res.send(users)
   } catch (error) {
     console.error('Failed to fetch users from database', error)
     res.status(500).send('Failed to fetch users from database')
+  }
+})
+
+app.get('/faltas', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('faltas')
+    const faltas = await collection.find({}).toArray()
+    res.send(faltas)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Ruta para crear un nuevo alumno
+app.post('/faltas-post/new', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('faltas')
+    const newAlumno = req.body
+    const result = await collection.insertOne(newAlumno)
+    res.status(201).send(result.ops[0])
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Ruta para actualizar un alumno existente
+app.post('/faltas-post/update', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('faltas')
+    const { alumnoId, falta } = req.body
+
+    // Actualiza el documento del alumno agregando la nueva falta al array detalleFaltas
+    const result = await collection.updateOne(
+      { _id: alumnoId },
+      { $push: { detalleFaltas: falta }, $inc: { faltas: 1 } }
+    )
+
+    if (result.modifiedCount > 0) {
+      res.status(200).send('Falta agregada correctamente')
+    } else {
+      res.status(404).send('Alumno no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
   }
 })
