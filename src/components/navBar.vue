@@ -32,7 +32,7 @@ const goLogin = () => {
 
 <style scoped>
 .navbar {
-  position: fixed;
+  position: flex;
   top: 0;
   width: 100%;
   background-color: #2c2c2e;

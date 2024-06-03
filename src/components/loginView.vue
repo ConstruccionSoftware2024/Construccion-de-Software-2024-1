@@ -244,7 +244,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height: 90vh;
   background-color: #1c1c1c;
 }
 
@@ -339,7 +339,7 @@ input:focus {
 }
 
 .loginButton {
-  width: calc(100% - 1rem);
+  width: 100%;
   padding: 0.75rem;
   border: none;
   border-radius: 5px;
