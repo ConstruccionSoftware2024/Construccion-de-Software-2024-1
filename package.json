@@ -20,7 +20,8 @@
     "mongodb": "^6.7.0",
     "uuid": "^9.0.1",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "xpress": "^2.4.6"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",
