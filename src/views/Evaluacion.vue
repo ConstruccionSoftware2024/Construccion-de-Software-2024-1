@@ -1,10 +1,9 @@
 <script setup>
 import ListaAlumnos from '@/components/ListaAlumnos.vue'
-import TheWelcome from '@/components/TheWelcome.vue'
 </script>
 
 <template>
   <main>
-    <TheWelcome />
+    <ListaAlumnos />
   </main>
 </template>

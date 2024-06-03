@@ -1,7 +1,9 @@
 <template>
   <nav class="nav-bar">
     <div class="nav-item">
-      <i class="fa-solid fa-user user-icon"></i>
+      <router-link to="/" class="user-icon-link">
+        <i class="fa-solid fa-user user-icon"></i>
+      </router-link>
       <span>{{ username }}</span>
     </div>
     <div class="nav-item dark-mode-switch">
@@ -47,6 +49,13 @@ export default {
   margin-right: 40px;
 }
 
+.user-icon-link {
+  display: inline-block;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+}
+
 .user-icon {
   font-size: 3em;
   margin-left: 60px;
@@ -75,6 +84,12 @@ export default {
 .slider-active {
   transform: translateX(26px);
 }
+
+body.dark-mode {
+  background-color: #333;
+  color: #fff;
+}
+
 .dark-mode .switch {
   background-color: #4e4e4e;
 }
