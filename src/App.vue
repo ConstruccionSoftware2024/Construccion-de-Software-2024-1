@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex flex-column min-vh-100">
-    <BarraNavegacion /> 
+    <BarraNavegacion />
     <div class="main-content">
       <RouterView class="flex-grow-1" />
     </div>
@@ -10,8 +10,8 @@
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import BarraNavegacion from './components/BarraNavegacion.vue';
-import Footer from './components/Footer.vue';
+import BarraNavegacion from './components/BarraNavegacion.vue'
+import Footer from './components/Footer.vue'
 </script>
 
 <style>
