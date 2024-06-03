@@ -4,7 +4,7 @@ futuras revisiones y/o avisos.*/
 <template>
   <div class="select-faltas">
     <h1>Faltas Alumnos</h1>
-    <router-link to="/estado-alumnos">Click para ir a Estado alumnos</router-link>
+    <router-link to="/estadoAlumnos">Click para ir a Estado alumnos</router-link>
     <table class="lista-alumnos">
       <thead>
         <tr>

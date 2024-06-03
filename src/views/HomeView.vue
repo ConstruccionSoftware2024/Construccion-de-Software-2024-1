@@ -1,9 +1,5 @@
-<script setup>
-import EstadoAlumnos from '../components/EstadoAlumnos.vue'
-</script>
+<script setup></script>
 
 <template>
-  <main>
-    <EstadoAlumnos />
-  </main>
+  <main></main>
 </template>
