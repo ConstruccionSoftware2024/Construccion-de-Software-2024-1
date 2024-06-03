@@ -76,3 +76,33 @@ app.post('/faltas/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+// Obtener lista de sesiones
+app.get('/sesion', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const faltas = await collection.find({}).toArray()
+    res.send(faltas)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.get('/user/:id',async (req, res) => {
+  try {
+    console.log("here")
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = {_id: new ObjectId(req.params.id)}
+    const result = await collection.findOne(consulta)
+    if(result){
+      res.send(result)
+    }
+    else{
+      res.status(404).send('user not found')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
