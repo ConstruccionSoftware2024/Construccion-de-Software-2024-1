@@ -5,7 +5,7 @@ decisión. /*
   <div class="general-container">
     <h1>Estado Alumnos</h1>
 
-    <router-link to="/faltas-alumnos">Falta alumnos</router-link>
+    <router-link to="/faltas-alumnos">Click para ir Falta alumnos</router-link>
 
     <table class="lista-alumnos">
       <thead>

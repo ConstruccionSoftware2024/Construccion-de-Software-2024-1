@@ -4,7 +4,7 @@ futuras revisiones y/o avisos.*/
 <template>
   <div class="select-faltas">
     <h1>Faltas Alumnos</h1>
-    <router-link to="/estado-alumnos">Estado alumnos</router-link>
+    <router-link to="/estado-alumnos">Click para ir a Estado alumnos</router-link>
     <table class="lista-alumnos">
       <thead>
         <tr>
@@ -15,11 +15,12 @@ futuras revisiones y/o avisos.*/
           <th>Rut</th>
           <th>Correo</th>
           <th>Faltas</th>
+          <th>Estado</th>
         </tr>
       </thead>
       <tbody>
         <template v-for="(falta, index) in faltas" :key="falta._id">
-          <tr @click="selectedFalta = selectedFalta === index ? null : index">
+          <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
             <td>{{ falta._id }}</td>
             <td>{{ falta.name }}</td>
             <td>{{ falta.lastName }}</td>
@@ -27,6 +28,7 @@ futuras revisiones y/o avisos.*/
             <td>{{ falta.rut }}</td>
             <td>{{ falta.email }}</td>
             <td>{{ falta.faltas }}</td>
+            <td>{{ falta.estado }}</td>
           </tr>
           <tr v-if="selectedFalta === index">
             <td colspan="6">
@@ -52,7 +54,7 @@ futuras revisiones y/o avisos.*/
         </option>
       </select>
       <input v-model="falta" type="text" placeholder="Falta Incurrida" />
-      <input v-model="motivo" type="text" placeholder="Motivo" />
+      <input v-model="motivo" type="text" placeholder="Descripcion" />
       <input v-model="fecha" type="date" />
       <button @click="guardarFalta">Guardar</button>
     </div>
@@ -93,64 +95,53 @@ export default {
         console.error('Failed to fetch users', error)
       }
     },
+    async fetchFaltas() {
+      try {
+        const response = await axios.get('http://localhost:8080/faltas')
+        this.faltas = response.data
+      } catch (error) {
+        console.error('Failed to fetch faltas', error)
+      }
+    },
     async guardarFalta() {
       const newFalta = {
-        fecha: this.fecha,
         falta: this.falta,
+        fecha: this.fecha,
         motivo: this.motivo
       }
-
-      const alumnoIndex = this.faltas.findIndex((alumno) => alumno._id === this.selectedAlumno)
-
-      if (alumnoIndex !== -1) {
-        this.faltas[alumnoIndex].detalleFaltas.push(newFalta)
-        this.faltas[alumnoIndex].faltas += 1
-        console.log(this.faltas[alumnoIndex])
-
-        // Send the new falta to the backend
-        try {
-          await axios.post('http://localhost:8080/faltas-post/update', {
-            alumnoId: this.selectedAlumno._id,
-            falta: newFalta
-          })
-        } catch (error) {
-          console.error('Failed to post new falta', error)
-        }
-      } else {
-        const selectedAlumnoData = this.alumnos.find((alumno) => alumno._id === this.selectedAlumno)
-        const newAlumno = {
-          _id: selectedAlumnoData._id,
-          name: selectedAlumnoData.firstName,
-          lastName: selectedAlumnoData.lastName,
-          email: selectedAlumnoData.email,
-          rut: selectedAlumnoData.rut,
-          faltas: 1,
-          estado: 'Peligroso',
-          detalleFaltas: [newFalta]
-        }
-        this.faltas.push(newAlumno)
-        console.log(newAlumno)
-        // Send the new alumno to the backend
-        try {
-          await axios.post('http://localhost:8080/faltas-post/new', newAlumno)
-          console.log(newAlumno)
-        } catch (error) {
-          console.error('Failed to post new alumno', error)
-        }
+      const selectedAlumnoData = this.alumnos.find((alumno) => alumno._id === this.selectedAlumno)
+      const newAlumno = {
+        _id: selectedAlumnoData._id,
+        name: selectedAlumnoData.firstName,
+        lastName: selectedAlumnoData.lastName,
+        email: selectedAlumnoData.email,
+        rut: selectedAlumnoData.rut,
+        faltas: 1,
+        estado: 'Ninguno',
+        detalleFaltas: [newFalta]
+      }
+      // Send the new alumno to the backend
+      try {
+        await axios.post('http://localhost:8080/faltas-post', newAlumno)
+      } catch (error) {
+        console.error('Failed to post new alumno', error)
       }
 
-      // Optional: Reset form fields
       this.selectedAlumno = ''
       this.falta = ''
       this.motivo = ''
       this.fecha = ''
       this.showAddFalta = false
+      this.fetchFaltas()
     }
   }
 }
 </script>
 
 <style scoped>
+.fila {
+  cursor: pointer;
+}
 p {
   font-weight: bold;
 }

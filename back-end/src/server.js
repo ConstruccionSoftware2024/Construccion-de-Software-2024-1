@@ -20,6 +20,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 }
 app.use(cors(corsOptions))
+app.use(express.json())
 
 // Conexión a la base de datos de MongoDB
 client
@@ -62,38 +63,27 @@ app.get('/faltas', async (req, res) => {
   }
 })
 
-// Ruta para crear un nuevo alumno
-app.post('/faltas-post/new', async (req, res) => {
+app.post('/faltas-post', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
-    const newAlumno = req.body
-    const result = await collection.insertOne(newAlumno)
-    res.status(201).send(result.ops[0])
-  } catch (error) {
-    res.status(500).send(error.message)
-  }
-})
+    const alumno = req.body
+    // Busca el alumno en la base de datos
+    const existingAlumno = await collection.findOne({ _id: alumno._id })
 
-// Ruta para actualizar un alumno existente
-app.post('/faltas-post/update', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const { alumnoId, falta } = req.body
-
-    // Actualiza el documento del alumno agregando la nueva falta al array detalleFaltas
-    const result = await collection.updateOne(
-      { _id: alumnoId },
-      { $push: { detalleFaltas: falta }, $inc: { faltas: 1 } }
-    )
-
-    if (result.modifiedCount > 0) {
-      res.status(200).send('Falta agregada correctamente')
+    if (existingAlumno) {
+      // Si el alumno ya existe, actualiza detalleFaltas
+      const result = await collection.updateOne(
+        { _id: alumno._id },
+        { $push: { detalleFaltas: alumno.detalleFaltas[0] }, $inc: { faltas: 1 } }
+      )
     } else {
-      res.status(404).send('Alumno no encontrado')
+      // Si el alumno no existe, inserta el nuevo alumno
+      const result = await collection.insertOne(alumno)
     }
+    res.status(200).send('Falta agregada correctamente')
   } catch (error) {
+    console.error(error) // Imprime el error
     res.status(500).send(error.message)
   }
 })
