@@ -3,7 +3,7 @@
     <div class="loginForm">
       <h2>{{ isLogin ? 'Bienvenido Utalino' : 'Registro' }}</h2>
       <transition name="fade" mode="out-in">
-        <form @submit.prevent="login" v-if="isLogin" key="login">
+        <form v-if="isLogin" key="login">
           <div class="inputGroup">
             <label for="email">Correo Electrónico</label>
             <div class="inputWrapper">
@@ -38,7 +38,7 @@
           <div class="options">
             <a href="#" class="forgotPassword">Olvidaste la contraseña?</a>
           </div>
-          <button type="submit" class="loginButton">Iniciar Sesión</button>
+          <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
         <form v-else key="register">
           <div class="formGrid">
@@ -211,10 +211,22 @@ export default {
     }
   },
   methods: {
-    login() {
-      // Lógica de inicio de sesión
-      console.log('Correo Electrónico:', this.email)
-      console.log('Contraseña:', this.password)
+    async login() {
+      try {
+        const response = await axios.post('http://localhost:8080/login', {
+          email: this.email,
+          password: this.password
+        });
+
+        if (response.data.success) {
+
+          this.$router.push('/other-page'); //Cambiar '/other-page' por la ruta de la página a la que se redirigirá al iniciar sesión
+        } else {
+          alert('Correo electrónico o contraseña incorrectos');
+        }
+      } catch (error) {
+        console.error(error);
+      }
     },
     async register() {
     try {
