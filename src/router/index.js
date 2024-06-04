@@ -1,23 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import ListaAlumnos from '@/components/ListaAlumnos.vue'
-import HistorialAlumno from '../views/HistorialAlumno.vue'
-import InicioSesion from '@/components/InicioSesion.vue'
-import ComponenteModulos from '@/components/ComponenteModulos.vue'
-import ComponenteOpciones from '@/components/ComponenteOpciones.vue'
-import CrearEvaluacion from '@/components/CrearEvaluacion.vue'
-import HistorialEvaluaciones from '@/components/HistorialEvaluaciones.vue'
-import VistaAlumno from '../views/VistaAlumno.vue'
-import RevisionesView from '../views/RevisionesView.vue'
-import InvitarAlumnos from '@/components/InvitarAlumnos.vue'
+import HomeView from '../views/VistasGrupoFelipe/HomeView.vue'
+import ListaAlumnos from '@/components/ComponentesGrupoFelipe/ListaAlumnos.vue'
+import HistorialAlumno from '../views/VistasGrupoFelipe/HistorialAlumno.vue'
+import InicioSesion from '@/components/ComponentesGrupoFelipe/InicioSesion.vue'
+import ComponenteModulos from '@/components/ComponentesGrupoFelipe/ComponenteModulos.vue'
+import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOpciones.vue'
+import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
+import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
+import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
+import RevisionesView from '../views/VistasGrupoFelipe/RevisionesView.vue'
+import InvitarAlumnos from '@/components/ComponentesGrupoFelipe/InvitarAlumnos.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'InicioSesion',
-      component: InicioSesion
+      name: 'HomeView',
+      component: HomeView
     },
 
     {
@@ -61,7 +61,7 @@ const router = createRouter({
     {
       path: '/historial',
       name: 'historial',
-      component: () => import('../views/HistorialAlumno.vue')
+      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
     },
     {
       path: '/alumnovista',
