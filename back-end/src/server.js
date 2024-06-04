@@ -89,6 +89,25 @@ app.get('/sesion', async (req, res) => {
   }
 })
 
+// Se actualiza la lista de participantes de una sesión
+app.put('/sesion/:id', async (req, res) => {
+  try {
+      const database = client.db('construccion')
+      const collection = database.collection('sesion')
+      const consulta = {_id: new ObjectId(req.params.id)}
+      const nuevosParticipantes = req.body.participantes
+      const result = await collection.updateOne(consulta, { $set: { participantes: nuevosParticipantes } })
+
+      if (result.modifiedCount === 1) {
+          res.send(result)
+      } else {
+          res.status(404).send('Sesión no encontrada')
+      }
+  } catch (error) {
+      res.status(500).send(error.message)
+  }
+})
+
 app.get('/user/:id',async (req, res) => {
   try {
     console.log("here")
