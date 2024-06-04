@@ -7,6 +7,7 @@ import ComponenteModulos from '@/components/ComponenteModulos.vue'
 import ComponenteOpciones from '@/components/ComponenteOpciones.vue'
 import CrearEvaluacion from '@/components/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/HistorialEvaluaciones.vue'
+import VistaAlumno from '../views/VistaAlumno.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +52,11 @@ const router = createRouter({
       path: '/historial',
       name: 'historial',
       component: () => import('../views/HistorialAlumno.vue')
+    },
+    {
+      path: '/alumnovista',
+      name: 'vista-alumno',
+      component: VistaAlumno
     }
   ]
 })

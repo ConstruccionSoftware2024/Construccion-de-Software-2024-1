@@ -52,7 +52,6 @@ export default {
   border: 1px solid #ccc;
   border-radius: 10px;
   margin-bottom: 30px;
-  background-color: #f0f0f0; 
 }
 
 .forgot-password-link {
