@@ -1,3 +1,39 @@
+/* Estilos para el modo claro y oscuro */
+
+:root {
+  --container-background-color: #ee0000;
+
+  --background-color-light: #f5f5f5;
+  --text-color-light: #1c1c1c;
+  --input-background-color-light: #f5f5f5;
+  --button-background-color-light: #08cccc;
+  --button-hover-background-color-light: #06bfbf;
+
+  --background-color-dark: #1c1c1c;
+  --text-color-dark: #f5f5f5;
+  --input-background-color-dark: #3a3a3c;
+  --button-background-color-dark: #08cccc;
+  --button-hover-background-color-dark: #06bfbf;
+}
+
+body.light-mode {
+  --background-color: var(--background-color-light);
+  --text-color: var(--text-color-light);
+  --input-background-color: var(--input-background-color-light);
+  --button-background-color: var(--button-background-color-light);
+  --button-hover-background-color: var(--button-hover-background-color-light);
+  --container-background-color: #fafafa;
+}
+
+body.dark-mode {
+  --background-color: var(--background-color-dark);
+  --text-color: var(--text-color-dark);
+  --input-background-color: var(--input-background-color-dark);
+  --button-background-color: var(--button-background-color-dark);
+  --button-hover-background-color: var(--button-hover-background-color-dark);
+  --container-background-color: #2c2c2e;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,7 +45,8 @@ html {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: #1c1c1c;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 #app {

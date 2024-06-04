@@ -245,11 +245,10 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 90vh;
-  background-color: #1c1c1c;
 }
 
 .loginForm {
-  background-color: #2c2c2e;
+  background-color: var(--container-background-color);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -271,7 +270,7 @@ input[type='password']::-ms-clear {
 }
 
 h2 {
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
@@ -282,7 +281,7 @@ h2 {
 
 label {
   display: block;
-  color: #ccc;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
@@ -295,7 +294,7 @@ label {
 .inputWrapper i {
   position: absolute;
   margin-left: 0.5rem;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 input {
@@ -303,8 +302,8 @@ input {
   padding: 0.75rem 2.5rem 0.75rem 2rem;
   border: none;
   border-radius: 5px;
-  background-color: #3a3a3c;
-  color: #fff;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
   margin-left: auto;
   margin-right: auto;
   display: block;
@@ -312,13 +311,13 @@ input {
 
 input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #08cccc;
+  box-shadow: 0 0 0 2px var(--button-background-color);
 }
 
 .togglePassword {
   right: 10px;
   cursor: pointer;
-  color: #ccc;
+  color: var(--text-color);
   position: absolute;
 }
 
@@ -328,13 +327,13 @@ input:focus {
 }
 
 .forgotPassword {
-  color: #08cccc;
+  color: var(--button-background-color);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .forgotPassword:hover {
-  color: #06bfbf;
+  color: var(--button-hover-background-color);
   text-decoration: underline;
 }
 
@@ -343,8 +342,8 @@ input:focus {
   padding: 0.75rem;
   border: none;
   border-radius: 5px;
-  background-color: #08cccc;
-  color: #fff;
+  background-color: var(--button-background-color);
+  color: var(--text-color);
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -354,26 +353,26 @@ input:focus {
 }
 
 .loginButton:hover {
-  background-color: #06bfbf;
+  background-color: var(--button-hover-background-color);
 }
 
 .signUp {
   margin-top: 1.5rem;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .signUp span {
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .signUp a {
-  color: #08cccc;
+  color: var(--button-background-color);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .signUp a:hover {
-  color: #06bfbf;
+  color: var(--button-hover-background-color);
   text-decoration: underline;
 }
 
