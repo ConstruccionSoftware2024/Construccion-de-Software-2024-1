@@ -46,6 +46,27 @@ app.get('/', async (req, res) => {
   res.json(users)
 })
 
+app.post('/login', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      return res.json({ success: false });
+    }
+
+    if (req.body.password !== user.password) {
+      return res.json({ success: false });
+    }
+
+    res.json({ success: true});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 app.post('/register', async (req, res) => {
   try{
     const database = client.db('construccion');
