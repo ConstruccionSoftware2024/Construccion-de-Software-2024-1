@@ -35,6 +35,8 @@ const router = createRouter({
       path: '/alumnovista',
       name: 'vista-alumno',
       component: VistaAlumno
+    },
+    {
       path: '/PagesHistory',
       name: 'History',
       // route level code-splitting
