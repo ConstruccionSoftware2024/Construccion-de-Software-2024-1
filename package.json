@@ -21,6 +21,7 @@
     "http": "^0.0.1-security",
     "mongodb": "^6.7.0",
     "uuid": "^9.0.1",
+    "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
     "xpress": "^2.4.6"

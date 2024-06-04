@@ -54,6 +54,14 @@ const router = createRouter({
       component: RevisionesView
     },
     {
+      path: '/login',
+      name: 'login',
+      component: () => import('../components/loginView.vue')
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../components/SettingsView.vue')
       path: '/invitar-alumnos',
       name: 'invitar-alumnos',
       component: InvitarAlumnos
