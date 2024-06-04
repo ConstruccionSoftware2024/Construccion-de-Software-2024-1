@@ -75,8 +75,8 @@ app.post('/checkEmail', async (req, res) => {
     //const nodemailer = require('nodemailer')
     const e_mail = req.body
     const mail = {
-      user: 'pruebas.construccion2024@gmail.com',
-      pass: 'Construccion'
+      user: 'pruebas.constru@yahoo.com',
+      pass: 'Prueba12345'
     }
 
     let transporter = nodemailer.createTransport({
