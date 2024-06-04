@@ -1,5 +1,5 @@
 <script setup>
-import ListaAlumnos from '@/components/ListaAlumnos.vue'
+import ListaAlumnos from '@/components/ComponentesGrupoClaudio/ListaAlumnos.vue'
 </script>
 
 <template>

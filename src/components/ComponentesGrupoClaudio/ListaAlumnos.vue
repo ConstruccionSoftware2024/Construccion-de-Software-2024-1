@@ -49,7 +49,7 @@ export default {
   data() {
     return {
       alumnos: [],
-      historial: [] //por ahora es una idea probicional hecha por enzo y erik
+      historial: [],//por ahora es una idea probicional hecha por enzo y erik
       //la idea es guardar la informacion de los usuarios con su matricula, la idea es guardarlos posteriormente dentro de una nueva tabla en la base de datos
       matriculaABanear: ''
     }
