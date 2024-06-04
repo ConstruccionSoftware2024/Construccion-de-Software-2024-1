@@ -32,6 +32,7 @@
                 <a href="#">Ver alumno</a>
                 <a href="#">Enviar mensaje</a>
                 <a href="#">Bloquear</a>
+                <a href="#" @click="banearAlumno(alumno)">Banear alumno</a>
               </div>
             </div>
           </td>
@@ -48,6 +49,7 @@ export default {
       alumnos: [],
       historial: [] //por ahora es una idea probicional hecha por enzo y erik
       //la idea es guardar la informacion de los usuarios con su matricula, la idea es guardarlos posteriormente dentro de una nueva tabla en la base de datos
+      matriculaABanear: ''
     }
   },
   methods: {
@@ -68,6 +70,11 @@ export default {
       console.log(this.historial)
       //examinando el localhost, revisando dentro de console se puede verificar que los datos
       //se estan guardando correctamente nombre y matricula
+    },
+    banearAlumno(alumno) {
+      // Placeholder para banear a un alumno sin lógica, dada la falta de la lógica de otros componentes
+      console.log(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
+      alert(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
     }
   },
   created() {
