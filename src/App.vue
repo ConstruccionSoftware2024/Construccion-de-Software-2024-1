@@ -1,44 +1,38 @@
 <template>
-  <div class="d-flex flex-column min-vh-100">
-    <BarraNavegacion />
-    <div class="main-content">
-      <RouterView class="flex-grow-1" />
-    </div>
-    <Footer />
+  <div id="app">
+    <main class="content">
+      <Navbar />
+      <!-- <Header/> -->
+      <RouterView />
+    </main>
   </div>
 </template>
 
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import BarraNavegacion from './components/BarraNavegacion.vue'
-import Footer from './components/Footer.vue'
+<script>
+import { RouterView } from 'vue-router'
+/* import Header from './components/Header.vue' */
+import Navbar from './components/Navbar.vue'
+
+export default {
+  components: {
+    Navbar
+    /* Header,*/
+  }
+}
 </script>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
-body {
-  font-family: 'Roboto', sans-serif;
-}
-
-.d-flex {
+<style scoped>
+#app {
   display: flex;
-}
-
-.flex-column {
   flex-direction: column;
-}
-
-.min-vh-100 {
   min-height: 100vh;
 }
 
-.flex-grow-1 {
+.content {
+  background-color: #c8cbd0;
+  /* DARK MODE background-color: #2F2F33; */
+  display: flex;
+  align-items: center;
   flex-grow: 1;
-}
-
-.main-content {
-  min-height: 70vh;
-  padding: 20px;
 }
 </style>

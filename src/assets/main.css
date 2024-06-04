@@ -1,4 +1,4 @@
-@import './base.css';
+/* @import './base.css';
 
 #app {
   max-width: auto;
@@ -19,5 +19,7 @@ body.dark-mode {
   body {
     display: flex;
     place-items: center;
+    margin: 0;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
   }
 }
