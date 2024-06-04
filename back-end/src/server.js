@@ -76,3 +76,21 @@ app.post('/faltas/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+let historial = []
+
+//funcion que guarda el usuarios que se acaban de logear en un historial
+app.post('/login', async (req, res) => {
+  const { nombre, matricula } = req.body
+
+  const database = client.db('construccion') //aqui debe de ir el nombre de la tabla donde se almacenan los usuarios logeados
+  const collection = database.collection('users')
+  const user = await collection.findOne({ nombre, matricula })
+
+  if (user) {
+    historial.push({ nombre, matricula, fecha: new Date() })
+    res.json({ message: 'usuario guardado' })
+  } else {
+    res.status(401).json({ message: 'usuario no encontrado' })
+  }
+})
