@@ -158,6 +158,25 @@ app.get('/sesion', async (req, res) => {
   }
 });
 
+// Se actualiza la lista de participantes de una sesión
+app.put('/sesion/:id', async (req, res) => {
+  try {
+      const database = client.db('construccion')
+      const collection = database.collection('sesion')
+      const consulta = {_id: new ObjectId(req.params.id)}
+      const nuevosParticipantes = req.body.participantes
+      const result = await collection.updateOne(consulta, { $set: { participantes: nuevosParticipantes } })
+
+      if (result.modifiedCount === 1) {
+          res.send(result)
+      } else {
+          res.status(404).send('Sesión no encontrada')
+      }
+  } catch (error) {
+      res.status(500).send(error.message)
+  }
+})
+
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
@@ -188,6 +207,69 @@ app.get('/user/:id',async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
+})
+
+// Enviar una alerta a un usuario
+// Se guarda un mensaje de alerta en un array para el usuario
+// Para utilizar el mensaje de alerta en algun componente es necesario usar el 
+// metodo GET /user/:id/alertas abajo para obtener los mensajes
+app.post('/user/:id/alerta', async (req, res) => {
+  try {
+      const database = client.db('construccion')
+      const collection = database.collection('users')
+      const consulta = {_id: new ObjectId(req.params.id)}
+      const mensaje = req.body.mensaje
+      const result = await collection.updateOne(consulta, { $push: { alertas: mensaje } })
+
+      if (result.modifiedCount === 1) {
+          res.send(result)
+      } else {
+          res.status(404).send('Usuario no encontrado')
+      }
+  } catch (error) {
+      res.status(500).send(error.message)
+  }
+})
+
+// Usa este método para obtener los mensajes de alerta de un usuario
+app.get('/user/:id/alertas', async (req, res) => {
+  try {
+      const database = client.db('construccion')
+      const collection = database.collection('users')
+      const consulta = {_id: new ObjectId(req.params.id)}
+      const usuario = await collection.findOne(consulta)
+
+      if (usuario) {
+          res.send(usuario.alertas)
+      } else {
+          res.status(404).send('Usuario no encontrado')
+      }
+  } catch (error) {
+      res.status(500).send(error.message)
+  }
+})
+
+// Para mostrar los mensajes de alerta en algún componente puedes usar la siguiente función
+// USAR SOLO EN EL FRONTEND (NO AQUI)
+/*
+const obtenerAlertas = async () => {
+  try {
+      let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
+      let alertas = await respuesta.json()
+
+      // Muestra las alertas al usuario
+      alertas.forEach(alerta => {
+          alert(alerta)
+      })
+  }
+  catch (error) {
+      console.error('Error al obtener las alertas:', error)
+  }
+}
+
+// Se llama a obtenerAlertas cada 5 segundos
+setInterval(obtenerAlertas, 5000)
+*/
 ;
 
 // crear una nueva sesión
