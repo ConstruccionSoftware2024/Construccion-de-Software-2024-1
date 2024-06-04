@@ -11,7 +11,13 @@
                 <h3>
                     {{ participante.email }}
                 </h3>
-                <button class="boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
+                <h3>
+                    {{ participante.riesgo }}
+                </h3>
+                <div class="container-botones">
+                    <button class="boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
+                    <button class="boton-alerta" @click="alertarParticipante(index)">Enviar Alerta</button>
+                </div>
             </div>
         </div>
     </div>
@@ -120,13 +126,39 @@ export default {
             }
         }
 
+        const alertarParticipante = async (index) => {
+            try {
+                // Se obtiene el id del participante
+                const idParticipante = participantes.value[index].id;
+
+                // Envía una alerta al participante
+                let respuesta = await fetch(`http://localhost:8080/user/${idParticipante}/alerta`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mensaje: `Tu valor de riesgo actual es ${participantes.value[index].riesgo}`,
+                    }),
+                })
+
+                if (!respuesta.ok) {
+                    throw new Error('Error al enviar la alerta al participante')
+                }
+            }
+            catch (error) {
+                console.error('Error al alertar al participante:', error)
+            }
+        }
+
         onMounted(cargarSesion)
 
         return {
             info,
             finish,
             participantes,
-            expulsarParticipante
+            expulsarParticipante,
+            alertarParticipante
         }
     }
 }
@@ -138,10 +170,17 @@ export default {
     border: 1px solid black;
 }
 
+.container-botones {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+}
+
 .boton-expulsar {
-    background-color: orange;
+    background-color: white;
     border: none;
-    color: white;
+    color: black;
     padding: 10px 20px;
     text-align: center;
     text-decoration: none;
@@ -155,5 +194,24 @@ export default {
 
 .boton-expulsar:hover {
     background-color: red;
+}
+
+.boton-alerta {
+    background-color: white;
+    border: none;
+    color: black;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: background-color 0.3s;
+}
+
+.boton-alerta:hover {
+    background-color: yellow;
 }
 </style>
