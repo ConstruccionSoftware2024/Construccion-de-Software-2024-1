@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/VistasGrupoFelipe/HomeView.vue'
-import ListaAlumnos from '@/components/ComponentesGrupoFelipe/ListaAlumnos.vue'
+import ListaAlumnos from '@/components/ListaAlumnos.vue'
 import HistorialAlumno from '../views/VistasGrupoFelipe/HistorialAlumno.vue'
 import InicioSesion from '@/components/ComponentesGrupoFelipe/InicioSesion.vue'
 import ComponenteModulos from '@/components/ComponentesGrupoFelipe/ComponenteModulos.vue'
@@ -9,7 +9,7 @@ import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
 import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
 import RevisionesView from '../views/RevisionesView.vue'
-import InvitarAlumnos from '@/components/ComponentesGrupoFelipe/InvitarAlumnos.vue'
+import InvitarAlumnos from '@/components/InvitarAlumnos.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
