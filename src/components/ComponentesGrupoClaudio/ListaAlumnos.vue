@@ -11,6 +11,7 @@
           <th>Nombre</th>
           <th>Apellido</th>
           <th>Matrícula</th>
+          <th>Sesión Iniciada</th>
           <th>Riesgo</th>
           <th>Opciones</th>
         </tr>
@@ -20,6 +21,7 @@
           <td>{{ alumno.nombre }}</td>
           <td>{{ alumno.apellido }}</td>
           <td>{{ alumno.matricula }}</td>
+          <td>{{ "Si/No" }}</td>
           <td>
             <i v-if="alumno.riesgo === 'Bajo'" class="fa-solid fa-check"></i>
             <i v-else-if="alumno.riesgo === 'Medio'" class="fa-solid fa-exclamation"></i>
@@ -29,7 +31,7 @@
             <div class="dropdown">
               <button class="dropbtn">Ver más</button>
               <div class="dropdown-content">
-                <a href="#">Ver alumno</a>
+                <router-link to="/historial">Ver alumno</router-link>
                 <a href="#">Enviar mensaje</a>
                 <a href="#">Bloquear</a>
                 <a href="#" @click="banearAlumno(alumno)">Banear alumno</a>
@@ -47,7 +49,7 @@ export default {
   data() {
     return {
       alumnos: [],
-      historial: [], //por ahora es una idea probicional hecha por enzo y erik
+      historial: [],//por ahora es una idea probicional hecha por enzo y erik
       //la idea es guardar la informacion de los usuarios con su matricula, la idea es guardarlos posteriormente dentro de una nueva tabla en la base de datos
       matriculaABanear: ''
     }
@@ -131,9 +133,9 @@ table {
   border-collapse: collapse;
 }
 
-th,
-td {
+th, td {
   padding: 8px;
+  text-align: left;
   border-bottom: 1px solid #ddd;
 }
 
@@ -147,5 +149,31 @@ th {
   text-align: left;
   background-color: #c58940;
   color: white;
+}
+
+body.dark-mode {
+  background-color: #333;
+  color: #fff;
+}
+
+body.dark-mode table {
+  color: #fff;
+}
+
+body.dark-mode th, body.dark-mode td {
+  border-bottom: 1px solid #888;
+}
+
+body.dark-mode tr:nth-child(even) {
+  background-color: #555;
+}
+
+body.dark-mode th {
+  background-color: #444;
+  color: #fff;
+}
+
+.dark-mode .switch {
+  background-color: #4e4e4e;
 }
 </style>
