@@ -128,6 +128,24 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
+let historial = []
+
+//funcion que guarda el usuarios que se acaban de logear en un historial
+app.post('/login', async (req, res) => {
+  const { nombre, matricula } = req.body
+
+  const database = client.db('construccion') //aqui debe de ir el nombre de la tabla donde se almacenan los usuarios logeados
+  const collection = database.collection('users')
+  const user = await collection.findOne({ nombre, matricula })
+
+  if (user) {
+    historial.push({ nombre, matricula, fecha: new Date() })
+    res.json({ message: 'usuario guardado' })
+  } else {
+    res.status(401).json({ message: 'usuario no encontrado' })
+  }
+});
+
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
   try {
@@ -138,7 +156,7 @@ app.get('/sesion', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
 
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
@@ -151,7 +169,7 @@ app.get('/sesion/:id', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
 
 //obtener usuario especifico
 app.get('/user/:id',async (req, res) => {
@@ -170,7 +188,7 @@ app.get('/user/:id',async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+;
 
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
