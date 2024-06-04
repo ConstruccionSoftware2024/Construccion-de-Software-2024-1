@@ -10,7 +10,6 @@ dotenv.config()
 // Configuración de la aplicación
 const url = process.env.MONGODB_URI
 const app = express()
-const url = process.env.MONGODB_URI
 const client = new MongoClient(url)
 let db
 
@@ -49,31 +48,43 @@ app.get('/', async (req, res) => {
 })
 
 app.post('/register', async (req, res) => {
-  try{
-    const database = client.db('construccion');
-    const collection = database.collection('users');
-    await collection.insertOne(req.body);
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    await collection.insertOne(req.body)
     res.send({ success: true, message: 'Registro exitoso' })
-  }
-  catch(error){
+  } catch (error) {
     console.log(error)
   }
-  
-});
+})
 
 app.post('/checkEmail', async (req, res) => {
   try {
-    const database = client.db('construccion');
-    const User = database.collection('users');
-    const user = await User.findOne({ email: req.body.email });
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const user = await User.findOne({ email: req.body.email })
 
     if (user) {
-      res.json({ exists: true });
+      res.json({ exists: true })
     } else {
-      res.json({ exists: false });
+      res.json({ exists: false })
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+
+// Ruta de inicio de sesión
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  // Buscar el usuario
+  const user = user.find(u => u.email === email && u.password === password);
+
+  if (user) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false, message: 'Correo electrónico o contraseña incorrectos' });
   }
 });

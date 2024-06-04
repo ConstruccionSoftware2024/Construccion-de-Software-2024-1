@@ -40,7 +40,7 @@
           </div>
           <button type="submit" class="loginButton">Iniciar Sesión</button>
         </form>
-        <form v-else key="register">
+        <form v-else @submit.prevent="register" key="register">
           <div class="formGrid">
             <div class="inputGroup">
               <label for="email">Correo Electrónico</label>
@@ -170,7 +170,7 @@
               </div>
             </div>
           </div>
-          <button type="submit" class="loginButton" @click.prevent="register">Registrarse</button>
+          <button type="submit" class="loginButton">Registrarse</button>
         </form>
       </transition>
       <div class="signUp">
@@ -209,48 +209,67 @@ export default {
     }
   },
   methods: {
-    login() {
-      // Lógica de inicio de sesión
-      console.log('Correo Electrónico:', this.email)
-      console.log('Contraseña:', this.password)
+    async login() {
+      try {
+        const response = await axios.post('http://localhost:8080/login', {
+          email: this.email,
+          password: this.password
+        });
+
+        if (response.data.success) {
+          localStorage.setItem('token', response.data.token);
+          this.$router.push('/home'); // Cambia '/home' por tu ruta deseada
+        } else {
+          alert('Correo electrónico o contraseña incorrectos');
+        }
+      } catch (error) {
+        console.error('Error in login function:', error);
+        alert('Ocurrió un error durante el inicio de sesión. Inténtelo de nuevo.');
+      }
     },
     async register() {
-    try {
-      // Verificar si el correo electrónico ya existe
-      const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
-        email: this.email
-      });
-
-      if (checkEmailResponse.data.exists) {
-        alert('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+      if (this.password !== this.confirmPassword) {
+        alert('Las contraseñas no coinciden.');
         return;
       }
-      const response = await axios.post('http://localhost:8080/register', {
-        email: this.email,
-        username: this.username,
-        password: this.password,
-        confirmPassword: this.confirmPassword,
-        firstName: this.firstName,
-        lastName: this.lastName,
-        secondLastName: this.secondLastName,
-        campus: this.campus,
-        major: this.major
-      });
-      if (response.data.success) {
-        this.email = '';
-        this.username = '';
-        this.password = '';
-        this.confirmPassword = '';
-        this.firstName = '';
-        this.lastName = '';
-        this.secondLastName = '';
-        this.campus = '';
-        this.major = '';
+      try {
+        const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
+          email: this.email
+        });
+        if (checkEmailResponse.data.exists) {
+          alert('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+          return;
+        }
+        const response = await axios.post('http://localhost:8080/register', {
+          email: this.email,
+          username: this.username,
+          password: this.password,
+          confirmPassword: this.confirmPassword,
+          firstName: this.firstName,
+          lastName: this.lastName,
+          secondLastName: this.secondLastName,
+          campus: this.campus,
+          major: this.major
+        });
+        if (response.data.success) {
+          this.email = '';
+          this.username = '';
+          this.password = '';
+          this.confirmPassword = '';
+          this.firstName = '';
+          this.lastName = '';
+          this.secondLastName = '';
+          this.campus = '';
+          this.major = '';
+          this.toggleForm(); // Switch to login form after successful registration
+        } else {
+          alert('Error en el registro. Inténtelo de nuevo.');
+        }
+      } catch (error) {
+        console.error('Error in register function:', error);
+        alert('Ocurrió un error durante el registro. Inténtelo de nuevo.');
       }
-    } catch (error) {
-      console.error('error in register function:', error);
-    }
-  },
+    },
     togglePasswordVisibility() {
       this.passwordVisible = !this.passwordVisible
     },
@@ -264,6 +283,8 @@ export default {
 <style scoped>
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 .loginContainer {
@@ -407,6 +428,11 @@ input:focus {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
 }
 
 .formGrid {
