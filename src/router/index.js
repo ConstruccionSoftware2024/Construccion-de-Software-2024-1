@@ -10,6 +10,9 @@ import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/Historial
 import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
 import RevisionesView from '../views/RevisionesView.vue'
 import InvitarAlumnos from '@/components/InvitarAlumnos.vue'
+import FaltaAlumnos from '@/views/FaltaAlumnos.vue'
+import EstadoAlumnos from '@/views/EstadoAlumnos.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,6 +57,32 @@ const router = createRouter({
       path: '/invitar-alumnos',
       name: 'invitar-alumnos',
       component: InvitarAlumnos
+    },
+    {
+      path:'/newsession',
+      name: 'create',
+      component: () => import('../views/CrearSesion.vue')
+    },
+    {
+      path:'/session',
+      name: 'sesion',
+      component: () => import('../views/Sesion.vue')
+    },
+    {
+      path:'/session/:id',
+      name: 'sesionid',
+      component: () => import('../views/Sesion.vue'),
+      props:true
+    },
+    {
+      path: '/faltaAlumnos',
+      name: 'FaltasAlumnos',
+      component: FaltaAlumnos
+    },
+    {
+      path: '/estadoAlumnos',
+      name: 'EstadoAlumnos',
+      component: EstadoAlumnos
     },
     {path: '/lista-alumnos',
     name: 'lista-alumnos',
