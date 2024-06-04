@@ -11,6 +11,7 @@
           <th>Nombre</th>
           <th>Apellido</th>
           <th>Matrícula</th>
+          <th>Sesión Iniciada</th>
           <th>Riesgo</th>
           <th>Opciones</th>
         </tr>
@@ -20,6 +21,7 @@
           <td>{{ alumno.nombre }}</td>
           <td>{{ alumno.apellido }}</td>
           <td>{{ alumno.matricula }}</td>
+          <td>{{ "Si/No" }}</td>
           <td>
             <i v-if="alumno.riesgo === 'Bajo'" class="fa-solid fa-check"></i>
             <i v-else-if="alumno.riesgo === 'Medio'" class="fa-solid fa-exclamation"></i>
@@ -29,7 +31,7 @@
             <div class="dropdown">
               <button class="dropbtn">Ver más</button>
               <div class="dropdown-content">
-                <a href="#">Ver alumno</a>
+                <router-link to="/historial">Ver alumno</router-link>
                 <a href="#">Enviar mensaje</a>
                 <a href="#">Bloquear</a>
               </div>
@@ -99,8 +101,8 @@ h3 {
 }
 
 .dropbtn {
-  background-color: #E5BA73;
-  color: black;
+  background-color: #FFE0B5;
+  color: #92642c;
   padding: 12px;
   font-size: 12px;
   border: none;
@@ -112,9 +114,9 @@ table {
   border-collapse: collapse;
 }
 
-th,
-td {
+th, td {
   padding: 8px;
+  text-align: left;
   border-bottom: 1px solid #ddd;
 }
 
@@ -128,5 +130,31 @@ th {
   text-align: left;
   background-color: #c58940;
   color: white;
+}
+
+body.dark-mode {
+  background-color: #333;
+  color: #fff;
+}
+
+body.dark-mode table {
+  color: #fff;
+}
+
+body.dark-mode th, body.dark-mode td {
+  border-bottom: 1px solid #888;
+}
+
+body.dark-mode tr:nth-child(even) {
+  background-color: #555;
+}
+
+body.dark-mode th {
+  background-color: #444;
+  color: #fff;
+}
+
+.dark-mode .switch {
+  background-color: #4e4e4e;
 }
 </style>
