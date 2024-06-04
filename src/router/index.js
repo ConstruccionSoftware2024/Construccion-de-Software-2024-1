@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/VistasGrupoFelipe/HomeView.vue'
+import HomeView from '../views/VistasGrupoJoaquin/HomeView.vue'
 import ListaAlumnos from '@/components/ComponentesGrupoClaudio/ListaAlumnos.vue'
 import HistorialAlumno from '../views/VistasGrupoFelipe/HistorialAlumno.vue'
 import InicioSesion from '@/components/ComponentesGrupoFelipe/InicioSesion.vue'
@@ -56,12 +56,14 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../components/loginView.vue')
+      component: () => import('../components/ComponentesGrupoJoaquin/loginView.vue')
     },
     {
       path: '/settings',
       name: 'settings',
-      component: () => import('../components/SettingsView.vue')
+      component: () => import('../components/ComponentesGrupoJoaquin/SettingsView.vue')
+    },
+    {
       path: '/invitar-alumnos',
       name: 'invitar-alumnos',
       component: InvitarAlumnos

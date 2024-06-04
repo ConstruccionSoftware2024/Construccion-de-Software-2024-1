@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { useThemeStore } from '../../back-end/src/store.js'
+import { useThemeStore } from '../../../back-end/src/store.js'
 
 const themeStore = useThemeStore()
 
