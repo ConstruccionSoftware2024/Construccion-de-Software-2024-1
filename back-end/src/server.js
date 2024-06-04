@@ -139,12 +139,12 @@ app.post('/login', async (req, res) => {
   const user = await collection.findOne({ nombre, matricula })
 
   if (user) {
-    historial.push({ nombre, matricula, fecha: new Date() }) //alamcena el nombre, la matricula y la fecha en la que se logeo
+    historial.push({ nombre, matricula, fecha: new Date() })
     res.json({ message: 'usuario guardado' })
   } else {
     res.status(401).json({ message: 'usuario no encontrado' })
   }
-})
+});
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -156,38 +156,40 @@ app.get('/sesion', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
 
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('sesion')
-    const consulta = { _id: new ObjectId(req.params.id) }
+    const consulta = {_id: new ObjectId(req.params.id)}
     const result = await collection.findOne(consulta)
     res.send(result)
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
 
 //obtener usuario especifico
-app.get('/user/:id', async (req, res) => {
+app.get('/user/:id',async (req, res) => {
   try {
-    console.log('here')
+    console.log("here")
     const database = client.db('construccion')
     const collection = database.collection('users')
-    const consulta = { _id: new ObjectId(req.params.id) }
+    const consulta = {_id: new ObjectId(req.params.id)}
     const result = await collection.findOne(consulta)
-    if (result) {
+    if(result){
       res.send(result)
-    } else {
+    }
+    else{
       res.status(404).send('user not found')
     }
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+;
+
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
   try {
@@ -197,12 +199,12 @@ app.post('/sesion', async (req, res) => {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
       participantes: []
-    }
-    console.log('enviando', newSession.nombre, newSession.descripcion)
-    const result = await collection.insertOne(newSession)
-    res.sendStatus(200)
+    };
+    console.log("enviando", newSession.nombre, newSession.descripcion)
+    const result = await collection.insertOne(newSession);
+    res.sendStatus(200);
   } catch (error) {
-    console.error('Error inserting document:', error)
-    res.status(500).send('Error inserting document')
+    console.error('Error inserting document:', error);
+    res.status(500).send('Error inserting document');
   }
-})
+});
