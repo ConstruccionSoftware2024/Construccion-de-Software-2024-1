@@ -8,7 +8,7 @@ import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOp
 import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
 import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
-import RevisionesView from '../views/VistasGrupoFelipe/RevisionesView.vue'
+import RevisionesView from '../views/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoFelipe/InvitarAlumnos.vue'
 
 const router = createRouter({
