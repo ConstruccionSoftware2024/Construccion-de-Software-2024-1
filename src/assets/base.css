@@ -1,7 +1,6 @@
 /* Estilos para el modo claro y oscuro */
-
 :root {
-  --container-background-color: #ee0000;
+  --container-background-color: #fafafa;
 
   --background-color-light: #f5f5f5;
   --text-color-light: #1c1c1c;
