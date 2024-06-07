@@ -3,7 +3,7 @@
     <div :class="['loginForm', { login: isLogin, register: !isLogin }]">
       <h2>{{ isLogin ? 'Bienvenido Utalino' : 'Registro' }}</h2>
       <transition name="fade" mode="out-in">
-        <form @submit.prevent="login" v-if="isLogin" key="login">
+        <form v-if="isLogin" key="login">
           <div class="inputGroup">
             <label for="email">Correo Electrónico</label>
             <div class="inputWrapper">
@@ -38,9 +38,9 @@
           <div class="options">
             <a href="#" class="forgotPassword">Olvidaste la contraseña?</a>
           </div>
-          <button type="submit" class="loginButton">Iniciar Sesión</button>
+          <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
-        <form @submit.prevent="register" v-else key="register">
+        <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
               <label for="email">Correo Electrónico</label>
@@ -170,18 +170,26 @@
               </div>
             </div>
           </div>
-          <button type="submit" class="loginButton">Registrarse</button>
+          <button type="submit" class="loginButton" @click.prevent="register">Registrarse</button>
         </form>
       </transition>
       <div class="signUp">
         <span>{{ isLogin ? 'No tienes una cuenta? ' : 'Ya tienes una cuenta? ' }}</span>
         <a href="#" @click.prevent="toggleForm">{{ isLogin ? 'REGISTRARSE' : 'INICIAR SESIÓN' }}</a>
       </div>
+    <div v-if="showPopup" class="error-popup">
+      <div class="error-popup-content">
+        {{ errorMessage }}
+        <button @click="showPopup = false">Cerrar</button>
+      </div>
     </div>
   </div>
+</div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -195,7 +203,9 @@ export default {
       campus: '',
       major: '',
       passwordVisible: false,
-      isLogin: true
+      isLogin: true,
+      showPopup: false,
+      errorMessage: ''
     }
   },
   computed: {
@@ -207,23 +217,72 @@ export default {
     }
   },
   methods: {
-    login() {
-      // Lógica de inicio de sesión
-      console.log('Correo Electrónico:', this.email)
-      console.log('Contraseña:', this.password)
+    showError(message) {
+      this.errorMessage = message;
+      this.showPopup = true;
     },
-    register() {
-      // Lógica de registro
-      console.log('Correo Electrónico:', this.email)
-      console.log('Nombre de Usuario:', this.username)
-      console.log('Nombre:', this.firstName)
-      console.log('Apellido:', this.lastName)
-      console.log('Segundo Apellido:', this.secondLastName)
-      console.log('Campus:', this.campus)
-      console.log('Carrera:', this.major)
-      console.log('Contraseña:', this.password)
-      console.log('Confirmar Contraseña:', this.confirmPassword)
+    validateEmail() {
+      const regex = /(^[a-zA-Z0-9_.+-]+@(alumnos\.)?utalca\.cl$)/;
+      return regex.test(this.email);
     },
+    async login() {
+      try {
+        const response = await axios.post('http://localhost:8080/login', {
+          email: this.email,
+          password: this.password
+        });
+
+        if (response.data.success) {
+
+          this.$router.push('/about'); //Cambiar '/about' por la ruta de la página a la que se redirigirá al iniciar sesión
+        } else {
+          this.showError('Correo electrónico o contraseña incorrectos');
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    async register() {
+    try {
+      // Verificar si el correo electrónico ya existe
+      const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
+        email: this.email
+      });
+
+      if (checkEmailResponse.data.exists) {
+        this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+        return;
+      }
+      if (!this.validateEmail()) {
+        this.showError('El correo electrónico debe ser un correo institucional de la UTalca.');
+        return;
+      }
+      const response = await axios.post('http://localhost:8080/register', {
+        email: this.email,
+        username: this.username,
+        password: this.password,
+        confirmPassword: this.confirmPassword,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        secondLastName: this.secondLastName,
+        campus: this.campus,
+        major: this.major
+      });
+      if (response.data.success) {
+        this.email = '';
+        this.username = '';
+        this.password = '';
+        this.confirmPassword = '';
+        this.firstName = '';
+        this.lastName = '';
+        this.secondLastName = '';
+        this.campus = '';
+        this.major = '';
+      }
+    } catch (error) {
+      console.error('error in register function:', error);
+    }
+  },
     togglePasswordVisibility() {
       this.passwordVisible = !this.passwordVisible
     },
@@ -237,6 +296,49 @@ export default {
 <style scoped>
 * {
   box-sizing: border-box;
+}
+
+.error-popup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.error-popup-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #2c2c2e;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+}
+
+.error-popup button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #08cccc;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .loginContainer {

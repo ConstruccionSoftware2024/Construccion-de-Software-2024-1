@@ -2,7 +2,7 @@
   <footer class="footer">
     <div class="container">
       <div class="logo">
-        <img src="../assets/logo.svg" alt="Logo" />
+        <img src="../../assets/logo.svg" alt="Logo" />
         <h2>Cheat Detector</h2>
         <p>Transparencia Académica</p>
       </div>
@@ -121,6 +121,7 @@ export default {
   .description {
     margin-bottom: 20px;
   }
+
   .address {
     margin-bottom: 20px;
   }
