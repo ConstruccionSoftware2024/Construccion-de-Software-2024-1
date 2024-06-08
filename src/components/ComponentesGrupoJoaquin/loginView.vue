@@ -1,9 +1,9 @@
 <template>
   <div class="loginContainer">
-    <div class="loginForm">
+    <div :class="['loginForm', { login: isLogin, register: !isLogin }]">
       <h2>{{ isLogin ? 'Bienvenido Utalino' : 'Registro' }}</h2>
       <transition name="fade" mode="out-in">
-        <form @submit.prevent="login" v-if="isLogin" key="login">
+        <form v-if="isLogin" key="login">
           <div class="inputGroup">
             <label for="email">Correo Electrónico</label>
             <div class="inputWrapper">
@@ -38,7 +38,7 @@
           <div class="options">
             <a href="#" class="forgotPassword">Olvidaste la contraseña?</a>
           </div>
-          <button type="submit" class="loginButton">Iniciar Sesión</button>
+          <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
         <form v-else key="register">
           <div class="formGrid">
@@ -174,13 +174,17 @@
         </form>
       </transition>
       <div class="signUp">
-        <span>{{ isLogin ? 'No tienes una cuenta?' : 'Ya tienes una cuenta?' }}</span>
-        <a href="#" @click.prevent="toggleForm">{{
-          isLogin ? ' REGISTRARSE' : ' INICIAR SESIÓN'
-        }}</a>
+        <span>{{ isLogin ? 'No tienes una cuenta? ' : 'Ya tienes una cuenta? ' }}</span>
+        <a href="#" @click.prevent="toggleForm">{{ isLogin ? 'REGISTRARSE' : 'INICIAR SESIÓN' }}</a>
+      </div>
+    <div v-if="showPopup" class="error-popup">
+      <div class="error-popup-content">
+        {{ errorMessage }}
+        <button @click="showPopup = false">Cerrar</button>
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script>
@@ -199,7 +203,9 @@ export default {
       campus: '',
       major: '',
       passwordVisible: false,
-      isLogin: true
+      isLogin: true,
+      showPopup: false,
+      errorMessage: ''
     }
   },
   computed: {
@@ -211,10 +217,30 @@ export default {
     }
   },
   methods: {
-    login() {
-      // Lógica de inicio de sesión
-      console.log('Correo Electrónico:', this.email)
-      console.log('Contraseña:', this.password)
+    showError(message) {
+      this.errorMessage = message;
+      this.showPopup = true;
+    },
+    validateEmail() {
+      const regex = /(^[a-zA-Z0-9_.+-]+@(alumnos\.)?utalca\.cl$)/;
+      return regex.test(this.email);
+    },
+    async login() {
+      try {
+        const response = await axios.post('http://localhost:8080/login', {
+          email: this.email,
+          password: this.password
+        });
+
+        if (response.data.success) {
+
+          this.$router.push('/about'); //Cambiar '/about' por la ruta de la página a la que se redirigirá al iniciar sesión
+        } else {
+          this.showError('Correo electrónico o contraseña incorrectos');
+        }
+      } catch (error) {
+        console.error(error);
+      }
     },
     async register() {
     try {
@@ -224,7 +250,11 @@ export default {
       });
 
       if (checkEmailResponse.data.exists) {
-        alert('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+        this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+        return;
+      }
+      if (!this.validateEmail()) {
+        this.showError('El correo electrónico debe ser un correo institucional de la UTalca.');
         return;
       }
       const response = await axios.post('http://localhost:8080/register', {
@@ -268,23 +298,72 @@ export default {
   box-sizing: border-box;
 }
 
+.error-popup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.error-popup-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #2c2c2e;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+}
+
+.error-popup button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #08cccc;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
 .loginContainer {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #1c1c1c;
+  min-height: 90vh;
 }
 
 .loginForm {
-  background-color: #2c2c2e;
+  background-color: var(--container-background-color);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 700px;
   transition: all 0.3s ease;
+}
+
+.loginForm.login {
+  width: 400px;
+}
+
+.loginForm.register {
+  width: 700px;
 }
 
 input[type='password']::-ms-reveal,
@@ -293,7 +372,7 @@ input[type='password']::-ms-clear {
 }
 
 h2 {
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
@@ -304,7 +383,7 @@ h2 {
 
 label {
   display: block;
-  color: #ccc;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
@@ -317,7 +396,7 @@ label {
 .inputWrapper i {
   position: absolute;
   margin-left: 0.5rem;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 input {
@@ -325,8 +404,8 @@ input {
   padding: 0.75rem 2.5rem 0.75rem 2rem;
   border: none;
   border-radius: 5px;
-  background-color: #3a3a3c;
-  color: #fff;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
   margin-left: auto;
   margin-right: auto;
   display: block;
@@ -334,13 +413,13 @@ input {
 
 input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #08cccc;
+  box-shadow: 0 0 0 2px var(--button-background-color);
 }
 
 .togglePassword {
   right: 10px;
   cursor: pointer;
-  color: #ccc;
+  color: var(--text-color);
   position: absolute;
 }
 
@@ -350,23 +429,23 @@ input:focus {
 }
 
 .forgotPassword {
-  color: #08cccc;
+  color: var(--button-background-color);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .forgotPassword:hover {
-  color: #06bfbf;
+  color: var(--button-hover-background-color);
   text-decoration: underline;
 }
 
 .loginButton {
-  width: calc(100% - 1rem);
+  width: 100%;
   padding: 0.75rem;
   border: none;
   border-radius: 5px;
-  background-color: #08cccc;
-  color: #fff;
+  background-color: var(--button-background-color);
+  color: var(--text-color);
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -376,32 +455,27 @@ input:focus {
 }
 
 .loginButton:hover {
-  background-color: #06bfbf;
+  background-color: var(--button-hover-background-color);
 }
 
 .signUp {
   margin-top: 1.5rem;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .signUp span {
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .signUp a {
-  color: #08cccc;
+  color: var(--button-background-color);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .signUp a:hover {
-  color: #06bfbf;
+  color: var(--button-hover-background-color);
   text-decoration: underline;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
 }
 
 .fade-enter,
@@ -413,5 +487,17 @@ input:focus {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .loginForm.login {
+    width: 90%;
+  }
+  .loginForm.register {
+    width: 90%;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
