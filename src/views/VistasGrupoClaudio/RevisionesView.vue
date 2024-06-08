@@ -42,9 +42,9 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
           <tr v-for="(student, index) in filteredStudents" :key="index">
             <td>{{ student.name }}</td>
             <td>{{ student.lastName }}</td>
-            <td>{{ student.email }}</td>
+            <td>{{ student.email }}</td>  
             <td>{{ student.rut }}</td>
-            <td @click="student.showDetalleFaltas = !student.showDetalleFaltas">
+            <td >
               {{ student.faltas }}
             </td>
 
@@ -103,17 +103,17 @@ const students = ref([]);
 const filteredStudents = computed(() => {
   return students.value.filter((student) => {
     return (
-      student.name.toLowerCase().includes(searchName.value.toLowerCase()) &&
-      student.lastName.toLowerCase().includes(searchLastName.value.toLowerCase()) &&
-      student.email.toLowerCase().includes(searchEmail.value.toLowerCase()) &&
-      student.rut.toLowerCase().includes(searchRut.value.toLowerCase())
+      student.name?.toLowerCase().includes(searchName.value.toLowerCase()) &&
+      student.lastName?.toLowerCase().includes(searchLastName.value.toLowerCase()) &&
+      student.email?.toLowerCase().includes(searchEmail.value.toLowerCase()) &&
+      student.rut?.toLowerCase().includes(searchRut.value.toLowerCase())
     )
   })
 });
 
 const updateStudentStatus = async (student) => {
   try {
-    await axios.post(`http://localhost:8080/faltas/${student.id}`, {
+    await axios.post(`http://localhost:8080/faltas/${student._id}`, {
       estado: student.estado
     });
   } catch (error) {
@@ -198,11 +198,6 @@ onMounted(async () => {
 
 .styled-table tbody tr.selected-row {
   background-color: #f8f4e7;
-}
-
-.styled-table tbody tr:hover {
-  background-color: #f1f1f1;
-  cursor: pointer;
 }
 
 .detalle-table {
