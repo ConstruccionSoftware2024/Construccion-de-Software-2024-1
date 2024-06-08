@@ -22,7 +22,6 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 app.use(express.json())
-
 // Conexión a la base de datos de MongoDB
 client
   .connect()
@@ -36,7 +35,6 @@ client
 // Iniciar el servidor
 const PORT = process.env.PORT || 8080
 const server = http.createServer(app)
-
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
@@ -119,7 +117,7 @@ app.post('/faltas/:id', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
     const result = await collection.updateOne(
-      { id: Number(req.params.id) },
+      { _id: new ObjectId(req.params.id) },
       { $set: { estado: req.body.estado } }
     )
     res.send(result)
@@ -129,7 +127,7 @@ app.post('/faltas/:id', async (req, res) => {
 })
 
 let historial = []
-
+/* FUNCION DE LOGIN ANTERIOR 
 //funcion que guarda el usuarios que se acaban de logear en un historial
 app.post('/login', async (req, res) => {
   const { nombre, matricula } = req.body
@@ -145,6 +143,8 @@ app.post('/login', async (req, res) => {
     res.status(401).json({ message: 'usuario no encontrado' })
   }
 });
+*/
+
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -176,7 +176,57 @@ app.put('/sesion/:id', async (req, res) => {
       res.status(500).send(error.message)
   }
 })
+/* FUNCION DE LOGIN DE GRUPO JOAQUIN*/
+app.post('/login', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: req.body.email });
 
+    if (!user) {
+      return res.json({ success: false });
+    }
+
+    if (req.body.password !== user.password) {
+      return res.json({ success: false });
+    }
+
+    res.json({ success: true});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+app.post('/register', async (req, res) => {
+  try{
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    await collection.insertOne(req.body);
+    res.send({ success: true, message: 'Registro exitoso' })
+  }
+  catch(error){
+    console.log(error)
+  }
+  
+});
+
+app.post('/checkEmail', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: req.body.email });
+
+    if (user) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
