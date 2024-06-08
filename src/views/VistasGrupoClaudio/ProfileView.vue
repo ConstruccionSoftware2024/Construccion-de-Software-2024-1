@@ -1,13 +1,12 @@
 <template>
-
     <div class="container">
         <div class="alumno-container">
             <div class="alumno-info">
-                <img class="alumno-img" />
+                <img class="alumno-img" :src="alumno.imagen"/>
                 <div class="alumno-text">
-                    <h2>Nombre Apellido</h2>
-                    <p>Ciudad, Pais</p>
-                    <p>Carrera</p>
+                    <h2>{{ alumno.nombre }} {{ alumno.apellido }}</h2>
+                    <p class="texto-carrera"> {{ alumno.carrera }} </p>
+                    <p class="texto-ciudad">{{ alumno.ciudad }}, {{ alumno.pais }} </p>
                 </div>
             </div>
         </div>
@@ -15,30 +14,51 @@
         <div class="detalle-container">
             <h2 class="titulo"> Información General </h2>
             <div class="detalle-info">
-                <p>Matrícula:</p>
-                <p>Rut:</p>
-                <p>Correo: </p>
-                <p>Fecha de Nacimiento: </p>
-                <p>Teléfono: </p>
-                <p>Dirección: </p>
+                <p><span class="atributo-nombre">Matrícula</span><span class="dospuntos">:</span> {{ alumno.matricula }}</p>
+                <p><span class="atributo-nombre">Rut</span><span class="dospuntos">:</span> {{ alumno.rut }}</p>
+                <p><span class="atributo-nombre">Correo</span><span class="dospuntos">:</span> {{ alumno.correo }}</p>
+                <p><span class="atributo-nombre">Fecha de Nacimiento</span><span class="dospuntos">:</span> {{ alumno.fechaNacimiento }}</p>
+                <p><span class="atributo-nombre">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono }}</p>
+                <p><span class="atributo-nombre">Dirección</span><span class="dospuntos">:</span> {{ alumno.direccion }}</p>
             </div>
             <button class="editar-perfil-btn">Editar Perfil</button>
         </div>
     </div>
 </template>
 
+<script setup>
+import { defineProps } from 'vue';
+
+// Obtener datos de la DB
+
+// Datos de prueba
+
+const alumno = {
+    nombre: 'Nombre',
+    apellido: 'Apellido',
+    ciudad: 'Curico',
+    pais: 'Chile',
+    carrera: 'Ingenieria Civil en Computación',
+    matricula: '2000000',
+    rut: '111111111-1',
+    correo: 'hola@gmail.com',
+    fechaNacimiento: '01 Enero 2000',
+    telefono: 'Telefono',
+    direccion: 'Direccion',
+};
+
+
+
+</script>
+
 
 <style scoped>
 .container {
     display: flex;
     flex-direction: row;
-    /* Alinea los elementos hijos horizontalmente */
     justify-content: center;
-    /* Centra los elementos hijos horizontalmente */
     align-items: stretch;
-    /* Estira los elementos hijos para que coincidan en altura */
     gap: 3rem;
-    /* Opcional: Añade espacio entre los elementos hijos */
     margin-left: 10%;
     margin-right: 10%;
     margin-top: 2rem;
@@ -47,13 +67,11 @@
 
 .alumno-container,
 .detalle-container {
-    /* Asegura que ambos contenedores tengan la misma altura */
     flex-grow: 1;
 }
 
 .alumno-container {
     flex-basis: 25%;
-    /* Establece el tamaño base del alumno-container a 1/4 del contenedor padre, considerando que queremos 1/3 del tamaño del otro contenedor en un contexto de 4 partes */
     background-color: #08cccc;
     border-radius: 1rem;
     padding: 1rem;
@@ -62,13 +80,11 @@
     margin-top: 1rem;
     flex-direction: row;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    /* Agrega sombra */
     padding: 3rem;
 }
 
 .detalle-container {
     flex-basis: 75%;
-    /* Establece el tamaño base del detalle-container a 3/4 del contenedor padre */
     display: flex;
     border-radius: 1rem;
     margin-top: 1rem;
@@ -76,18 +92,14 @@
     flex-direction: column;
     background-color: #08cccc;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    /* Agrega sombra */
 }
 
 .alumno-info {
     display: flex;
     flex-direction: column;
-    /* Cambia de row a column */
     align-items: center;
-    /* Centra los elementos hijos horizontalmente */
     gap: 1rem;
     width: 100%;
-    /* Asegura que .alumno-info ocupe todo el ancho disponible */
 }
 
 .alumno-img {
@@ -96,7 +108,6 @@
     border-radius: 50%;
     background-color: #ffffff;
     border: 2px solid #000000;
-    /* Agrega un borde de 2px sólido y de color gris */
 }
 
 .alumno-text {
@@ -104,7 +115,6 @@
     flex-direction: column;
     gap: 0.5rem;
     border-top: 2px solid #000;
-    /* Línea separadora */
     padding-top: 1rem;
     width: 100%;
     justify-content: center;
@@ -120,7 +130,6 @@
 
 .alumno-text>p {
     margin: 0;
-    font-size: 1.5rem;
     color: #000;
     margin-top: 0.8rem;
 }
@@ -140,7 +149,6 @@
     color: #000;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid grey;
-    /* Establece un borde inferior */
 }
 
 .titulo {
@@ -153,18 +161,37 @@
 }
 
 .editar-perfil-btn {
-    background-color: black; /* Color de fondo */
-    color: white; /* Color del texto */
-    padding: 10px 20px; /* Padding alrededor del texto */
-    margin: 10px 0; /* Margen exterior */
-    border: none; /* Sin borde */
-    cursor: pointer; /* Cursor en forma de mano al pasar por encima */
-    border-radius: 5px; /* Bordes redondeados */
-    font-size: 1.2rem; /* Tamaño de la fuente */
+    background-color: black;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1.2rem;
 }
 
 .editar-perfil-btn:hover {
-    background-color: #333333; /* Cambia el color de fondo al pasar por encima */
+    background-color: #333333;
+}
+
+.dospuntos {
+    margin-right: 6px;
+}
+
+.atributo-nombre {
+    font-weight: 600;
+}
+
+.texto-ciudad{
+    font-size: 1.2rem;
+    color: #000;
+}
+
+.texto-carrera{
+    font-size: 1.2rem;
+    color: #000;
+    margin-top: 0.8rem;
 }
 
 </style>
