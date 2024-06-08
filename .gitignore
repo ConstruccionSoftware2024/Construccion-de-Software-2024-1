@@ -34,6 +34,9 @@ coverage
 .AppleDouble
 .LSOverride
 
+#Archivo env (base de datos)
+.env
+
 # Icon must end with two \r
 Icon
 
