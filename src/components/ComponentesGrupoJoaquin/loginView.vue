@@ -3,7 +3,7 @@
     <div :class="['loginForm', { login: isLogin, register: !isLogin }]">
       <h2>{{ isLogin ? 'Bienvenido Utalino' : 'Registro' }}</h2>
       <transition name="fade" mode="out-in">
-        <form @submit.prevent="login" v-if="isLogin" key="login">
+        <form v-if="isLogin" key="login">
           <div class="inputGroup">
             <label for="email">Correo Electrónico</label>
             <div class="inputWrapper">
@@ -38,9 +38,9 @@
           <div class="options">
             <a href="#" class="forgotPassword">Olvidaste la contraseña?</a>
           </div>
-          <button type="submit" class="loginButton">Iniciar Sesión</button>
+          <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
-        <form v-else @submit.prevent="register" key="register">
+        <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
               <label for="email">Correo Electrónico</label>
@@ -170,15 +170,21 @@
               </div>
             </div>
           </div>
-          <button type="submit" class="loginButton">Registrarse</button>
+          <button type="submit" class="loginButton" @click.prevent="register">Registrarse</button>
         </form>
       </transition>
       <div class="signUp">
         <span>{{ isLogin ? 'No tienes una cuenta? ' : 'Ya tienes una cuenta? ' }}</span>
         <a href="#" @click.prevent="toggleForm">{{ isLogin ? 'REGISTRARSE' : 'INICIAR SESIÓN' }}</a>
       </div>
+    <div v-if="showPopup" class="error-popup">
+      <div class="error-popup-content">
+        {{ errorMessage }}
+        <button @click="showPopup = false">Cerrar</button>
+      </div>
     </div>
   </div>
+</div>
 </template>
 
 <script>
@@ -197,7 +203,9 @@ export default {
       campus: '',
       major: '',
       passwordVisible: false,
-      isLogin: true
+      isLogin: true,
+      showPopup: false,
+      errorMessage: ''
     }
   },
   computed: {
@@ -209,6 +217,14 @@ export default {
     }
   },
   methods: {
+    showError(message) {
+      this.errorMessage = message;
+      this.showPopup = true;
+    },
+    validateEmail() {
+      const regex = /(^[a-zA-Z0-9_.+-]+@(alumnos\.)?utalca\.cl$)/;
+      return regex.test(this.email);
+    },
     async login() {
       try {
         const response = await axios.post('http://localhost:8080/login', {
@@ -217,59 +233,56 @@ export default {
         });
 
         if (response.data.success) {
-          localStorage.setItem('token', response.data.token);
-          this.$router.push('/home'); // Cambia '/home' por tu ruta deseada
+
+          this.$router.push('/about'); //Cambiar '/about' por la ruta de la página a la que se redirigirá al iniciar sesión
         } else {
-          alert('Correo electrónico o contraseña incorrectos');
+          this.showError('Correo electrónico o contraseña incorrectos');
         }
       } catch (error) {
-        console.error('Error in login function:', error);
-        alert('Ocurrió un error durante el inicio de sesión. Inténtelo de nuevo.');
+        console.error(error);
       }
     },
     async register() {
-      if (this.password !== this.confirmPassword) {
-        alert('Las contraseñas no coinciden.');
+    try {
+      // Verificar si el correo electrónico ya existe
+      const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
+        email: this.email
+      });
+
+      if (checkEmailResponse.data.exists) {
+        this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
         return;
       }
-      try {
-        const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
-          email: this.email
-        });
-        if (checkEmailResponse.data.exists) {
-          alert('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
-          return;
-        }
-        const response = await axios.post('http://localhost:8080/register', {
-          email: this.email,
-          username: this.username,
-          password: this.password,
-          confirmPassword: this.confirmPassword,
-          firstName: this.firstName,
-          lastName: this.lastName,
-          secondLastName: this.secondLastName,
-          campus: this.campus,
-          major: this.major
-        });
-        if (response.data.success) {
-          this.email = '';
-          this.username = '';
-          this.password = '';
-          this.confirmPassword = '';
-          this.firstName = '';
-          this.lastName = '';
-          this.secondLastName = '';
-          this.campus = '';
-          this.major = '';
-          this.toggleForm(); // Switch to login form after successful registration
-        } else {
-          alert('Error en el registro. Inténtelo de nuevo.');
-        }
-      } catch (error) {
-        console.error('Error in register function:', error);
-        alert('Ocurrió un error durante el registro. Inténtelo de nuevo.');
+      if (!this.validateEmail()) {
+        this.showError('El correo electrónico debe ser un correo institucional de la UTalca.');
+        return;
       }
-    },
+      const response = await axios.post('http://localhost:8080/register', {
+        email: this.email,
+        username: this.username,
+        password: this.password,
+        confirmPassword: this.confirmPassword,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        secondLastName: this.secondLastName,
+        campus: this.campus,
+        major: this.major
+      });
+      if (response.data.success) {
+        this.email = '';
+        this.username = '';
+        this.password = '';
+        this.confirmPassword = '';
+        this.firstName = '';
+        this.lastName = '';
+        this.secondLastName = '';
+        this.campus = '';
+        this.major = '';
+      }
+    } catch (error) {
+      console.error('error in register function:', error);
+    }
+  },
     togglePasswordVisibility() {
       this.passwordVisible = !this.passwordVisible
     },
@@ -283,8 +296,49 @@ export default {
 <style scoped>
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+}
+
+.error-popup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.error-popup-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #2c2c2e;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+}
+
+.error-popup button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #08cccc;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .loginContainer {
@@ -293,11 +347,10 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 90vh;
-  background-color: #1c1c1c;
 }
 
 .loginForm {
-  background-color: #2c2c2e;
+  background-color: var(--container-background-color);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -319,7 +372,7 @@ input[type='password']::-ms-clear {
 }
 
 h2 {
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
@@ -330,7 +383,7 @@ h2 {
 
 label {
   display: block;
-  color: #ccc;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
@@ -343,7 +396,7 @@ label {
 .inputWrapper i {
   position: absolute;
   margin-left: 0.5rem;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 input {
@@ -351,8 +404,8 @@ input {
   padding: 0.75rem 2.5rem 0.75rem 2rem;
   border: none;
   border-radius: 5px;
-  background-color: #3a3a3c;
-  color: #fff;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
   margin-left: auto;
   margin-right: auto;
   display: block;
@@ -360,13 +413,13 @@ input {
 
 input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #08cccc;
+  box-shadow: 0 0 0 2px var(--button-background-color);
 }
 
 .togglePassword {
   right: 10px;
   cursor: pointer;
-  color: #ccc;
+  color: var(--text-color);
   position: absolute;
 }
 
@@ -376,13 +429,13 @@ input:focus {
 }
 
 .forgotPassword {
-  color: #08cccc;
+  color: var(--button-background-color);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .forgotPassword:hover {
-  color: #06bfbf;
+  color: var(--button-hover-background-color);
   text-decoration: underline;
 }
 
@@ -391,8 +444,8 @@ input:focus {
   padding: 0.75rem;
   border: none;
   border-radius: 5px;
-  background-color: #08cccc;
-  color: #fff;
+  background-color: var(--button-background-color);
+  color: var(--text-color);
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -402,37 +455,32 @@ input:focus {
 }
 
 .loginButton:hover {
-  background-color: #06bfbf;
+  background-color: var(--button-hover-background-color);
 }
 
 .signUp {
   margin-top: 1.5rem;
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .signUp span {
-  color: #ccc;
+  color: var(--text-color);
 }
 
 .signUp a {
-  color: #08cccc;
+  color: var(--button-background-color);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .signUp a:hover {
-  color: #06bfbf;
+  color: var(--button-hover-background-color);
   text-decoration: underline;
 }
 
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
 }
 
 .formGrid {
