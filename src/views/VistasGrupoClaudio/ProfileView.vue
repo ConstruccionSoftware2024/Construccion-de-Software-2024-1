@@ -2,7 +2,7 @@
     <div class="container">
         <div class="alumno-container">
             <div class="alumno-info">
-                <img class="alumno-img" :src="alumno.imagen"/>
+                <img class="alumno-img" :src="imagen" />
                 <div class="alumno-text">
                     <h2>{{ alumno.nombre }} {{ alumno.apellido }}</h2>
                     <p class="texto-carrera"> {{ alumno.carrera }} </p>
@@ -14,26 +14,78 @@
         <div class="detalle-container">
             <h2 class="titulo"> Información General </h2>
             <div class="detalle-info">
-                <p><span class="atributo-nombre">Matrícula</span><span class="dospuntos">:</span> {{ alumno.matricula }}</p>
-                <p><span class="atributo-nombre">Rut</span><span class="dospuntos">:</span> {{ alumno.rut }}</p>
-                <p><span class="atributo-nombre">Correo</span><span class="dospuntos">:</span> {{ alumno.correo }}</p>
-                <p><span class="atributo-nombre">Fecha de Nacimiento</span><span class="dospuntos">:</span> {{ alumno.fechaNacimiento }}</p>
-                <p><span class="atributo-nombre">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono }}</p>
-                <p><span class="atributo-nombre">Dirección</span><span class="dospuntos">:</span> {{ alumno.direccion }}</p>
+                <template v-if="mostrarFormulario">
+                    <div class="input-group">
+                        <label for="matricula">Matrícula: </label>
+                        <input id="matricula" class="inputEditable" v-model="alumno.matricula" placeholder="Matrícula"
+                            disabled>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="rut">Rut: </label>
+                        <input id="rut" class="inputEditable" v-model="alumno.rut" placeholder="Rut" disabled>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fechaNacimiento">Fecha de Nacimiento: </label>
+                        <input id="fechaNacimiento" class="inputEditable" v-model="alumno.fechaNacimiento"
+                            placeholder="Fecha de Nacimiento" disabled>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="correo">Correo: </label>
+                        <input id="correo" class="inputEditable" v-model="alumnoEditado.correo" placeholder="Correo">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="telefono">Teléfono: </label>
+                        <input id="telefono" class="inputEditable" v-model="alumnoEditado.telefono"
+                            placeholder="Teléfono">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="direccion">Dirección: </label>
+                        <input id="direccion" class="inputEditable" v-model="alumnoEditado.direccion"
+                            placeholder="Dirección">
+                    </div>
+                </template>
+                <template v-else>
+                    <p><span class="atributo-nombre">Matrícula</span><span class="dospuntos">:</span> {{
+                        alumno.matricula }}</p>
+                    <p><span class="atributo-nombre">Rut</span><span class="dospuntos">:</span> {{ alumno.rut }}</p>
+                    <p><span class="atributo-nombre">Fecha de Nacimiento</span><span class="dospuntos">:</span> {{
+                        alumno.fechaNacimiento }}</p>
+                    <p><span class="atributo-nombre">Correo</span><span class="dospuntos">:</span> {{ alumno.correo }}
+                    </p>
+                    <p><span class="atributo-nombre">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono
+                        }}</p>
+                    <p><span class="atributo-nombre">Dirección</span><span class="dospuntos">:</span> {{
+                        alumno.direccion }}</p>
+                </template>
             </div>
-            <button class="editar-perfil-btn">Editar Perfil</button>
+            <div class="botones-contenedor">
+                <button v-if="mostrarFormulario" class="cancelar-perfil-btn" @click="cancelarEdicion">
+                    Cancelar
+                </button>
+                <button class="editar-perfil-btn" @click="toggleFormulario"
+                    :disabled="mostrarFormulario && !cambiosRealizados">
+                    {{ mostrarFormulario ? 'Guardar Cambios' : 'Editar Perfil' }}
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
-
-// Obtener datos de la DB
+import { ref, reactive, computed } from 'vue';
+import Swal from 'sweetalert2';
 
 // Datos de prueba
 
-const alumno = {
+const imagen = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+
+
+const alumno = ref({
     nombre: 'Nombre',
     apellido: 'Apellido',
     ciudad: 'Curico',
@@ -45,9 +97,58 @@ const alumno = {
     fechaNacimiento: '01 Enero 2000',
     telefono: 'Telefono',
     direccion: 'Direccion',
+});
+
+const alumnoEditado = reactive({ ...alumno.value });
+
+const mostrarFormulario = ref(false);
+
+const cambiosRealizados = computed(() => {
+    return Object.keys(alumno.value).some(key => alumno.value[key] !== alumnoEditado[key]);
+});
+
+function toggleFormulario() {
+    if (mostrarFormulario.value) {
+        // Verificar si hay cambios antes de guardar
+        if (cambiosRealizados.value) {
+            Object.assign(alumno.value, alumnoEditado);
+            Swal.fire({
+                icon: 'success',
+                title: '¡Cambios guardados!',
+                showConfirmButton: false,
+                timer: 1200
+            });
+        }
+    } else {
+        Object.assign(alumnoEditado, alumno.value);
+    }
+    mostrarFormulario.value = !mostrarFormulario.value;
+}
+
+const cancelarEdicion = () => {
+
+    if (cambiosRealizados.value) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Los cambios no se guardarán",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: 'red',
+            cancelButtonColor: 'grey',
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No, seguir editando',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                mostrarFormulario.value = false;
+                Object.assign(alumnoEditado, alumno.value);
+            }
+        });
+    } else
+
+
+
+    mostrarFormulario.value = false;
 };
-
-
 
 </script>
 
@@ -160,6 +261,58 @@ const alumno = {
     padding-bottom: 1.5rem;
 }
 
+.dospuntos {
+    margin-right: 6px;
+}
+
+.atributo-nombre {
+    font-weight: 600;
+}
+
+.texto-ciudad {
+    font-size: 1.2rem;
+    color: #000;
+}
+
+.texto-carrera {
+    font-size: 1.2rem;
+    color: #000;
+    margin-top: 0.8rem;
+}
+
+.inputEditable {
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid #000;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    width: 100%;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid grey;
+}
+
+.input-group label {
+    margin-right: 10px;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.inputEditable {
+    flex-grow: 1;
+}
+
+.botones-contenedor {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+
 .editar-perfil-btn {
     background-color: black;
     color: white;
@@ -169,29 +322,36 @@ const alumno = {
     cursor: pointer;
     border-radius: 5px;
     font-size: 1.2rem;
+    flex-grow: 5;
 }
 
 .editar-perfil-btn:hover {
     background-color: #333333;
 }
 
-.dospuntos {
-    margin-right: 6px;
+.editar-perfil-btn:disabled {
+    background-color: grey;
+    cursor: not-allowed;
 }
 
-.atributo-nombre {
-    font-weight: 600;
+.cancelar-perfil-btn,
+.editar-perfil-btn {
+    margin: 10px;
 }
 
-.texto-ciudad{
+.cancelar-perfil-btn {
+    background-color: red;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
     font-size: 1.2rem;
-    color: #000;
+    flex-grow: 1;
 }
 
-.texto-carrera{
-    font-size: 1.2rem;
-    color: #000;
-    margin-top: 0.8rem;
+.cancelar-perfil-btn:hover {
+    background-color: #E50000;
 }
-
 </style>
