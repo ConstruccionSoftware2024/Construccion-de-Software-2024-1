@@ -2,8 +2,10 @@
   <div>
     <h2>Opciones</h2>
     <ul class="subject-list">
-      <li><router-link to="/crearevaluacion"><button class="subject-button">Crear sesión de evaluación</button></router-link></li>
-      <li><router-link to="/historialevaluaciones"><button class="subject-button">Ver evaluaciones anteriores</button></router-link></li>
+      <li><router-link to="/crearevaluacion"><button class="subject-button">Crear sesión de
+            evaluación</button></router-link></li>
+      <li><router-link to="/historialevaluaciones"><button class="subject-button">Ver evaluaciones
+            anteriores</button></router-link></li>
       <li><router-link to="/modulos"><button class="subject-button">Volver atrás</button></router-link></li>
     </ul>
   </div>
@@ -24,9 +26,9 @@ export default {}
 }
 
 .subject-button {
-  background-color: #FFE0B5;
+  background-color: #08cccc;
   border: none;
-  color: #92642c;
+  color: white;
   padding: 12px 32px;
   text-align: center;
   text-decoration: none;

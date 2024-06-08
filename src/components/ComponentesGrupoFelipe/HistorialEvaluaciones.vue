@@ -9,6 +9,7 @@
           </button>
         </router-link>
       </li>
+      <li><router-link to="/opciones"><button class="subject-button">Volver atrás</button></router-link></li>
     </ul>
   </div>
 </template>
@@ -40,9 +41,9 @@ export default {
 }
 
 .subject-button {
-  background-color: #FFE0B5;
+  background-color: #08cccc;
   border: none;
-  color: #92642c;
+  color: white;
   padding: 12px 32px;
   text-align: center;
   text-decoration: none;
