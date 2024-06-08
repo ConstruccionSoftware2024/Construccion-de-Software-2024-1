@@ -340,4 +340,3 @@ app.post('/sesion', async (req, res) => {
     res.status(500).send('Error inserting document');
   }
 });
-
