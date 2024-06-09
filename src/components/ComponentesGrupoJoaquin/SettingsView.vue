@@ -17,16 +17,16 @@
         <div class="theme-option" :class="{ selected: !isDarkMode && selectedTheme === 'light' }"
           @click="selectTheme('light')">
           <img src="../../assets/images/light.jpg" alt="Light Theme">
-          <p>Light</p>
+          <p>Claro</p>
         </div>
         <div class="theme-option" :class="{ selected: isDarkMode && selectedTheme === 'dark' }"
           @click="selectTheme('dark')">
           <img src="../../assets/images/dark.jpg" alt="Dark Theme">
-          <p>Dark</p>
+          <p>Oscuro</p>
         </div>
         <div class="theme-option" :class="{ selected: selectedTheme === 'auto' }" @click="selectTheme('auto')">
           <img src="../../assets/images/auto.jpg" alt="Auto Theme">
-          <p>Auto</p>
+          <p>Automatico</p>
         </div>
       </div>
     </div>

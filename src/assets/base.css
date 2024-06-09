@@ -1,6 +1,8 @@
 /* Estilos para el modo claro y oscuro */
 :root {
   --container-background-color: #fafafa;
+  --border-color: #d6d6d6;
+  --table-button-color: #08cccc;
 
   --background-color-light: #f5f5f5;
   --text-color-light: #1c1c1c;
@@ -22,6 +24,8 @@ body.light-mode {
   --button-background-color: var(--button-background-color-light);
   --button-hover-background-color: var(--button-hover-background-color-light);
   --container-background-color: #fafafa;
+  --border-color: #d6d6d6;
+  --table-button-color: #08cccc;
 }
 
 body.dark-mode {
@@ -31,6 +35,8 @@ body.dark-mode {
   --button-background-color: var(--button-background-color-dark);
   --button-hover-background-color: var(--button-hover-background-color-dark);
   --container-background-color: #2c2c2e;
+  --border-color: #39393a;
+  --table-button-color: #088181;
 }
 
 * {
