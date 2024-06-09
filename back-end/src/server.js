@@ -216,6 +216,7 @@ app.post('/register', async (req, res) => {
     secondLastName,
     campus,
     major,
+    role,
     rut,
     matricula
   } = req.body
@@ -231,6 +232,7 @@ app.post('/register', async (req, res) => {
       campus,
       major,
       rut,
+      role,
       matricula
     },
     SECRET_KEY,
@@ -265,6 +267,7 @@ app.get('/verify', async (req, res) => {
   const { token } = req.query
   try {
     const decoded = jwt.verify(token, SECRET_KEY)
+    const rol = 'Estudiante'
     const {
       email,
       username,
@@ -275,9 +278,15 @@ app.get('/verify', async (req, res) => {
       secondLastName,
       campus,
       major,
+      role,
       rut,
       matricula
     } = decoded
+
+    const emailDomain = email.split('@')[1];
+    if (emailDomain === 'utalca.cl') {
+      rol = 'Profesor';
+    }
 
     const database = client.db('construccion')
     const User = database.collection('users')
@@ -298,6 +307,7 @@ app.get('/verify', async (req, res) => {
         rut: rut,
         matricula: matricula,
         campus: campus,
+        role: rol,
         major: major
       })
     }

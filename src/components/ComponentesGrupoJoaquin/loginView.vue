@@ -146,6 +146,7 @@ export default {
       major: '',
       rut: '',
       matricula: '',
+      role: '',
       passwordVisible: false,
       isLogin: true,
       showPopup: false,
@@ -168,6 +169,23 @@ export default {
     validateEmail() {
       const regex = /(^[a-zA-Z0-9_.+-]+@(alumnos\.)?utalca\.cl$)/;
       return regex.test(this.email);
+    },
+    validaRut(rutCompleto) {
+      rutCompleto = rutCompleto.replace("‐","-");
+      if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
+          return false;
+      const tmp = rutCompleto.split('-');
+      const digv = tmp[1];
+      const rut = tmp[0];
+      if (digv == 'K') digv = 'k' ;
+
+      return (this.dv(rut) == digv );
+    },
+    dv(T) {
+      const M = 0, S = 1;
+      for (; T; T = Math.floor(T / 10))
+          S = (S + T % 10 * (9 - M++ % 6)) % 11;
+      return S ? S - 1 : 'k';
     },
     async login() {
       try {
@@ -194,7 +212,10 @@ export default {
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
-
+        if (!this.validaRut(this.rut)) {
+          this.showError('El RUT no es válido.');
+          return;
+        }
         if (checkEmailResponse.data.exists) {
           this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
           return;
@@ -213,6 +234,7 @@ export default {
           secondLastName: this.secondLastName,
           rut: this.rut,
           matricula: this.matricula,
+          role: 'Estudiante',
           campus: this.campus,
           major: this.major,
         });
