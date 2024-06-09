@@ -266,7 +266,7 @@ export default {
         lastName: this.lastName,
         secondLastName: this.secondLastName,
         campus: this.campus,
-        major: this.major
+        major: this.major,
       });
       if (response.data.success) {
         this.email = '';
@@ -279,6 +279,7 @@ export default {
         this.campus = '';
         this.major = '';
       }
+      this.showError('Revise su correo ingresado para confirmar el registro.');
     } catch (error) {
       console.error('error in register function:', error);
     }
