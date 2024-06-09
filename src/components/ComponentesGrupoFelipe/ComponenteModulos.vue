@@ -84,25 +84,26 @@ export default {
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: #ffffff;
+  background-color: var(--container-background-color);
   width: 14em;
   z-index: 1;
 }
 
 .dropdown-content a {
-  color: black;
+  color: var(--text-color);
   padding: 12px 16px;
   text-decoration: none;
   display: block;
   white-space: nowrap;
 }
 
-.dropdown-content a:hover {
-  background-color: #f1f1f1;
+.dropdown-content a:hover {  
+  background-color: var(--grey-hover-color);
 }
 
 .dropdown:hover .dropdown-content {
   display: block;
+  background-color: var(--container-background-color);
 }
 
 .dropbtn {
@@ -183,9 +184,9 @@ section {
   width: 250px;
   height: 350px;
   box-sizing: border-box;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   padding: 16px;
-  background-color: rgb(236, 236, 236);
+  background-color: var(--container-background-color);
   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
   margin: 16px;
   display: flex;
