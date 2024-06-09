@@ -4,15 +4,15 @@ import { MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
 import dotenv from 'dotenv'
 import { log } from 'console'
-import nodemailer from 'nodemailer';
-import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer'
+import jwt from 'jsonwebtoken'
 
 dotenv.config()
 
 // Configuración de la aplicación
 const url = process.env.MONGODB_URI
 const app = express()
-const SECRET_KEY = '8jP@4k#Dq^2Lw!x9u&T7zR*Y0o';
+const SECRET_KEY = '8jP@4k#Dq^2Lw!x9u&T7zR*Y0o'
 
 const client = new MongoClient(url)
 let db
@@ -148,7 +148,6 @@ app.post('/login', async (req, res) => {
 });
 */
 
-
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
   try {
@@ -159,90 +158,135 @@ app.get('/sesion', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-});
+})
 
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
   try {
-      const database = client.db('construccion')
-      const collection = database.collection('sesion')
-      const consulta = {_id: new ObjectId(req.params.id)}
-      const nuevosParticipantes = req.body.participantes
-      const result = await collection.updateOne(consulta, { $set: { participantes: nuevosParticipantes } })
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const nuevosParticipantes = req.body.participantes
+    const result = await collection.updateOne(consulta, {
+      $set: { participantes: nuevosParticipantes }
+    })
 
-      if (result.modifiedCount === 1) {
-          res.send(result)
-      } else {
-          res.status(404).send('Sesión no encontrada')
-      }
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Sesión no encontrada')
+    }
   } catch (error) {
-      res.status(500).send(error.message)
+    res.status(500).send(error.message)
   }
 })
 /* FUNCION DE LOGIN DE GRUPO JOAQUIN*/
 app.post('/login', async (req, res) => {
   try {
-    const database = client.db('construccion');
-    const User = database.collection('users');
-    const user = await User.findOne({ email: req.body.email });
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const user = await User.findOne({ email: req.body.email })
 
     if (!user) {
-      return res.json({ success: false });
+      return res.json({ success: false })
     }
 
     if (req.body.password !== user.password) {
-      return res.json({ success: false });
+      return res.json({ success: false })
     }
 
-    res.json({ success: true});
+    // Excluir la contraseña de la respuesta
+    const { password, ...userWithoutPassword } = user
+
+    res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
   }
-});
+})
 
 app.post('/register', async (req, res) => {
-  const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula } = req.body;
-  const verificationToken = jwt.sign({ email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula }, SECRET_KEY, { expiresIn: '24h' });
+  const {
+    email,
+    username,
+    password,
+    confirmPassword,
+    firstName,
+    lastName,
+    secondLastName,
+    campus,
+    major,
+    rut,
+    matricula
+  } = req.body
+  const verificationToken = jwt.sign(
+    {
+      email,
+      username,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      secondLastName,
+      campus,
+      major,
+      rut,
+      matricula
+    },
+    SECRET_KEY,
+    { expiresIn: '24h' }
+  )
 
   let transporter = nodemailer.createTransport({
     service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
-      pass: 'RkUFFzM1LUTk',
-    },
-  });
+      pass: 'RkUFFzM1LUTk'
+    }
+  })
 
   let mailOptions = {
     from: 'pruebas.construccion2024@outlook.com',
     to: email,
     subject: 'Verificación de Correo Electrónico en Cheat Detector',
-    html: `<p>Haz clic en el siguiente enlace para verificar tu correo electrónico: <a href="http://localhost:8080/verify?token=${verificationToken}">Verificar Correo</a></p>`, 
-  };
+    html: `<p>Haz clic en el siguiente enlace para verificar tu correo electrónico: <a href="http://localhost:8080/verify?token=${verificationToken}">Verificar Correo</a></p>`
+  }
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      return res.status(500).send('Error al enviar el correo de verificación');
+      return res.status(500).send('Error al enviar el correo de verificación')
     } else {
-      return res.status(200).json({ success: true, message: 'Correo de verificación enviado' });
+      return res.status(200).json({ success: true, message: 'Correo de verificación enviado' })
     }
-  });
-});
+  })
+})
 
 app.get('/verify', async (req, res) => {
-  const { token } = req.query;  
+  const { token } = req.query
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula} = decoded;
-    
-    const database = client.db('construccion');
-    const User = database.collection('users');
-    
-    const verificacionUser = await User.findOne({ email });
+    const decoded = jwt.verify(token, SECRET_KEY)
+    const {
+      email,
+      username,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      secondLastName,
+      campus,
+      major,
+      rut,
+      matricula
+    } = decoded
+
+    const database = client.db('construccion')
+    const User = database.collection('users')
+
+    const verificacionUser = await User.findOne({ email })
 
     if (verificacionUser) {
-      res.redirect('http://localhost:5173/');
-    }else{
+      res.redirect('http://localhost:5173/')
+    } else {
       await User.insertOne({
         email: email,
         username: username,
@@ -254,58 +298,57 @@ app.get('/verify', async (req, res) => {
         rut: rut,
         matricula: matricula,
         campus: campus,
-        major: major,
-      });
+        major: major
+      })
     }
-    
-    res.redirect('http://localhost:5173/');
+
+    res.redirect('http://localhost:5173/')
   } catch (error) {
-    console.error('Error al verificar el token:', error);
-    return res.status(500).send('Error al verificar el correo electrónico');
+    console.error('Error al verificar el token:', error)
+    return res.status(500).send('Error al verificar el correo electrónico')
   }
-});
+})
 
 app.post('/checkEmail', async (req, res) => {
   try {
-    const database = client.db('construccion');
-    const User = database.collection('users');
-    const user = await User.findOne({ email: req.body.email });
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const user = await User.findOne({ email: req.body.email })
 
     if (user) {
-      res.json({ exists: true });
+      res.json({ exists: true })
     } else {
-      res.json({ exists: false });
+      res.json({ exists: false })
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
   }
-});
+})
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('sesion')
-    const consulta = {_id: new ObjectId(req.params.id)}
+    const consulta = { _id: new ObjectId(req.params.id) }
     const result = await collection.findOne(consulta)
     res.send(result)
   } catch (error) {
     res.status(500).send(error.message)
   }
-});
+})
 
 //obtener usuario especifico
-app.get('/user/:id',async (req, res) => {
+app.get('/user/:id', async (req, res) => {
   try {
-    console.log("here")
+    console.log('here')
     const database = client.db('construccion')
     const collection = database.collection('users')
-    const consulta = {_id: new ObjectId(req.params.id)}
+    const consulta = { _id: new ObjectId(req.params.id) }
     const result = await collection.findOne(consulta)
-    if(result){
+    if (result) {
       res.send(result)
-    }
-    else{
+    } else {
       res.status(404).send('user not found')
     }
   } catch (error) {
@@ -315,41 +358,41 @@ app.get('/user/:id',async (req, res) => {
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario
-// Para utilizar el mensaje de alerta en algun componente es necesario usar el 
+// Para utilizar el mensaje de alerta en algun componente es necesario usar el
 // metodo GET /user/:id/alertas abajo para obtener los mensajes
 app.post('/user/:id/alerta', async (req, res) => {
   try {
-      const database = client.db('construccion')
-      const collection = database.collection('users')
-      const consulta = {_id: new ObjectId(req.params.id)}
-      const mensaje = req.body.mensaje
-      const result = await collection.updateOne(consulta, { $push: { alertas: mensaje } })
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const mensaje = req.body.mensaje
+    const result = await collection.updateOne(consulta, { $push: { alertas: mensaje } })
 
-      if (result.modifiedCount === 1) {
-          res.send(result)
-      } else {
-          res.status(404).send('Usuario no encontrado')
-      }
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Usuario no encontrado')
+    }
   } catch (error) {
-      res.status(500).send(error.message)
+    res.status(500).send(error.message)
   }
 })
 
 // Usa este método para obtener los mensajes de alerta de un usuario
 app.get('/user/:id/alertas', async (req, res) => {
   try {
-      const database = client.db('construccion')
-      const collection = database.collection('users')
-      const consulta = {_id: new ObjectId(req.params.id)}
-      const usuario = await collection.findOne(consulta)
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const usuario = await collection.findOne(consulta)
 
-      if (usuario) {
-          res.send(usuario.alertas)
-      } else {
-          res.status(404).send('Usuario no encontrado')
-      }
+    if (usuario) {
+      res.send(usuario.alertas)
+    } else {
+      res.status(404).send('Usuario no encontrado')
+    }
   } catch (error) {
-      res.status(500).send(error.message)
+    res.status(500).send(error.message)
   }
 })
 
@@ -374,7 +417,6 @@ const obtenerAlertas = async () => {
 // Se llama a obtenerAlertas cada 5 segundos
 setInterval(obtenerAlertas, 5000)
 */
-;
 
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
@@ -385,12 +427,12 @@ app.post('/sesion', async (req, res) => {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
       participantes: []
-    };
-    console.log("enviando", newSession.nombre, newSession.descripcion)
-    const result = await collection.insertOne(newSession);
-    res.sendStatus(200);
+    }
+    console.log('enviando', newSession.nombre, newSession.descripcion)
+    const result = await collection.insertOne(newSession)
+    res.sendStatus(200)
   } catch (error) {
-    console.error('Error inserting document:', error);
-    res.status(500).send('Error inserting document');
+    console.error('Error inserting document:', error)
+    res.status(500).send('Error inserting document')
   }
-});
+})
