@@ -110,13 +110,13 @@ export default {
                 participantes.value.splice(index, 1)
 
                 // Se actualiza la lista de participantes en la base de datos
-                let respuesta = await fetch(`http://localhost:8080/sesion/${info.value.id}`, {
+                let respuesta = await fetch(`http://localhost:8080/sesion/${info.value._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        participantes: participantes.value.map(participante => participante.id),
+                        participantes: participantes.value.map(participante => participante._id),
                     }),
                 })
 
@@ -132,7 +132,7 @@ export default {
         const alertarParticipante = async (index) => {
             try {
                 // Se obtiene el id del participante
-                const idParticipante = participantes.value[index].id;
+                const idParticipante = participantes.value[index]._id;
 
                 // Envía una alerta al participante
                 let respuesta = await fetch(`http://localhost:8080/user/${idParticipante}/alerta`, {
