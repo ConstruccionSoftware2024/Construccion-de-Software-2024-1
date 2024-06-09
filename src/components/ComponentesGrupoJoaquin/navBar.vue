@@ -9,7 +9,7 @@
         <RouterLink to="/" class="navLink">Home</RouterLink>
         <RouterLink to="/about" class="navLink">About</RouterLink>
         <RouterLink to="/contact" class="navLink">Contact</RouterLink>
-        <RouterLink to="/testing" class="navLink">Testing</RouterLink>
+        <RouterLink to="/settings" class="navLink">Settings</RouterLink>
         <button class="loginButton" @click="goLogin">
           <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
 

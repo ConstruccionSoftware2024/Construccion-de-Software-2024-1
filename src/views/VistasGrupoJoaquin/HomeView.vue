@@ -15,7 +15,6 @@
   justify-content: center;
   height: 90vh;
   text-align: center;
-  color: #fff;
 }
 
 h1 {
