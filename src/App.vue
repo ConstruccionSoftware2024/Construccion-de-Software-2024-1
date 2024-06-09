@@ -1,7 +1,8 @@
 <script setup>
 import { computed, watch, onMounted } from 'vue'
 import { useThemeStore } from '../back-end/src/store.js'
-import Navbar from './components/navBar.vue'
+import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
+import Footer from './components/ComponentesGrupoJoaquin/Footer.vue'
 import { RouterView } from 'vue-router'
 
 const themeStore = useThemeStore()
@@ -30,6 +31,7 @@ const toggleTheme = () => {
   <div id="app">
     <Navbar />
     <RouterView />
+    <Footer />
   </div>
 </template>
 
