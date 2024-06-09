@@ -1,9 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import RevisionesView from '../views/RevisionesView.vue'
-import InvitarAlumnos from '@/components/InvitarAlumnos.vue'
-import FaltaAlumnos from '@/views/FaltaAlumnos.vue'
-import EstadoAlumnos from '@/views/EstadoAlumnos.vue'
+import HomeView from '../views/VistasGrupoJoaquin/HomeView.vue'
+import ListaAlumnos from '@/components/ComponentesGrupoClaudio/ListaAlumnos.vue'
+import HistorialAlumno from '../views/VistasGrupoFelipe/HistorialAlumno.vue'
+import InicioSesion from '@/components/ComponentesGrupoFelipe/InicioSesion.vue'
+import ComponenteModulos from '@/components/ComponentesGrupoFelipe/ComponenteModulos.vue'
+import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOpciones.vue'
+import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
+import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
+import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
+import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
+import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
+import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
+import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
+import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 
 
 const router = createRouter({
@@ -11,21 +20,49 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'HomeView',
       component: HomeView
     },
+
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue')
+      path: '/modulos',
+      name: 'modulos',
+      component: ComponenteModulos
+    },
+    {
+      path: '/opciones',
+      name: 'opciones',
+      component: ComponenteOpciones
+    },
+    {
+      path: '/historialevaluaciones',
+      name: 'historialevaluaciones',
+      component: HistorialEvaluaciones
+    },
+    {
+      path: '/crearevaluacion',
+      name: 'crearevaluacion',
+      component: CrearEvaluacion
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: HomeView
     },
     {
       path: '/revisiones',
       name: 'revisiones',
       component: RevisionesView
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../components/ComponentesGrupoJoaquin/loginView.vue')
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../components/ComponentesGrupoJoaquin/SettingsView.vue')
     },
     {
       path: '/invitar-alumnos',
@@ -35,17 +72,17 @@ const router = createRouter({
     {
       path:'/newsession',
       name: 'create',
-      component: () => import('../views/CrearSesion.vue')
+      component: () => import('../views/VistasGrupoClaudio/CrearSesion.vue')
     },
     {
       path:'/session',
       name: 'sesion',
-      component: () => import('../views/Sesion.vue')
+      component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
       path:'/session/:id',
       name: 'sesionid',
-      component: () => import('../views/Sesion.vue'),
+      component: () => import('../views/VistasGrupoClaudio/Sesion.vue'),
       props:true
     },
     {
@@ -57,6 +94,24 @@ const router = createRouter({
       path: '/estadoAlumnos',
       name: 'EstadoAlumnos',
       component: EstadoAlumnos
+    },
+    {path: '/lista-alumnos',
+    name: 'lista-alumnos',
+    component: ListaAlumnos},
+    {
+      path: '/historial',
+      name: 'historial',
+      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+    },
+    {
+      path: '/alumnovista',
+      name: 'vista-alumno',
+      component: VistaAlumno
+    },
+    {
+      path: '/perfil',
+      name: 'perfil',
+      component: ProfileView
     }
   ]
 })
