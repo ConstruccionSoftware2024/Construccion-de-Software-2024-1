@@ -202,8 +202,8 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major } = req.body;
-  const verificationToken = jwt.sign({ email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major }, SECRET_KEY, { expiresIn: '24h' });
+  const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula } = req.body;
+  const verificationToken = jwt.sign({ email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula }, SECRET_KEY, { expiresIn: '24h' });
 
   let transporter = nodemailer.createTransport({
     service: 'outlook',
@@ -233,7 +233,7 @@ app.get('/verify', async (req, res) => {
   const { token } = req.query;  
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major} = decoded;
+    const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula} = decoded;
     
     const database = client.db('construccion');
     const User = database.collection('users');
@@ -251,6 +251,8 @@ app.get('/verify', async (req, res) => {
         firstName: firstName,
         lastName: lastName,
         secondLastName: secondLastName,
+        rut: rut,
+        matricula: matricula,
         campus: campus,
         major: major,
       });
