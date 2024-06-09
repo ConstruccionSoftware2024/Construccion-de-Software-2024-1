@@ -28,11 +28,6 @@ const router = createRouter({
       component: ComponenteModulos
     },
     {
-      path: '/opciones',
-      name: 'opciones',
-      component: ComponenteOpciones
-    },
-    {
       path: '/historialevaluaciones',
       name: 'historialevaluaciones',
       component: HistorialEvaluaciones
