@@ -173,7 +173,7 @@ const cancelarEdicion = () => {
 
 .alumno-container {
     flex-basis: 25%;
-    background-color: #08cccc;
+    background-color: var(--container-background-color);
     border-radius: 1rem;
     padding: 1rem;
     justify-content: center;
@@ -191,7 +191,7 @@ const cancelarEdicion = () => {
     margin-top: 1rem;
     padding: 1rem;
     flex-direction: column;
-    background-color: #08cccc;
+    background-color: var(--container-background-color);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -208,14 +208,14 @@ const cancelarEdicion = () => {
     height: 150px;
     border-radius: 50%;
     background-color: #ffffff;
-    border: 2px solid #000000;
+    border: 2px solid var(--text-color);
 }
 
 .alumno-text {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    border-top: 2px solid #000;
+    border-top: 2px solid var(--text-color);
     padding-top: 1rem;
     width: 100%;
     justify-content: center;
@@ -225,13 +225,13 @@ const cancelarEdicion = () => {
 .alumno-text>h2 {
     margin: 0;
     font-size: 1.5rem;
-    color: #000;
+    color: var(--text-color);
     font-weight: bold;
 }
 
 .alumno-text>p {
     margin: 0;
-    color: #000;
+    color: var(--text-color);
     margin-top: 0.8rem;
 }
 
@@ -247,15 +247,15 @@ const cancelarEdicion = () => {
 .detalle-info>p {
     margin: 0.5rem 0;
     font-size: 1.3rem;
-    color: #000;
+    color: var(--text-color);
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid grey;
+    border-bottom: 1px solid var(--text-color);
 }
 
 .titulo {
     text-align: start;
     font-size: 1.8rem;
-    color: #000;
+    color: var(--text-color);
     font-weight: bold;
     padding-left: 1rem;
     padding-bottom: 1.5rem;
@@ -270,13 +270,13 @@ const cancelarEdicion = () => {
 }
 
 .texto-ciudad {
-    font-size: 1.2rem;
-    color: #000;
+    font-size: 0.9rem;
+    color: var(--text-color);
 }
 
 .texto-carrera {
-    font-size: 1.2rem;
-    color: #000;
+    font-size: 1rem;
+    color: var(--text-color);
     margin-top: 0.8rem;
 }
 
@@ -292,7 +292,7 @@ const cancelarEdicion = () => {
 .input-group {
     display: flex;
     align-items: center;
-    border-bottom: 1px solid grey;
+    border-bottom: 1px solid var(--text-color);
 }
 
 .input-group label {
@@ -314,8 +314,9 @@ const cancelarEdicion = () => {
 
 
 .editar-perfil-btn {
-    background-color: black;
-    color: white;
+    background-color: var(--button-background-color);
+    color: black;
+    font-weight: 600;
     padding: 10px 20px;
     margin: 10px 0;
     border: none;
@@ -326,7 +327,7 @@ const cancelarEdicion = () => {
 }
 
 .editar-perfil-btn:hover {
-    background-color: #333333;
+    background-color: var(--button-hover-background-color);
 }
 
 .editar-perfil-btn:disabled {
