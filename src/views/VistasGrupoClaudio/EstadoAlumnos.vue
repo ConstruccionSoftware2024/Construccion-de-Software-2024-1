@@ -40,9 +40,8 @@ decisión. /*
           <td>
             <input type="text" v-model="alumno.descripcion" placeholder="Agregar descripción" />
             <div>
-              <span v-if="needsDescription[index] && !alumno.descripcion" style="color: red"
-                >Debe agregar una descripción</span
-              >
+              <span v-if="needsDescription[index] && !alumno.descripcion" style="color: red">Debe agregar una
+                descripción</span>
             </div>
             <button @click="applyDescription(alumno, index)" :disabled="!alumno.descripcion">
               Aplicar
@@ -136,7 +135,7 @@ th {
 }
 
 tr:nth-child(even) {
-  background-color: #303030;
+  background-color: #dfdfdf;
 }
 
 .general-container {
