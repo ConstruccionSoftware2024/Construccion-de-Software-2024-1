@@ -108,6 +108,32 @@
               </div>
             </div>
             <div class="inputGroup">
+              <label for="rut">RUT</label>
+              <div class="inputWrapper">
+                <i class="fas fa-lock"></i>
+                <input
+                  type="text"
+                  id="rut"
+                  v-model="rut"
+                  placeholder="Ingresa tu RUT"
+                  required
+                />
+              </div>
+            </div>
+            <div class="inputGroup">
+              <label for="matricula">Matricula</label>
+              <div class="inputWrapper">
+                <i class="fas fa-lock"></i>
+                <input
+                  type="text"
+                  id="matricula"
+                  v-model="matricula"
+                  placeholder="Ingresa tu matricula"
+                  required
+                />
+              </div>
+            </div>
+            <div class="inputGroup">
               <label for="campus">Campus</label>
               <div class="inputWrapper">
                 <i class="fas fa-university"></i>
@@ -202,6 +228,8 @@ export default {
       secondLastName: '',
       campus: '',
       major: '',
+      rut: '',
+      matricula: '',
       passwordVisible: false,
       isLogin: true,
       showPopup: false,
@@ -265,8 +293,10 @@ export default {
         firstName: this.firstName,
         lastName: this.lastName,
         secondLastName: this.secondLastName,
+        rut: this.rut,
+        matricula: this.matricula,
         campus: this.campus,
-        major: this.major
+        major: this.major,
       });
       if (response.data.success) {
         this.email = '';
@@ -276,9 +306,12 @@ export default {
         this.firstName = '';
         this.lastName = '';
         this.secondLastName = '';
+        this.rut = '';
+        this.matricula = '';
         this.campus = '';
         this.major = '';
       }
+      this.showError('Revise su correo ingresado para confirmar el registro.');
     } catch (error) {
       console.error('error in register function:', error);
     }

@@ -4,12 +4,15 @@ import { MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
 import dotenv from 'dotenv'
 import { log } from 'console'
+import nodemailer from 'nodemailer';
+import jwt from 'jsonwebtoken';
 
 dotenv.config()
 
 // Configuración de la aplicación
 const url = process.env.MONGODB_URI
 const app = express()
+const SECRET_KEY = '8jP@4k#Dq^2Lw!x9u&T7zR*Y0o';
 
 const client = new MongoClient(url)
 let db
@@ -199,16 +202,67 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  try{
+  const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula } = req.body;
+  const verificationToken = jwt.sign({ email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula }, SECRET_KEY, { expiresIn: '24h' });
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk',
+    },
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: 'Verificación de Correo Electrónico en Cheat Detector',
+    html: `<p>Haz clic en el siguiente enlace para verificar tu correo electrónico: <a href="http://localhost:8080/verify?token=${verificationToken}">Verificar Correo</a></p>`, 
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return res.status(500).send('Error al enviar el correo de verificación');
+    } else {
+      return res.status(200).json({ success: true, message: 'Correo de verificación enviado' });
+    }
+  });
+});
+
+app.get('/verify', async (req, res) => {
+  const { token } = req.query;  
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const { email, username, password, confirmPassword, firstName, lastName, secondLastName, campus, major, rut, matricula} = decoded;
+    
     const database = client.db('construccion');
-    const collection = database.collection('users');
-    await collection.insertOne(req.body);
-    res.send({ success: true, message: 'Registro exitoso' })
+    const User = database.collection('users');
+    
+    const verificacionUser = await User.findOne({ email });
+
+    if (verificacionUser) {
+      res.redirect('http://localhost:5173/');
+    }else{
+      await User.insertOne({
+        email: email,
+        username: username,
+        password: password,
+        confirmPassword: confirmPassword,
+        firstName: firstName,
+        lastName: lastName,
+        secondLastName: secondLastName,
+        rut: rut,
+        matricula: matricula,
+        campus: campus,
+        major: major,
+      });
+    }
+    
+    res.redirect('http://localhost:5173/');
+  } catch (error) {
+    console.error('Error al verificar el token:', error);
+    return res.status(500).send('Error al verificar el correo electrónico');
   }
-  catch(error){
-    console.log(error)
-  }
-  
 });
 
 app.post('/checkEmail', async (req, res) => {
