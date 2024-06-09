@@ -14,6 +14,7 @@ export default {
             tried: false,
             success: false
         })
+        let enviado = ref(false)
 
         const enviarFormulario = async () => {
 
@@ -30,6 +31,9 @@ export default {
                 if (respuesta.ok) {
                     //const datos = await respuesta.json();
                     console.log('Datos enviados y subidos');
+                    //refrescamos los datos
+                    enviado.value = true
+                    cargarSesiones()
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText);
                 }
@@ -65,7 +69,8 @@ export default {
             formulario,
             enviarFormulario,
             info,
-            finish
+            finish,
+            enviado
         };
     }
 
@@ -78,18 +83,20 @@ export default {
 <template>
     <div class="container">
 
-        <div class="">
+        <div class="formcont">
             <h1>Crear una nueva sesión de monitoreo </h1>
             <form @submit.prevent="enviarFormulario">
                 <div>
-                    <label for="nombre">Nombre de la sesión:</label>
+                    <label for="nombre">Nombre de la sesión</label>
                     <input type="text" id="nombre" v-model="formulario.nombre">
                 </div>
                 <div>
-                    <label for="mensaje">Descripción:</label>
+                    <label for="mensaje">Descripción</label>
                     <textarea id="mensaje" v-model="formulario.descripcion"></textarea>
                 </div>
-                <button type="submit">Crear</button>
+
+                <button v-if="!enviado" class="btn" type="submit">Crear</button>
+                <p>{{ enviado ? 'Sesión creada con exito' : '' }}</p>
             </form>
         </div>
 
@@ -102,9 +109,9 @@ export default {
                         <h2>
                             {{ sesion.nombre }}
                         </h2>
-                        <p>
+                        <!-- <p>
                             Id: {{ sesion._id }}
-                        </p>
+                        </p> -->
                     </div>
                     <p>
                         {{ sesion.descripcion }}
@@ -112,11 +119,18 @@ export default {
                 </a>
             </div>
         </div>
+
     </div>
 
 </template>
 
 <style scoped>
+h1 {
+    font-size: 2rem;
+    font-weight: bolder;
+
+}
+
 @media (min-width: 1024px) {
     .about {
         min-height: 100vh;
@@ -125,14 +139,45 @@ export default {
     }
 }
 
-.card {
-    border: 1px solid black;
+.formcont {
     display: flex;
     flex-direction: column;
+    gap: 2rem;
+    margin: 2rem auto;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
     width: 20rem;
-    padding: .2rem;
+    padding: 1rem;
     justify-content: center;
     align-items: center;
+    border-radius: 15px;
+    /* create a property to remove color to anchors*/
+    border: 1px solid rgb(46, 46, 46);
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    color: #1C1C1C;
+    text-decoration: none;
+}
+
+.card>div>h2 {
+    text-align: center;
+    font-weight: bold;
+    color: #08CCCC;
+}
+
+.btn {
+    background-color: #08CCCC;
+    width: 95%;
+    border-radius: 15px;
+    transition: all .3s ease;
+}
+
+.btn:hover {
+    cursor: pointer;
+    background-color: #05a5a5;
 }
 
 form {
@@ -140,13 +185,14 @@ form {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 2px solid coral;
+    border: 2px solid gray;
     border-radius: 1rem;
     box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
-    width: f20rem;
+    width: 30rem;
     padding: 1rem;
     height: 20rem;
     margin: 0 auto;
+    overflow: hidden;
 }
 
 .container {
@@ -154,6 +200,7 @@ form {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2rem;
 }
 
 form>div {
@@ -176,5 +223,10 @@ form>button {
 .cont {
     display: flex;
     gap: 1rem;
+    flex-wrap: wrap;
+    width: 95%;
+    margin: auto auto;
+    justify-content: center;
+    padding: 1rem;
 }
 </style>
