@@ -117,7 +117,7 @@ app.post('/faltas/:id', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
     const result = await collection.updateOne(
-      { id: Number(req.params.id) },
+      { _id: new ObjectId(req.params.id) },
       { $set: { estado: req.body.estado } }
     )
     res.send(result)

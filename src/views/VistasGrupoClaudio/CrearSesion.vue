@@ -1,8 +1,13 @@
 <script>
 
 import { ref, reactive, onMounted } from 'vue'
+import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue';
 
 export default {
+
+    components: {
+        InvitarAlumnos
+    },
 
     setup() {
         const formulario = reactive({
@@ -99,10 +104,9 @@ export default {
                 <p>{{ enviado ? 'Sesión creada con exito' : '' }}</p>
             </form>
         </div>
-
         <h2>Lista de sesiones </h2>
         <div class="cont" v-if="finish">
-            <div v-for="(sesion, index) in info" :key="index">
+            <div v-for="(sesion, index) in info" :key="index" class="session-container">
                 <a :href="'/session/' + sesion._id" class="card">
                     <div>
 
@@ -117,7 +121,9 @@ export default {
                         {{ sesion.descripcion }}
                     </p>
                 </a>
+                <InvitarAlumnos :datosSesion="sesion._id"/>
             </div>
+
         </div>
 
     </div>
@@ -228,5 +234,10 @@ form>button {
     margin: auto auto;
     justify-content: center;
     padding: 1rem;
+
+.session-container{
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border: 2px solid #08cccc;
 }
 </style>
