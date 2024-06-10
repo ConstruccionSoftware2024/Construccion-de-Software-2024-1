@@ -88,19 +88,17 @@ export default {
 <template>
     <div class="container">
 
-        <div class="formcont">
+        <div class=" ar_form formcont">
             <h1>Crear una nueva sesión de monitoreo </h1>
             <form @submit.prevent="enviarFormulario">
                 <div>
-                    <label for="nombre">Nombre de la sesión</label>
-                    <input type="text" id="nombre" v-model="formulario.nombre">
-                </div>
-                <div>
-                    <label for="mensaje">Descripción</label>
-                    <textarea id="mensaje" v-model="formulario.descripcion"></textarea>
+                    <!-- <label for="nombre">Nombre de la sesión</label> -->
+                    <input placeholder="nombre sesion" type="text" id="nombre" v-model="formulario.nombre">
+                    <!-- <label for="mensaje">Descripción</label> -->
+                    <input placeholder="descripcion" type="text" id="mensaje" v-model="formulario.descripcion"></input>
                 </div>
 
-                <button v-if="!enviado" class="btn" type="submit">Crear</button>
+                <input type="submit" v-if="!enviado" class="btn" value="Crear sesion">
                 <p>{{ enviado ? 'Sesión creada con exito' : '' }}</p>
             </form>
         </div>
@@ -121,7 +119,7 @@ export default {
                         {{ sesion.descripcion }}
                     </p>
                 </a>
-                <InvitarAlumnos :datosSesion="sesion._id"/>
+                <InvitarAlumnos :datosSesion="sesion._id" />
             </div>
 
         </div>
@@ -156,34 +154,26 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: .5rem;
-    width: 20rem;
+    width: 100%;
     padding: 1rem;
     justify-content: center;
     align-items: center;
     border-radius: 15px;
-    /* create a property to remove color to anchors*/
-    border: 1px solid rgb(46, 46, 46);
-    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    /* border: 1px solid rgb(46, 46, 46); */
+    /* box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2); */
     color: #1C1C1C;
     text-decoration: none;
+    transition: all .3s ease;
+}
+
+.card:hover {
+    background-color: #efefef;
 }
 
 .card>div>h2 {
     text-align: center;
     font-weight: bold;
     color: #08CCCC;
-}
-
-.btn {
-    background-color: #08CCCC;
-    width: 95%;
-    border-radius: 15px;
-    transition: all .3s ease;
-}
-
-.btn:hover {
-    cursor: pointer;
-    background-color: #05a5a5;
 }
 
 form {
@@ -199,6 +189,7 @@ form {
     height: 20rem;
     margin: 0 auto;
     overflow: hidden;
+    gap: 1rem;
 }
 
 .container {
@@ -215,16 +206,9 @@ form>div {
     padding: .5rem;
     width: 100%;
     gap: .5rem;
+    margin: 0 auto;
 }
 
-form>div>input {
-    padding: .5rem;
-}
-
-form>button {
-    padding: .5rem 1rem;
-    width: 100%;
-}
 
 .cont {
     display: flex;
@@ -234,10 +218,59 @@ form>button {
     margin: auto auto;
     justify-content: center;
     padding: 1rem;
+}
 
-.session-container{
+.session-container {
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
     border: 2px solid #08cccc;
+    border-radius: 1rem;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ar_form * {
+    transition: .3s ease-in-out;
+    box-sizing: border-box;
+}
+
+.ar_form form input {
+    width: 90%;
+    /* margin: .6em 0; */
+    margin: 0 auto;
+    padding: 10px 10px;
+    border: 0;
+    font-weight: 700;
+    background-color: transparent;
+    outline: none;
+    border-color: #08CCCC;
+    border-radius: 20px;
+    /* margin-left: 50%; */
+    /* transform: translateX(-50%); */
+}
+
+.ar_form form input[type="text"] {
+    border: 2px solid gray;
+    color: black;
+}
+
+/* #03273D; */
+.ar_form form input[type="text"]:focus {
+    border-color: #08CCCC;
+    width: 100%
+}
+
+.ar_form form input[type="submit"] {
+    background-color: #06a0a0;
+    color: white;
+    width: 70%;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+
+.ar_form form input[type="submit"]:hover {
+    width: 80%;
+    background-color: #08CCCC;
 }
 </style>
