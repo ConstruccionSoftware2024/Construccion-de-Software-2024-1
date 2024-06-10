@@ -19,10 +19,13 @@
             <a :href="sitio.link" target="_blank" class="sitio-link">{{ sitio.link }}</a>
           </td>
           <td>{{ sitio.riesgo }}</td>
-          <td>
-            <button v-if="sitio.riesgo !== 'Peligroso'" @click="cambiarRiesgo(sitio, 'Peligroso')">Rojo</button>
-            <button v-if="sitio.riesgo !== 'Dudoso'" @click="cambiarRiesgo(sitio, 'Dudoso')">Amarillo</button>
-            <button v-if="sitio.riesgo !== 'Sin riesgo'" @click="cambiarRiesgo(sitio, 'Sin riesgo')">Verde</button>
+          <td class="button-container">
+            <button v-if="sitio.riesgo !== 'Peligroso'" @click="cambiarRiesgo(sitio, 'Peligroso')"
+              class="rojo">Peligroso</button>
+            <button v-if="sitio.riesgo !== 'Dudoso'" @click="cambiarRiesgo(sitio, 'Dudoso')"
+              class="amarillo">Dudoso</button>
+            <button v-if="sitio.riesgo !== 'Sin riesgo'" @click="cambiarRiesgo(sitio, 'Sin riesgo')" class="verde">Sin
+              riesgo</button>
           </td>
         </tr>
       </tbody>
@@ -204,5 +207,34 @@ body.dark-mode tr:nth-child(even) {
 body.dark-mode th {
   background-color: #444;
   color: #fff;
+}
+
+.rojo {
+  background-color: red;
+  color: white;
+}
+
+.amarillo {
+  background-color: yellow;
+  color: black;
+}
+
+.verde {
+  background-color: green;
+  color: white;
+}
+
+.button-container button {
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  width: 60%;
+  /* Agrega margen arriba de los botones */
 }
 </style>
