@@ -330,10 +330,10 @@ app.post('/edit_username', async (req, res) => {
   try {
     const database = client.db('construccion')
     const User = database.collection('users')
-    const filter = { email: 'matiasv994@gmail.com' }
-    const update = { username: 'MatiGol123' }
+    const filter = { email: req.body.email }
+    const update = { username: req.body.new_username }
     const poster = await User.updateOne(filter, { $set: update })
-    console.log('******Actualizar **********', poster)
+    console.log('******Actualizar*********', filter, update, poster)
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })
@@ -343,8 +343,8 @@ app.post('/edit_password', async (req, res) => {
   try {
     const database = client.db('construccion')
     const User = database.collection('users')
-    const filter = { email: 'matiasv994@gmail.com' }
-    const update1 = { password: 'Prueba123', confirmPassword: 'Prueba123' }
+    const filter = { email: req.body.email }
+    const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     //const update2 = { confirmPassword: 'Prueba' }
     const poster = await User.updateOne(filter, { $set: update1 })
     console.log()
