@@ -1,21 +1,24 @@
 <template>
     <div class="container2" v-if="finish.tried">
-        <div>
+        <div class="titlecontainer">
             <h1>{{ info.nombre }}</h1>
+            <h2>creador: {{ info.creador }}</h2>
             <p>{{ info.descripcion }}</p>
         </div>
         <h2>Participantes</h2>
         <div class="container">
             <div class="card" v-for="(participante, index) in participantes" :key="index">
-                <h3>
-                    {{ participante.username }}
-                </h3>
-                <h4>
-                    {{ participante.email }}
-                </h4>
-                <h4>
-                    {{ participante.riesgo }}
-                </h4>
+                <div>
+                    <h3>
+                        {{ participante.username }}
+                    </h3>
+                    <h4>
+                        {{ participante.email }}
+                    </h4>
+                    <h4>
+                        {{ participante.riesgo }}
+                    </h4>
+                </div>
                 <div class="container-botones">
                     <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
                     <button class="btn boton-alerta" @click="alertarParticipante(index)">Alertar</button>
@@ -73,8 +76,8 @@ export default {
                     //updateInfo(info.value.participantes, info.value.banlist)
                 } else {
                     console.error('Error al obtener los datos:', respuesta.statusText);
-                    finish.tried = true
-                    finish.success = false
+                    finish.value.tried = true
+                    finish.value.success = false
                 }
             } catch (error) {
                 console.error('Error en la petición fetch:', error);
@@ -191,6 +194,14 @@ export default {
 
 
 <style scoped>
+.titlecontainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: .3rem;
+}
+
 h1 {
     font-size: 3rem;
     font-weight: bolder;
@@ -206,29 +217,37 @@ h2 {
 }
 
 h3 {
-    color: #08CCCC;
+    /* color: #08CCCC; */
     font-weight: bold;
 }
 
 .card {
     display: flex;
-    flex-direction: column;
-    gap: .2rem;
-    justify-content: center;
+    gap: 1rem;
+    justify-content: space-between;
     align-items: center;
-    border: 1px solid black;
-    width: 20rem;
+    width: 22rem;
     padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    border: 1px solid;
+    line-height: 1.5;
+    border-radius: 0.3rem;
+    box-shadow: 3px 3px 0 3px #222;
+    overflow: hidden;
+
+}
+
+.card h4 {
+    color: #2c2c2e;
 
 }
 
 .container-botones {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    /* gap: 8px; */
 }
 
 .btn {
@@ -237,11 +256,13 @@ h3 {
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: .8rem;
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 12px;
+    width: 100%;
     transition: background-color 0.3s;
+    border: 1px solid black;
 }
 
 .boton-expulsar {
@@ -274,9 +295,10 @@ h3 {
 
 .container {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     justify-content: center;
     flex-wrap: wrap;
+    width: 90%;
 }
 
 .container2 {
@@ -286,5 +308,6 @@ h3 {
     justify-content: center;
     align-items: center;
     margin: 2rem auto;
+    padding: 1rem 1rem 4rem 1rem;
 }
 </style>
