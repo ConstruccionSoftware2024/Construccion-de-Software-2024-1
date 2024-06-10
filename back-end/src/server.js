@@ -231,8 +231,8 @@ app.post('/edit_username', async (req, res) => {
   try {
     const database = client.db('construccion')
     const User = database.collection('users')
-    const filter = { email: 'prueba123@gmail.com' }
-    const update = { username: 'Prueba123' }
+    const filter = { email: 'matiasv994@gmail.com' }
+    const update = { username: 'MatiGol123' }
     const poster = await User.updateOne(filter, { $set: update })
     console.log('******Actualizar **********', poster)
   } catch (error) {
@@ -245,12 +245,10 @@ app.post('/edit_password', async (req, res) => {
     const database = client.db('construccion')
     const User = database.collection('users')
     const filter = { email: 'matiasv994@gmail.com' }
-    //const update1 = { password: 'Prueba' }
+    const update1 = { password: 'Prueba123', confirmPassword: 'Prueba123' }
     //const update2 = { confirmPassword: 'Prueba' }
-    const poster = await User.updateOne(filter, {
-      password: 'Prueba123' //,
-      //confirmPassword: 'Prueba123'
-    })
+    const poster = await User.updateOne(filter, { $set: update1 })
+    console.log()
     console.log('******Actualizar **********', poster)
   } catch (error) {
     console.error(error)

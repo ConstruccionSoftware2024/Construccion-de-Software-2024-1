@@ -65,7 +65,7 @@ export default {
         },
         async edit_password() {
             try {
-                const response = await axios.post('http://localhost:8080/edit_username', {
+                const response = await axios.post('http://localhost:8080/edit_password', {
                 });
 
                 console.log(response.data);
