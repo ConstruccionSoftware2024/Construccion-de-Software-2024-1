@@ -327,8 +327,10 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
+      creador: req.body.creador,
       participantes: [],
-      banlist: []
+      banlist: [],
+
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)

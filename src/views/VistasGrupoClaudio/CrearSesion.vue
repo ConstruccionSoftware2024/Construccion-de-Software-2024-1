@@ -12,7 +12,8 @@ export default {
     setup() {
         const formulario = reactive({
             nombre: '',
-            descripcion: ''
+            descripcion: '',
+            creador: 'default'
         })
         let info = ref({})
         let finish = ref({
@@ -60,8 +61,8 @@ export default {
                     finish.value.success = true
                 } else {
                     console.error('Error al obtener los datos:', respuesta.statusText);
-                    finish.tried = true
-                    finish.success = false
+                    finish.value.tried = true
+                    finish.value.success = false
                 }
             } catch (error) {
                 console.error('Error en la petición fetch:', error);
@@ -93,9 +94,9 @@ export default {
             <form @submit.prevent="enviarFormulario">
                 <div>
                     <!-- <label for="nombre">Nombre de la sesión</label> -->
-                    <input placeholder="nombre sesion" type="text" id="nombre" v-model="formulario.nombre">
+                    <input required placeholder="nombre sesion" type="text" id="nombre" v-model="formulario.nombre">
                     <!-- <label for="mensaje">Descripción</label> -->
-                    <input placeholder="descripcion" type="text" id="mensaje" v-model="formulario.descripcion"></input>
+                    <input required placeholder="descripcion" type="text" id="mensaje" v-model="formulario.descripcion">
                 </div>
 
                 <input type="submit" v-if="!enviado" class="btn" value="Crear sesion">
@@ -104,7 +105,7 @@ export default {
         </div>
         <h2>Lista de sesiones </h2>
         <div class="cont" v-if="finish">
-            <div v-for="(sesion, index) in info" :key="index" class="session-container">
+            <div v-for="(sesion, index) in info" :key="index" class="sombrabkn session-container">
                 <a :href="'/session/' + sesion._id" class="card">
                     <div>
 
@@ -167,7 +168,7 @@ h1 {
 }
 
 .card:hover {
-    background-color: #efefef;
+    background-color: #ededed;
 }
 
 .card>div>h2 {
@@ -212,7 +213,7 @@ form>div {
 
 .cont {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     flex-wrap: wrap;
     width: 95%;
     margin: auto auto;
@@ -223,12 +224,18 @@ form>div {
 .session-container {
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
-    border: 2px solid #08cccc;
+    border: 2px solid gray;
     border-radius: 1rem;
-    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    /* box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2); */
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: all .3s ease;
+}
+
+.sombrabkn:hover {
+    box-shadow: rgba(8, 204, 204, 0.199) -6px 6px, rgba(8, 204, 204, 0.19) -12px 12px;
+    transform: scale(0.99);
 }
 
 .ar_form * {
@@ -253,7 +260,7 @@ form>div {
 
 .ar_form form input[type="text"] {
     border: 2px solid gray;
-    color: black;
+    /* color: black; */
 }
 
 /* #03273D; */
