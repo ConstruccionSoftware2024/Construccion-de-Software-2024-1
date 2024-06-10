@@ -1,3 +1,6 @@
+/*HU10 Como profesor quiero dejar constancia de acción de la falta incurrida por el alumno para futuras revisiones y/o
+avisos.*/
+
 <template>
   <div class="general-div">
     <h1>Faltas Alumnos</h1>
@@ -6,26 +9,26 @@
       <thead>
         <tr>
           <th>ID</th>
+          <th>Matricula</th>
+          <th>Rut</th>
           <th>Nombre</th>
           <th>Apellido Paterno</th>
           <th>Apellido Materno</th>
-          <th>Rut</th>
           <th>Correo</th>
           <th>Faltas</th>
-          <th>Estado</th>
         </tr>
       </thead>
       <tbody>
         <template v-for="(falta, index) in faltas" :key="falta._id">
           <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
             <td>{{ falta._id }}</td>
+            <td>{{ falta.matricula }}</td>
+            <td>{{ falta.rut }}</td>
             <td>{{ falta.name }}</td>
             <td>{{ falta.lastName }}</td>
             <td>{{ falta.secondLastName }}</td>
-            <td>{{ falta.rut }}</td>
             <td>{{ falta.email }}</td>
             <td>{{ falta.faltas }}</td>
-            <td>{{ falta.estado }}</td>
           </tr>
           <tr v-if="selectedFalta === index">
             <td colspan="8">
@@ -140,9 +143,8 @@ export default {
     async guardarFalta() {
       const selectedAlumnoData = this.alumnos.find((alumno) => alumno._id === this.selectedAlumno)
       if (!selectedAlumnoData || !this.selectedProfesor || !this.falta || !this.motivo || !this.fecha) {
-        // Mostrar el mensaje de error
         this.showError = true;
-        return; // Detener el proceso de guardar
+        return;
       }
       const newFalta = {
         falta: this.falta,
@@ -153,15 +155,16 @@ export default {
       console.log()
       const newAlumno = {
         _id: selectedAlumnoData._id,
+        matricula: selectedAlumnoData.matricula,
         name: selectedAlumnoData.firstName,
         lastName: selectedAlumnoData.lastName,
+        secondLastName: selectedAlumnoData.secondLastName,
         email: selectedAlumnoData.email,
         rut: selectedAlumnoData.rut,
         faltas: 1,
         estado: 'Ninguno',
         detalleFaltas: [newFalta]
       }
-      // Send the new alumno to the backend
       try {
         await axios.post('http://localhost:8080/faltas-post', newAlumno)
       } catch (error) {
@@ -176,7 +179,6 @@ export default {
       this.fetchFaltas()
     },
     cerrarModal() {
-      // Ocultar el mensaje de error al cerrar el modal
       this.showError = false;
       this.showAddFalta = false;
     }
@@ -188,6 +190,7 @@ export default {
 .detail-falta-container {
   max-height: 200px;
   overflow-y: auto;
+  width: 100%;
 }
 
 .text-form {
@@ -200,7 +203,6 @@ export default {
   top: calc(100%);
   left: 0;
   right: 0;
-  /* Agregado */
   background-color: #ff5733;
   color: white;
   padding: 10px;
@@ -220,7 +222,7 @@ export default {
   padding: 6px;
   text-align: left;
   padding-left: 3rem;
-
+  width: 100%;
 }
 
 .faltaTitle {
@@ -296,7 +298,6 @@ tr:nth-child(even) {
   padding: 2rem;
   width: 65%;
   min-height: 35%;
-  /* Cambiado de 'height' a 'min-height' */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   position: relative;
 }

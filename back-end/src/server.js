@@ -38,7 +38,6 @@ const server = http.createServer(app)
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
-
 app.get('/users', async (req, res) => {
   try {
     const database = client.db('construccion')

@@ -1,38 +1,71 @@
 <template>
-  <nav class="navbar">
-    <div class="container">
-      <div class="navbarLeft">
-        <img src="@/assets/logo.svg" alt="Logo" class="logo" />
-        <span class="text">UTAL</span>
+  <div>
+    <nav class="navbar">
+      <div class="container">
+        <div class="navbarLeft">
+          <img src="@/assets/logo.svg" alt="Logo" class="logo" />
+          <span class="text">Cheat Detector</span>
+        </div>
+        <div class="navbarRight" :class="{ open: isOpen }">
+          <RouterLink to="/" class="navLink" @click.native="closeMenu">Home</RouterLink>
+          <RouterLink to="/about" class="navLink" @click.native="closeMenu">About</RouterLink>
+          <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
+          <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
+          <button class="loginButton" @click="goLogin">
+            <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
+            <div class="loginText">Login</div>
+          </button>
+        </div>
+        <label class="hamburger">
+          <input type="checkbox" v-model="isOpen" @change="toggleMenu" />
+          <svg viewBox="0 0 32 32">
+            <path
+              class="line line-top-bottom"
+              d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"
+            ></path>
+            <path class="line" d="M7 16 27 16"></path>
+          </svg>
+        </label>
       </div>
-      <div class="navbarRight">
-        <RouterLink to="/" class="navLink">Home</RouterLink>
-        <RouterLink to="/about" class="navLink">About</RouterLink>
-        <RouterLink to="/contact" class="navLink">Contact</RouterLink>
-        <RouterLink to="/settings" class="navLink">Settings</RouterLink>
-        <button class="loginButton" @click="goLogin">
-          <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
-
-          <div class="loginText">Login</div>
-        </button>
-      </div>
+    </nav>
+    <main class="main-content">
+      <slot></slot>
+    </main>
+    <div v-if="isOpen" class="mobileLoginButtonContainer">
+      <button class="mobileLoginButton" @click="goLogin">Login</button>
     </div>
-  </nav>
+  </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const isOpen = ref(false)
 
 const goLogin = () => {
   router.push('/login')
+  closeMenu()
+}
+
+const toggleMenu = () => {
+  if (isOpen.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = 'auto'
+  }
+}
+
+const closeMenu = () => {
+  isOpen.value = false
+  document.body.style.overflow = 'auto'
 }
 </script>
 
 <style scoped>
 .navbar {
-  position: flex;
+  position: fixed;
   top: 0;
   width: 100%;
   background-color: #2c2c2e;
@@ -60,12 +93,14 @@ const goLogin = () => {
   height: 40px;
   margin-right: 10px;
 }
+
 .text {
   font-size: 1.5rem;
   font-weight: bold;
 }
 .navbarRight {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
 }
 .navLink {
@@ -149,5 +184,143 @@ const goLogin = () => {
   width: 17px;
   height: 17px;
   line-height: 17px;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 40px;
+  height: 30px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1100;
+}
+.hamburger input {
+  display: none;
+}
+.hamburger svg {
+  height: 3em;
+  transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.line {
+  fill: none;
+  stroke: white;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  transition:
+    stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.line-top-bottom {
+  stroke-dasharray: 12 63;
+}
+.hamburger input:checked + svg {
+  transform: rotate(-45deg);
+}
+.hamburger input:checked + svg .line-top-bottom {
+  stroke-dasharray: 20 300;
+  stroke-dashoffset: -32.42;
+}
+
+.main-content {
+  margin-top: 70px;
+}
+
+@media (max-width: 1024px) {
+  .navbarRight {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    background-color: #2c2c2e;
+    align-items: flex-start;
+    padding-top: 4rem;
+    padding-left: 1rem;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-height 0.3s ease-in-out,
+      opacity 0.3s ease-in-out;
+    z-index: 1000;
+  }
+  .navbarRight.open {
+    max-height: 100%;
+    opacity: 1;
+  }
+  .hamburger {
+    display: flex;
+  }
+  .navLink {
+    width: 100%;
+    padding: 1.5rem;
+    font-size: 1.5rem;
+    text-align: left;
+    transition:
+      transform 0.3s ease,
+      opacity 0.3s ease;
+  }
+  .navbarRight.open .navLink {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  .navLink {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  .navLink:nth-child(1) {
+    transition-delay: 0.1s;
+  }
+  .navLink:nth-child(2) {
+    transition-delay: 0.2s;
+  }
+  .navLink:nth-child(3) {
+    transition-delay: 0.3s;
+  }
+  .navLink:nth-child(4) {
+    transition-delay: 0.4s;
+  }
+  .loginButton {
+    display: none;
+  }
+  .mobileLoginButtonContainer {
+    position: fixed;
+    bottom: 2rem;
+    left: 1rem;
+    right: 1rem;
+    text-align: center;
+    z-index: 1001;
+  }
+  .mobileLoginButton {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.5rem;
+    background-color: #08cccc;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition:
+      background-color 0.3s ease,
+      transform 0.3s ease,
+      opacity 0.3s ease;
+    transition-delay: 0.5s;
+  }
+  .mobileLoginButton:hover {
+    background-color: #06b6b6;
+  }
+  .mobileLoginButton:active {
+    transform: translateY(2px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobileLoginButtonContainer {
+    display: none;
+  }
 }
 </style>
