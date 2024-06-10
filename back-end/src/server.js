@@ -177,7 +177,7 @@ app.post('/login', async (req, res) => {
     // Guardar el usuario en el historial de login
     await historialLogin.insertOne({
       IdUsuario: user._id,
-      nombre: user.nombre,
+      nombre: user.username,
       email: user.email,
       tiempoLogin: new Date()
     })
