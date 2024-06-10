@@ -371,3 +371,24 @@ app.post('/agregarParticipante', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+
+// HU-8 BlackList
+app.get('/sesion/:idSesion/blacklist', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const idSesion = new ObjectId(req.params.idSesion);
+
+    // Obtener la sesión y su banlist
+    const sesion = await collection.findOne({ _id: idSesion }, { projection: { banlist: 1 } });
+
+    if (sesion) {
+      res.send(sesion.banlist);
+    } else {
+      res.status(404).send('Sesión no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
