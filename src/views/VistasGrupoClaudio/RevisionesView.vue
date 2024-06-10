@@ -103,10 +103,10 @@ const students = ref([]);
 const filteredStudents = computed(() => {
   return students.value.filter((student) => {
     return (
-      student.name.toLowerCase().includes(searchName.value.toLowerCase()) &&
-      student.lastName.toLowerCase().includes(searchLastName.value.toLowerCase()) &&
-      student.email.toLowerCase().includes(searchEmail.value.toLowerCase()) &&
-      student.rut.toLowerCase().includes(searchRut.value.toLowerCase())
+      student.name?.toLowerCase().includes(searchName.value.toLowerCase()) &&
+      student.lastName?.toLowerCase().includes(searchLastName.value.toLowerCase()) &&
+      student.email?.toLowerCase().includes(searchEmail.value.toLowerCase()) &&
+      student.rut?.toLowerCase().includes(searchRut.value.toLowerCase())
     )
   })
 });

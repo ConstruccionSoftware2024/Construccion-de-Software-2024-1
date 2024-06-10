@@ -1,44 +1,47 @@
+<script setup>
+import { computed, watch, onMounted } from 'vue'
+import { useThemeStore } from '../back-end/src/store.js'
+import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
+import { RouterView } from 'vue-router'
+
+const themeStore = useThemeStore()
+
+const themeClass = computed(() => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode'))
+
+watch(themeClass, (newClass) => {
+  document.body.className = newClass
+})
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    themeStore.isDarkMode = savedTheme === 'dark'
+  }
+  document.body.className = themeClass.value
+})
+
+const toggleTheme = () => {
+  themeStore.toggleDarkMode()
+  localStorage.setItem('theme', themeStore.isDarkMode ? 'dark' : 'light')
+}
+</script>
+
 <template>
-  <div class="d-flex flex-column min-vh-100">
-    <BarraNavegacion />
-    <div class="main-content">
-      <RouterView class="flex-grow-1" />
-    </div>
-    <Footer />
+  <div id="app">
+    <Navbar />
+    <RouterView />
   </div>
 </template>
 
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import BarraNavegacion from './components/BarraNavegacion.vue'
-import Footer from './components/Footer.vue'
-</script>
-
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
-body {
-  font-family: 'Roboto', sans-serif;
-}
-
-.d-flex {
+<style scoped>
+#app {
   display: flex;
-}
-
-.flex-column {
   flex-direction: column;
-}
-
-.min-vh-100 {
-  min-height: 100vh;
-}
-
-.flex-grow-1 {
-  flex-grow: 1;
+  height: 100vh;
 }
 
 .main-content {
-  min-height: 70vh;
-  padding: 20px;
+  flex: 1 0 auto;
+  min-height: 90vh;
 }
 </style>
