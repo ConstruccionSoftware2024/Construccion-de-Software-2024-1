@@ -13,6 +13,8 @@ import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
 import perfil from '@/components/ComponentesGrupoJoaquin/profile.vue'
+import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
+import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,6 +23,18 @@ const router = createRouter({
       path: '/',
       name: 'HomeView',
       component: HomeView
+    },
+
+    {
+      path: '/vistaProfesor',
+      name: 'VistaProfesor',
+      component: VistaProfesor
+    },
+
+    {
+      path: '/about',
+      name: 'AboutView',
+      component: AboutView
     },
 
     {
