@@ -17,8 +17,8 @@
                     {{ participante.riesgo }}
                 </h4>
                 <div class="container-botones">
-                    <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
                     <button class="btn boton-alerta" @click="alertarParticipante(index)">Alertar</button>
+                    <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
                     <!-- Implementar logica para banear -->
                     <button class="btn boton-ban" @click="">Banear</button>
                 </div>
@@ -245,7 +245,7 @@ h3 {
 }
 
 .boton-expulsar {
-    background-color: white;
+    background-color: #ccc;
     color: black;
 
 }
@@ -255,7 +255,7 @@ h3 {
 }
 
 .boton-alerta {
-    background-color: white;
+    background-color: #ccc;
     color: black;
 }
 
