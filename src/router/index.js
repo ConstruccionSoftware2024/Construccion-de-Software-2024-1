@@ -12,6 +12,7 @@ import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
+import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 
 
 const router = createRouter({
@@ -106,6 +107,11 @@ const router = createRouter({
       path: '/alumnovista',
       name: 'vista-alumno',
       component: VistaAlumno
+    },
+    {
+      path: '/perfil',
+      name: 'perfil',
+      component: ProfileView
     }
   ]
 })
