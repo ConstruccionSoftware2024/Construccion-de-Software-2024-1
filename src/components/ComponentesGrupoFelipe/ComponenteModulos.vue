@@ -191,7 +191,7 @@ section {
   margin: 16px;
   display: flex;
   flex-direction: column;
-  allign-items: center;
+  align-items: center;
   justify-content: center;
 }
 
