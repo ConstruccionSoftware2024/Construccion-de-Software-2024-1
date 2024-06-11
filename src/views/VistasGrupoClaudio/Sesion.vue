@@ -20,8 +20,8 @@
                     </h4>
                 </div>
                 <div class="container-botones">
-                    <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
                     <button class="btn boton-alerta" @click="alertarParticipante(index)">Alertar</button>
+                    <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
                     <!-- Implementar logica para banear -->
                     <button class="btn boton-ban" @click="">Banear</button>
                 </div>
@@ -165,7 +165,7 @@ export default {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        mensaje: `Tu valor de riesgo actual es ${participantes.value[index].riesgo}`,
+                        mensaje: `Tu valor de riesgo actual es: ${participantes.value[index].riesgo}`,
                     }),
                 })
 
@@ -266,7 +266,7 @@ h3 {
 }
 
 .boton-expulsar {
-    background-color: white;
+    background-color: #ccc;
     color: black;
 
 }
@@ -276,7 +276,7 @@ h3 {
 }
 
 .boton-alerta {
-    background-color: white;
+    background-color: #ccc;
     color: black;
 }
 
