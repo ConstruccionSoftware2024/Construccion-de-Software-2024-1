@@ -149,7 +149,7 @@ section {
   margin-bottom: 0em;
 }
 
-.add-icon { /* Pensado para que se agreguen módulos */ 
+.add-icon { /* Pensado para que se agreguen módulos */
   cursor: pointer;
   position: absolute;
   right: 6.5em;
