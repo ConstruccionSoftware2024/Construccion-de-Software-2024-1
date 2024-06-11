@@ -74,7 +74,7 @@ const router = createRouter({
     {
       path: '/settings',
       name: 'settings',
-      component: () => import('../components/ComponentesGrupoJoaquin/SettingsView.vue')
+      component: () => import('../components/ComponentesGrupoJoaquin/SettingsPerfil.vue')
     },
     {
       path: '/invitar-alumnos',
