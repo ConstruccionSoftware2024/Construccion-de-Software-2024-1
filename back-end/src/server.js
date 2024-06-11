@@ -126,6 +126,7 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
+
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
   try {
@@ -314,6 +315,7 @@ app.get('/user/:id/alertas', async (req, res) => {
   setInterval(obtenerAlertas, 5000)
   */
 
+
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
   try {
@@ -336,6 +338,39 @@ app.post('/sesion', async (req, res) => {
     res.status(500).send('Error inserting document')
   }
 })
+
+// Banear a un alumno de una sesión
+/* Dadas las dudas presentes en el momento, esta función estará presente como un comentario
+app.post('/sesion/:id/ban', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const bannedEmail = req.body.email;
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    // Actualiza la lista de correos baneados de la sesión
+    const result = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $addToSet: { bannedEmails: bannedEmail } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Alumno baneado de la sesión' });
+    } else {
+      res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+*/
 
 app.post('/agregarParticipante', async (req, res) => {
   try {
