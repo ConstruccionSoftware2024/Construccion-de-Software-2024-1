@@ -1,19 +1,26 @@
 <script>
 
 import { ref, reactive, onMounted } from 'vue'
+import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue';
 
 export default {
+
+    components: {
+        InvitarAlumnos
+    },
 
     setup() {
         const formulario = reactive({
             nombre: '',
-            descripcion: ''
+            descripcion: '',
+            creador: 'default'
         })
         let info = ref({})
         let finish = ref({
             tried: false,
             success: false
         })
+        let enviado = ref(false)
 
         const enviarFormulario = async () => {
 
@@ -30,6 +37,9 @@ export default {
                 if (respuesta.ok) {
                     //const datos = await respuesta.json();
                     console.log('Datos enviados y subidos');
+                    //refrescamos los datos
+                    enviado.value = true
+                    cargarSesiones()
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText);
                 }
@@ -51,8 +61,8 @@ export default {
                     finish.value.success = true
                 } else {
                     console.error('Error al obtener los datos:', respuesta.statusText);
-                    finish.tried = true
-                    finish.success = false
+                    finish.value.tried = true
+                    finish.value.success = false
                 }
             } catch (error) {
                 console.error('Error en la petición fetch:', error);
@@ -65,7 +75,8 @@ export default {
             formulario,
             enviarFormulario,
             info,
-            finish
+            finish,
+            enviado
         };
     }
 
@@ -78,45 +89,53 @@ export default {
 <template>
     <div class="container">
 
-        <div class="">
+        <div class=" ar_form formcont">
             <h1>Crear una nueva sesión de monitoreo </h1>
             <form @submit.prevent="enviarFormulario">
                 <div>
-                    <label for="nombre">Nombre de la sesión:</label>
-                    <input type="text" id="nombre" v-model="formulario.nombre">
+                    <!-- <label for="nombre">Nombre de la sesión</label> -->
+                    <input required placeholder="nombre sesion" type="text" id="nombre" v-model="formulario.nombre">
+                    <!-- <label for="mensaje">Descripción</label> -->
+                    <input required placeholder="descripcion" type="text" id="mensaje" v-model="formulario.descripcion">
                 </div>
-                <div>
-                    <label for="mensaje">Descripción:</label>
-                    <textarea id="mensaje" v-model="formulario.descripcion"></textarea>
-                </div>
-                <button type="submit">Crear</button>
+
+                <input type="submit" v-if="!enviado" class="btn" value="Crear sesion">
+                <p>{{ enviado ? 'Sesión creada con exito' : '' }}</p>
             </form>
         </div>
-
         <h2>Lista de sesiones </h2>
         <div class="cont" v-if="finish">
-            <div v-for="(sesion, index) in info" :key="index">
+            <div v-for="(sesion, index) in info" :key="index" class="sombrabkn session-container">
                 <a :href="'/session/' + sesion._id" class="card">
                     <div>
 
                         <h2>
                             {{ sesion.nombre }}
                         </h2>
-                        <p>
+                        <!-- <p>
                             Id: {{ sesion._id }}
-                        </p>
+                        </p> -->
                     </div>
                     <p>
                         {{ sesion.descripcion }}
                     </p>
                 </a>
+                <InvitarAlumnos :datosSesion="sesion._id" />
             </div>
+
         </div>
+
     </div>
 
 </template>
 
 <style scoped>
+h1 {
+    font-size: 2rem;
+    font-weight: bolder;
+
+}
+
 @media (min-width: 1024px) {
     .about {
         min-height: 100vh;
@@ -125,14 +144,37 @@ export default {
     }
 }
 
-.card {
-    border: 1px solid black;
+.formcont {
     display: flex;
     flex-direction: column;
-    width: 20rem;
-    padding: .2rem;
+    gap: 2rem;
+    margin: 2rem auto;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    width: 100%;
+    padding: 1rem;
     justify-content: center;
     align-items: center;
+    border-radius: 15px;
+    /* border: 1px solid rgb(46, 46, 46); */
+    /* box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2); */
+    color: #1C1C1C;
+    text-decoration: none;
+    transition: all .3s ease;
+}
+
+.card:hover {
+    background-color: #ededed;
+}
+
+.card>div>h2 {
+    text-align: center;
+    font-weight: bold;
+    color: #08CCCC;
 }
 
 form {
@@ -140,13 +182,15 @@ form {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 2px solid coral;
+    border: 2px solid gray;
     border-radius: 1rem;
     box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
-    width: f20rem;
+    width: 30rem;
     padding: 1rem;
     height: 20rem;
     margin: 0 auto;
+    overflow: hidden;
+    gap: 1rem;
 }
 
 .container {
@@ -154,6 +198,7 @@ form {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2rem;
 }
 
 form>div {
@@ -162,19 +207,77 @@ form>div {
     padding: .5rem;
     width: 100%;
     gap: .5rem;
+    margin: 0 auto;
 }
 
-form>div>input {
-    padding: .5rem;
-}
-
-form>button {
-    padding: .5rem 1rem;
-    width: 100%;
-}
 
 .cont {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    width: 95%;
+    margin: auto auto;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.session-container {
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border: 2px solid gray;
+    border-radius: 1rem;
+    /* box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2); */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all .3s ease;
+}
+
+.sombrabkn:hover {
+    box-shadow: rgba(8, 204, 204, 0.199) -6px 6px, rgba(8, 204, 204, 0.19) -12px 12px;
+    transform: scale(0.99);
+}
+
+.ar_form * {
+    transition: .3s ease-in-out;
+    box-sizing: border-box;
+}
+
+.ar_form form input {
+    width: 90%;
+    /* margin: .6em 0; */
+    margin: 0 auto;
+    padding: 10px 10px;
+    border: 0;
+    font-weight: 700;
+    background-color: transparent;
+    outline: none;
+    border-color: #08CCCC;
+    border-radius: 20px;
+    /* margin-left: 50%; */
+    /* transform: translateX(-50%); */
+}
+
+.ar_form form input[type="text"] {
+    border: 2px solid gray;
+    /* color: black; */
+}
+
+/* #03273D; */
+.ar_form form input[type="text"]:focus {
+    border-color: #08CCCC;
+    width: 100%
+}
+
+.ar_form form input[type="submit"] {
+    background-color: #06a0a0;
+    color: white;
+    width: 70%;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+
+.ar_form form input[type="submit"]:hover {
+    width: 80%;
+    background-color: #08CCCC;
 }
 </style>
