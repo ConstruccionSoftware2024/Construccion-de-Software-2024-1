@@ -162,7 +162,7 @@ export default {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        mensaje: `Tu valor de riesgo actual es ${participantes.value[index].riesgo}`,
+                        mensaje: `Tu valor de riesgo actual es: ${participantes.value[index].riesgo}`,
                     }),
                 })
 
