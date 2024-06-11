@@ -21,10 +21,21 @@
             </div>
           </div>
           <div class="options">
-            <a href="#" class="forgotPassword">Olvidaste la contraseña?</a>
+            <a href="#" class="forgotPassword" @click.prevent="showResetPassword">Olvidaste la contraseña?</a>
           </div>
           <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
+        <form v-else-if="isResetPassword" class="" key="">
+          <div class="">
+            <div class="inputGroup">
+              <div class="inputWrapper">
+                <i class="fas fa-at"></i>
+                <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
+              </div>
+            </div>
+          </div>
+          <button class="loginButton" @click="submitResetPassword">Enviar</button>
+        </form> 
         <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
@@ -146,8 +157,10 @@ export default {
       major: '',
       rut: '',
       matricula: '',
+      role: '',
       passwordVisible: false,
       isLogin: true,
+      isResetPassword: false,
       showPopup: false,
       errorMessage: ''
     }
@@ -169,6 +182,23 @@ export default {
       const regex = /(^[a-zA-Z0-9_.+-]+@(alumnos\.)?utalca\.cl$)/;
       return regex.test(this.email);
     },
+    validaRut(rutCompleto) {
+      rutCompleto = rutCompleto.replace("‐","-");
+      if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
+          return false;
+      let tmp = rutCompleto.split('-');
+      let digv = tmp[1];
+      let rut = tmp[0];
+      if (digv == 'K') digv = 'k' ;
+
+      return (this.dv(rut) == digv );
+    },
+    dv(T) {
+      let M = 0, S = 1;
+      for (; T; T = Math.floor(T / 10))
+          S = (S + T % 10 * (9 - M++ % 6)) % 11;
+      return S ? S - 1 : 'k';
+    },
     async login() {
       try {
         const response = await axios.post('http://localhost:8080/login', {
@@ -188,13 +218,36 @@ export default {
         console.error(error);
       }
     },
+    showResetPassword() {
+      this.isResetPassword = true;
+      this.isLogin = false;
+    },
+    async submitResetPassword() {
+      if (this.email) {
+        try {
+          const response = await axios.post('http://localhost:8080/resetPassword', { email: this.email });
+          if (response.data.success) {
+            alert('Revisa tu correo electrónico para las instrucciones de restablecimiento de contraseña.');
+            this.showResetForm = false; // Opcional: Volver al inicio de sesión después de enviar el correo
+          } else {
+            this.showError('No se pudo enviar el correo de restablecimiento de contraseña.');
+          }
+        } catch (error) {
+          console.error(error);
+          this.showError('Error al intentar restablecer la contraseña.');
+        }
+      }
+    },
     async register() {
       try {
 
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
-
+        if (!this.validaRut(this.rut)) {
+          this.showError('El RUT no es válido.');
+          return;
+        }
         if (checkEmailResponse.data.exists) {
           this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
           return;
@@ -213,12 +266,13 @@ export default {
           secondLastName: this.secondLastName,
           rut: this.rut,
           matricula: this.matricula,
+          role: 'Estudiante',
           campus: this.campus,
           major: this.major,
         });
         if (response.data.success) {
           const userStore = useUserStore();
-          userStore.setUser(response.data.user);  // Almacenar los datos del usuario
+          userStore.setUser(response.data.user);
           this.email = '';
           this.username = '';
           this.password = '';
@@ -242,6 +296,7 @@ export default {
     },
     toggleForm() {
       this.isLogin = !this.isLogin
+      this.isResetPassword = false
     }
   }
 }
@@ -250,6 +305,10 @@ export default {
 <style scoped>
 * {
   box-sizing: border-box;
+}
+
+.recovery{
+  width: 400px;
 }
 
 .error-popup {
