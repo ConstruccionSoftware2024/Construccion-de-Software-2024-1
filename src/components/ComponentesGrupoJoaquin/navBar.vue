@@ -11,10 +11,13 @@
           <RouterLink to="/about" class="navLink" @click.native="closeMenu">About</RouterLink>
           <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
           <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
+          <RouterLink to="/newsession" class="navLink">Sesiones</RouterLink>
+          <Notificaciones />
           <button class="loginButton" @click="goLogin">
             <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
             <div class="loginText">Login</div>
           </button>
+          
         </div>
         <label class="hamburger">
           <input type="checkbox" v-model="isOpen" @change="toggleMenu" />
@@ -27,6 +30,7 @@
           </svg>
         </label>
       </div>
+      
     </nav>
     <main class="main-content">
       <slot></slot>
@@ -38,6 +42,7 @@
 </template>
 
 <script setup>
+import Notificaciones from '../ComponentesGrupoClaudio/Notificaciones.vue';
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -77,6 +82,7 @@ const closeMenu = () => {
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .container {
   display: flex;
   justify-content: space-between;
@@ -85,10 +91,12 @@ const closeMenu = () => {
   max-width: 1200px;
   margin: 0 auto;
 }
+
 .navbarLeft {
   display: flex;
   align-items: center;
 }
+
 .logo {
   height: 40px;
   margin-right: 10px;
@@ -98,11 +106,13 @@ const closeMenu = () => {
   font-size: 1.5rem;
   font-weight: bold;
 }
+
 .navbarRight {
   display: flex;
   align-items: center;
   gap: 1.5rem;
 }
+
 .navLink {
   color: white;
   text-decoration: none;
@@ -110,6 +120,7 @@ const closeMenu = () => {
   padding: 0.5rem 1rem;
   transition: all 0.3s ease;
 }
+
 .navLink:hover {
   color: #08cccc;
   border-radius: 4px;

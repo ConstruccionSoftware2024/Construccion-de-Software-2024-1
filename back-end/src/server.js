@@ -17,7 +17,7 @@ let db
 // Configuración de CORS
 const corsOptions = {
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'DELETE'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }
 app.use(cors(corsOptions))
@@ -101,24 +101,6 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
-let historial = []
-/* FUNCION DE LOGIN ANTERIOR 
-//funcion que guarda el usuarios que se acaban de logear en un historial
-app.post('/login', async (req, res) => {
-  const { nombre, matricula } = req.body
-
-  const database = client.db('construccion') //aqui debe de ir el nombre de la tabla donde se almacenan los usuarios logeados
-  const collection = database.collection('users')
-  const user = await collection.findOne({ nombre, matricula })
-
-  if (user) {
-    historial.push({ nombre, matricula, fecha: new Date() })
-    res.json({ message: 'usuario guardado' })
-  } else {
-    res.status(401).json({ message: 'usuario no encontrado' })
-  }
-});
-*/
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -158,6 +140,7 @@ app.post('/login', async (req, res) => {
     const database = client.db('construccion')
     const User = database.collection('users')
     const user = await User.findOne({ email: req.body.email })
+    const historialLogin = database.collection('historialLogin') //nueva coleccion para almacenar el historial del login en la pagina
 
     if (!user) {
       return res.json({ success: false })
@@ -166,6 +149,18 @@ app.post('/login', async (req, res) => {
     if (req.body.password !== user.password) {
       return res.json({ success: false })
     }
+
+    // Guardar el usuario en el historial de login
+    await historialLogin.insertOne({
+      IdUsuario: user._id,
+      nombre: user.username,
+      email: user.email,
+      tiempoLogin: new Date()
+    })
+
+    // Mostrar historial de login
+    const historial = await historialLogin.find().toArray()
+    console.log('Historial de login:', historial)
 
     res.json({ success: true })
   } catch (error) {
@@ -217,7 +212,9 @@ app.get('/sesion/:id', async (req, res) => {
 //obtener usuario especifico
 app.get('/user/:id', async (req, res) => {
   try {
-    console.log('here')
+
+    //console.log("here")
+
     const database = client.db('construccion')
     const collection = database.collection('users')
     const consulta = { _id: new ObjectId(req.params.id) }
@@ -275,24 +272,24 @@ app.get('/user/:id/alertas', async (req, res) => {
 // Para mostrar los mensajes de alerta en algún componente puedes usar la siguiente función
 // USAR SOLO EN EL FRONTEND (NO AQUI)
 /*
-const obtenerAlertas = async () => {
-  try {
-      let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
-      let alertas = await respuesta.json()
+  const obtenerAlertas = async () => {
+    try {
+        let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
+        let alertas = await respuesta.json()
+  
+        // Muestra las alertas al usuario
+        alertas.forEach(alerta => {
+            alert(alerta)
+        })
+    }
+    catch (error) {
+        console.error('Error al obtener las alertas:', error)
+    }
+  }  
+  // Se llama a obtenerAlertas cada 5 segundos
+  setInterval(obtenerAlertas, 5000)
+  */
 
-      // Muestra las alertas al usuario
-      alertas.forEach(alerta => {
-          alert(alerta)
-      })
-  }
-  catch (error) {
-      console.error('Error al obtener las alertas:', error)
-  }
-}
-
-// Se llama a obtenerAlertas cada 5 segundos
-setInterval(obtenerAlertas, 5000)
-*/
 
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
@@ -302,13 +299,83 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
-      participantes: []
+
+      creador: req.body.creador,
+      participantes: [],
+      banlist: [],
+
     }
-    console.log('enviando', newSession.nombre, newSession.descripcion)
+    //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
     res.sendStatus(200)
   } catch (error) {
     console.error('Error inserting document:', error)
     res.status(500).send('Error inserting document')
+  }
+})
+
+// Banear a un alumno de una sesión
+/* Dadas las dudas presentes en el momento, esta función estará presente como un comentario
+app.post('/sesion/:id/ban', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const bannedEmail = req.body.email;
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    // Actualiza la lista de correos baneados de la sesión
+    const result = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $addToSet: { bannedEmails: bannedEmail } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Alumno baneado de la sesión' });
+    } else {
+      res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+*/
+
+app.post('/agregarParticipante', async (req, res) => {
+  try {
+    //Implementar lógica para agregar participante a sesion
+    //se asume que se enviaran como parametros el id de la sesion y el id del participante
+
+    //cambiar estos por req.body.idSesion y req.body.idParticipante
+    let idSesion = '665d1794a22b8d44afad0793'
+    let idParticipante = '665cfd84b637ff59e562b66d'
+
+    //obtenemos la sesion
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(idSesion) }
+    const result = await collection.findOne(consulta)
+
+    //Si el usuario fue baneado de la sesion no lo agregamos
+    if (result) {
+      // Verificar si el participante está en la banlist
+      const participanteBaneado = result.banlist.some((element) => idParticipante === element)
+      if (participanteBaneado) {
+        return res.status(403).send('Participante baneado no se puede agregar')
+      }
+    }
+
+    //Continuar con la lógica para agregar participante a sesion
+
+    res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send(error.message)
   }
 })
