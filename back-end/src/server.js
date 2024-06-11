@@ -153,6 +153,8 @@ app.post('/login', async (req, res) => {
       return res.json({ success: false })
     }
 
+    // Excluir la contraseña de la respuesta
+    const { password, ...userWithoutPassword } = user
     // Guardar el usuario en el historial de login
     await historialLogin.insertOne({
       IdUsuario: user._id,
@@ -165,12 +167,16 @@ app.post('/login', async (req, res) => {
     const historial = await historialLogin.find().toArray()
     console.log('Historial de login:', historial)
 
-    res.json({ success: true })
+    res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+
+
+
+
 
 app.post('/register', async (req, res) => {
   const {
