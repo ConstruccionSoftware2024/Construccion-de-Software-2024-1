@@ -11,7 +11,7 @@ import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
 import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
-import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
+import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
@@ -108,17 +108,10 @@ const router = createRouter({
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
-    {
-      path: '/estadoAlumnos',
-      name: 'EstadoAlumnos',
-      component: EstadoAlumnos
-    },
-    { path: '/lista-alumnos', name: 'lista-alumnos', component: ListaAlumnos },
-    {
-      path: '/lista-alumnos',
-      name: 'lista-alumnos',
-      component: () => import('../views/VistasGrupoClaudio/EstadoAlumnos.vue')
-    },
+    { 
+      path: '/lista-alumnos', 
+      name: 'lista-alumnos', 
+      component: ListaAlumnos },
     {
       path: '/historial',
       name: 'historial',
@@ -130,10 +123,10 @@ const router = createRouter({
       component: VistaAlumno
     },
     {
-      path: '/historial',
-      name: 'historial',
-      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
-    }
+      path: '/perfil',
+      name: 'perfil',
+      component: ProfileView
+    },
   ]
 })
 

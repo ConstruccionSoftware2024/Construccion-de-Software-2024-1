@@ -23,7 +23,7 @@
           </template>
 
           <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
-
+                    <Notificaciones />
           <template v-if="isAuthenticated">
             <button class="loginButton" @click="goProfile">
               <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
@@ -47,6 +47,7 @@
           </svg>
         </label>
       </div>
+      
     </nav>
     <main class="main-content">
       <slot></slot>
@@ -58,6 +59,7 @@
 </template>
 
 <script setup>
+import Notificaciones from '../ComponentesGrupoClaudio/Notificaciones.vue';
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../back-end/src/store.js'
