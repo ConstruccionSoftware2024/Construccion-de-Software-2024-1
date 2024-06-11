@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
-
+import bcrypt from 'bcrypt'
 dotenv.config()
 
 // Configuración de la aplicación
@@ -326,14 +326,36 @@ app.post('/checkEmail', async (req, res) => {
   }
 })
 //actualizar ciertos datos del perfil
+app.post('/verify_password', async (req, res) => {
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  try {
+    const email = { email: req.body.email }
+    const val_password = { val_password: req.body.val_password }
+
+    // Busca al usuario en la base de datos
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({ passwordCorrect: false })
+    }
+    const passwordCorrect = await bcrypt.compare(val_password, user.password)
+    res.json(passwordCorrect)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
 app.post('/edit_username', async (req, res) => {
   try {
     const database = client.db('construccion')
     const User = database.collection('users')
     const filter = { email: req.body.email }
     const update = { username: req.body.new_username }
-    const poster = await User.updateOne(filter, { $set: update })
-    console.log('******Actualizar*********', filter, update, poster)
+    if (update != '') {
+      const poster = await User.updateOne(filter, { $set: update })
+      console.log(poster)
+    }
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })
@@ -345,10 +367,10 @@ app.post('/edit_password', async (req, res) => {
     const User = database.collection('users')
     const filter = { email: req.body.email }
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
-    //const update2 = { confirmPassword: 'Prueba' }
-    const poster = await User.updateOne(filter, { $set: update1 })
-    console.log()
-    console.log('******Actualizar **********', poster)
+    if (update1 != '' || update1 != ' ') {
+      const poster = await User.updateOne(filter, { $set: update1 })
+      console.log(poster)
+    }
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })

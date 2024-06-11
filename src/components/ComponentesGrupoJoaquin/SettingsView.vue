@@ -26,17 +26,20 @@
           <div class="profile-setting">
             <label for="username">Cambio de Usuario</label>
             <input type="text" id="new_username" v-model="newusername">
+
+            <button class="Btn" @click.prevent="edit_username">Cambiar tu Username
+              <svg class="svg" viewBox="0 0 512 512">
+                <path
+                  d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
+                </path>
+              </svg>
+            </button>
           </div>
-          <button class="Btn" @click.prevent="edit_username">Cambiar tu Username
-            <svg class="svg" viewBox="0 0 512 512">
-              <path
-                d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
-              </path>
-            </svg>
-          </button>
-          <div class="profile-setting">
-            <label for="password">Cambio de contraseña</label>
-            <input type="password" id="new_password" v-model="newpassword">
+          <div class="contenedor">
+            <div class="profile-setting">
+              <label for="password">Cambio de contraseña</label>
+              <input type="password" id="new_password" v-model="newpassword">
+            </div>
           </div>
           <button class="Btn" @click.prevent="edit_password">Cambiar contraseña
             <svg class="svg" viewBox="0 0 512 512">
@@ -45,10 +48,9 @@
               </path>
             </svg>
           </button>
+
         </div>
       </div>
-
-
 
     </div>
 
@@ -80,10 +82,7 @@ import { useThemeStore, useUserStore } from '../../../back-end/src/store.js'
 
 const themeStore = useThemeStore()
 const selectedTheme = ref('light')
-const profile = ref({
-  username: '',
-  email: ''
-})
+
 const isDarkMode = computed(() => themeStore.isDarkMode)
 
 const selectTheme = (theme) => {
@@ -150,13 +149,21 @@ export default {
   methods: {
     async edit_username() {
       try {
+        //var val_pass = prompt("Ingrese la contraseña actual para actualizar")
+        //const response = await axios.post('http://localhost:8080/verify_password', {
+        //email: user.value.email,
+        //val_password: val_pass
+        //});
+        //if (response.data.passwordCorrect) {
         const response = await axios.post('http://localhost:8080/edit_username', {
           email: user.value.email,
-          new_username: this.newusername,
-
+          new_username: this.newusername
         });
 
         console.log(response.data);
+        //} else {
+        //  alert("Contraseña incorrecta")
+        //}
 
       } catch (error) {
         console.error(error);
@@ -200,9 +207,10 @@ export default {
 }
 
 .profile-setting label {
-  display: block;
+  display: flex;
   font-size: 1rem;
   margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 h2 {
@@ -211,13 +219,15 @@ h2 {
 }
 
 .profile-setting input {
-  width: 100%;
+  width: 60%;
   padding: 0.5rem;
   font-size: 1rem;
   border-radius: 5px;
   border-color: transparent;
   background-color: var(--input-background-color);
   color: var(--text-color);
+  display: flex;
+  margin-left: 0;
 }
 
 input:focus {
@@ -324,10 +334,11 @@ p {
   font-size: 18px;
 }
 
+
+
 .Btn {
   position: relative;
-  display: flex;
-  align-items: center;
+
   justify-content: flex-start;
   width: 20%;
   height: 40px;
@@ -340,7 +351,7 @@ p {
   border-radius: 10px;
   box-shadow: 5px 5px 0px #6d6b6b;
   transition-duration: .3s;
-  margin: 6%;
+  margin: 1%;
 }
 
 .svg {

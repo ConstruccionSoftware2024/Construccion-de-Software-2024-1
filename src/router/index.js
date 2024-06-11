@@ -12,7 +12,6 @@ import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
-import perfil from '@/components/ComponentesGrupoJoaquin/profile.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 
@@ -118,11 +117,6 @@ const router = createRouter({
       path: '/alumnovista',
       name: 'vista-alumno',
       component: VistaAlumno
-    },
-    {
-      path: '/perfil',
-      name: 'perfil',
-      component: () => import('../components/ComponentesGrupoJoaquin/profile.vue')
     }
   ]
 })
