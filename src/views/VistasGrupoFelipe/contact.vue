@@ -50,9 +50,6 @@
     </body>
 </template>
 
-<script>
-
-</script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
@@ -98,7 +95,7 @@ body {
     margin-bottom: 16px;
     box-sizing: border-box;
     border-radius: 15px;
-    background-color: #dcdce1;
+    background-color: white;
     border: none;
 }
 
