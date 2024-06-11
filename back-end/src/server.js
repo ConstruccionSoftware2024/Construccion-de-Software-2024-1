@@ -38,7 +38,6 @@ const server = http.createServer(app)
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
-
 app.get('/users', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -83,30 +82,6 @@ app.post('/faltas-post', async (req, res) => {
     res.status(200).send('Falta agregada correctamente')
   } catch (error) {
     console.error(error) // Imprime el error
-    res.status(500).send(error.message)
-  }
-})
-
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
-  } catch (error) {
-    res.status(500).send(error.message)
-  }
-})
-
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
-  } catch (error) {
     res.status(500).send(error.message)
   }
 })
