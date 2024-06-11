@@ -10,6 +10,7 @@
         <RouterLink to="/about" class="navLink">About</RouterLink>
         <RouterLink to="/contact" class="navLink">Contact</RouterLink>
         <RouterLink to="/settings" class="navLink">Settings</RouterLink>
+        <RouterLink to="/newsession" class="navLink">Sesiones</RouterLink>
         <Notificaciones />
         <button class="loginButton" @click="goLogin">
           <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
