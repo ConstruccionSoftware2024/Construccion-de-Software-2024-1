@@ -65,6 +65,20 @@
               </div>
             </div>
             <div class="inputGroup">
+              <label for="rut">RUT</label>
+              <div class="inputWrapper">
+                <i class="fas fa-lock"></i>
+                <input type="text" id="rut" v-model="rut" placeholder="Ingresa tu RUT" required />
+              </div>
+            </div>
+            <div class="inputGroup">
+              <label for="matricula">Matricula</label>
+              <div class="inputWrapper">
+                <i class="fas fa-lock"></i>
+                <input type="text" id="matricula" v-model="matricula" placeholder="Ingresa tu matricula" required />
+              </div>
+            </div>
+            <div class="inputGroup">
               <label for="campus">Campus</label>
               <div class="inputWrapper">
                 <i class="fas fa-university"></i>
@@ -116,6 +130,7 @@
 
 <script>
 import axios from 'axios';
+import { useUserStore } from '../../../back-end/src/store.js';
 
 export default {
   data() {
@@ -129,6 +144,8 @@ export default {
       secondLastName: '',
       campus: '',
       major: '',
+      rut: '',
+      matricula: '',
       passwordVisible: false,
       isLogin: true,
       showPopup: false,
@@ -160,10 +177,9 @@ export default {
         });
 
         if (response.data.success) {
-          console.log('Datos del alumno:', response.data.alumno);
-          // Guardar datos en LocalStorage
-          localStorage.setItem('alumno', JSON.stringify(response.data.alumno));
-
+          const userStore = useUserStore();
+          userStore.setUser(response.data.user);  // Almacenar los datos del usuario
+          console.log('user:', response.data.user);
           this.$router.push('/sesionesAlum'); // Cambiar '/modulosAlum' por la ruta de la página a la que se redirigirá al iniciar sesión
         } else {
           this.showError('Correo electrónico o contraseña incorrectos');
@@ -174,7 +190,7 @@ export default {
     },
     async register() {
       try {
-        // Verificar si el correo electrónico ya existe
+
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
@@ -195,10 +211,14 @@ export default {
           firstName: this.firstName,
           lastName: this.lastName,
           secondLastName: this.secondLastName,
+          rut: this.rut,
+          matricula: this.matricula,
           campus: this.campus,
-          major: this.major
+          major: this.major,
         });
         if (response.data.success) {
+          const userStore = useUserStore();
+          userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           this.email = '';
           this.username = '';
           this.password = '';
@@ -206,9 +226,13 @@ export default {
           this.firstName = '';
           this.lastName = '';
           this.secondLastName = '';
+          this.rut = '';
+          this.matricula = '';
           this.campus = '';
           this.major = '';
+          this.$router.push('/about');
         }
+        this.showError('Revise su correo ingresado para confirmar el registro.');
       } catch (error) {
         console.error('error in register function:', error);
       }
@@ -277,12 +301,16 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 90vh;
+  padding-top: 20px;
+  padding-bottom: 50px;
 }
+
 
 .loginForm {
   background-color: var(--container-background-color);
   padding: 2rem;
   border-radius: 15px;
+  border-top: 200px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   text-align: center;
   transition: all 0.3s ease;
