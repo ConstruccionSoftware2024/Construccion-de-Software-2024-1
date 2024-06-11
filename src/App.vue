@@ -35,6 +35,7 @@ onMounted(() => {
   // Aplicar el tema actual al cargar la aplicación
   applyThemeClass(themeClass());
 
+
   // Observar cambios en el tema y aplicarlos
   themeStore.$watch('isDarkMode', (newVal) => {
     applyThemeClass(themeClass());
