@@ -16,6 +16,8 @@
             <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
           </template>
 
+          <RouterLink to="/navegacion" class="navLink" @click.native="closeMenu">Navegación</RouterLink>
+
           <!-- Mostrar Prueba1, Prueba2 solo si el usuario es profesor -->
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba1</RouterLink>
