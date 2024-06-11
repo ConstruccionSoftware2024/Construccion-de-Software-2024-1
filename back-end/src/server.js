@@ -126,25 +126,6 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
-let historial = []
-/* FUNCION DE LOGIN ANTERIOR 
-//funcion que guarda el usuarios que se acaban de logear en un historial
-app.post('/login', async (req, res) => {
-  const { nombre, matricula } = req.body
-
-  const database = client.db('construccion') //aqui debe de ir el nombre de la tabla donde se almacenan los usuarios logeados
-  const collection = database.collection('users')
-  const user = await collection.findOne({ nombre, matricula })
-
-  if (user) {
-    historial.push({ nombre, matricula, fecha: new Date() })
-    res.json({ message: 'usuario guardado' })
-  } else {
-    res.status(401).json({ message: 'usuario no encontrado' })
-  }
-});
-*/
-
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
   try {
@@ -183,6 +164,7 @@ app.post('/login', async (req, res) => {
     const database = client.db('construccion')
     const User = database.collection('users')
     const user = await User.findOne({ email: req.body.email })
+    const historialLogin = database.collection('historialLogin') //nueva coleccion para almacenar el historial del login en la pagina
 
     if (!user) {
       return res.json({ success: false })
@@ -191,6 +173,18 @@ app.post('/login', async (req, res) => {
     if (req.body.password !== user.password) {
       return res.json({ success: false })
     }
+
+    // Guardar el usuario en el historial de login
+    await historialLogin.insertOne({
+      IdUsuario: user._id,
+      nombre: user.username,
+      email: user.email,
+      tiempoLogin: new Date()
+    })
+
+    // Mostrar historial de login
+    const historial = await historialLogin.find().toArray()
+    console.log('Historial de login:', historial)
 
     res.json({ success: true })
   } catch (error) {
@@ -242,7 +236,9 @@ app.get('/sesion/:id', async (req, res) => {
 //obtener usuario especifico
 app.get('/user/:id', async (req, res) => {
   try {
+
     //console.log("here")
+
     const database = client.db('construccion')
     const collection = database.collection('users')
     const consulta = { _id: new ObjectId(req.params.id) }
@@ -313,8 +309,7 @@ app.get('/user/:id/alertas', async (req, res) => {
     catch (error) {
         console.error('Error al obtener las alertas:', error)
     }
-  }
-  
+  }  
   // Se llama a obtenerAlertas cada 5 segundos
   setInterval(obtenerAlertas, 5000)
   */
@@ -327,6 +322,7 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
+
       creador: req.body.creador,
       participantes: [],
       banlist: [],
