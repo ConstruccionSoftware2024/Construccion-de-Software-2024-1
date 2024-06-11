@@ -17,7 +17,12 @@ import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router';
 
 const themeStore = useThemeStore();
+const themeClass = computed(() => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode'))
 const router = useRouter();
+
+watch(themeClass, (newClass) => {
+  document.body.className = newClass
+})
 
 // Cambiar tema
 const toggleTheme = () => {
@@ -25,22 +30,13 @@ const toggleTheme = () => {
   localStorage.setItem('theme', themeStore.isDarkMode ? 'dark' : 'light');
 };
 
-// Observar cambios en el tema y aplicarlos al cuerpo del documento
 onMounted(() => {
-  const themeClass = () => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode');
-  const applyThemeClass = (newClass) => {
-    document.body.className = newClass;
-  };
-
-  // Aplicar el tema actual al cargar la aplicación
-  applyThemeClass(themeClass());
-
-
-  // Observar cambios en el tema y aplicarlos
-  themeStore.$watch('isDarkMode', (newVal) => {
-    applyThemeClass(themeClass());
-  });
-});
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    themeStore.isDarkMode = savedTheme === 'dark'
+  }
+  document.body.className = themeClass.value
+})
 
 // Registro de URLs visitadas internas
 router.beforeEach((to, from, next) => {
