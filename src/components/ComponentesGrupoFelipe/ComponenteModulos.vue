@@ -152,7 +152,7 @@ section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0em;
+  margin-bottom: 60em; /*se edito esto ya que en la rama original no existia el footer*/
 }
 
 .add-icon { /* Pensado para que se agreguen módulos */ 
