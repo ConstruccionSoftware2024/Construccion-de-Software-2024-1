@@ -145,7 +145,6 @@ app.post('/login', async (req, res) => {
 });
 */
 
-
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
   try {
@@ -156,102 +155,101 @@ app.get('/sesion', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-});
+})
 
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
   try {
-      const database = client.db('construccion')
-      const collection = database.collection('sesion')
-      const consulta = {_id: new ObjectId(req.params.id)}
-      const nuevosParticipantes = req.body.participantes
-      const result = await collection.updateOne(consulta, { $set: { participantes: nuevosParticipantes } })
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const nuevosParticipantes = req.body.participantes
+    const result = await collection.updateOne(consulta, {
+      $set: { participantes: nuevosParticipantes }
+    })
 
-      if (result.modifiedCount === 1) {
-          res.send(result)
-      } else {
-          res.status(404).send('Sesión no encontrada')
-      }
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Sesión no encontrada')
+    }
   } catch (error) {
-      res.status(500).send(error.message)
+    res.status(500).send(error.message)
   }
 })
 /* FUNCION DE LOGIN DE GRUPO JOAQUIN*/
 app.post('/login', async (req, res) => {
   try {
-    const database = client.db('construccion');
-    const User = database.collection('users');
-    const user = await User.findOne({ email: req.body.email });
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const user = await User.findOne({ email: req.body.email })
 
     if (!user) {
-      return res.json({ success: false });
+      return res.json({ success: false })
     }
 
     if (req.body.password !== user.password) {
-      return res.json({ success: false });
+      return res.json({ success: false })
     }
 
-    res.json({ success: true});
+    res.json({ success: true })
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
   }
-});
+})
 
 app.post('/register', async (req, res) => {
-  try{
-    const database = client.db('construccion');
-    const collection = database.collection('users');
-    await collection.insertOne(req.body);
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    await collection.insertOne(req.body)
     res.send({ success: true, message: 'Registro exitoso' })
-  }
-  catch(error){
+  } catch (error) {
     console.log(error)
   }
-  
-});
+})
 
 app.post('/checkEmail', async (req, res) => {
   try {
-    const database = client.db('construccion');
-    const User = database.collection('users');
-    const user = await User.findOne({ email: req.body.email });
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const user = await User.findOne({ email: req.body.email })
 
     if (user) {
-      res.json({ exists: true });
+      res.json({ exists: true })
     } else {
-      res.json({ exists: false });
+      res.json({ exists: false })
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
   }
-});
+})
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('sesion')
-    const consulta = {_id: new ObjectId(req.params.id)}
+    const consulta = { _id: new ObjectId(req.params.id) }
     const result = await collection.findOne(consulta)
     res.send(result)
   } catch (error) {
     res.status(500).send(error.message)
   }
-});
+})
 
 //obtener usuario especifico
-app.get('/user/:id',async (req, res) => {
+app.get('/user/:id', async (req, res) => {
   try {
-    console.log("here")
+    console.log('here')
     const database = client.db('construccion')
     const collection = database.collection('users')
-    const consulta = {_id: new ObjectId(req.params.id)}
+    const consulta = { _id: new ObjectId(req.params.id) }
     const result = await collection.findOne(consulta)
-    if(result){
+    if (result) {
       res.send(result)
-    }
-    else{
+    } else {
       res.status(404).send('user not found')
     }
   } catch (error) {
@@ -261,41 +259,41 @@ app.get('/user/:id',async (req, res) => {
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario
-// Para utilizar el mensaje de alerta en algun componente es necesario usar el 
+// Para utilizar el mensaje de alerta en algun componente es necesario usar el
 // metodo GET /user/:id/alertas abajo para obtener los mensajes
 app.post('/user/:id/alerta', async (req, res) => {
   try {
-      const database = client.db('construccion')
-      const collection = database.collection('users')
-      const consulta = {_id: new ObjectId(req.params.id)}
-      const mensaje = req.body.mensaje
-      const result = await collection.updateOne(consulta, { $push: { alertas: mensaje } })
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const mensaje = req.body.mensaje
+    const result = await collection.updateOne(consulta, { $push: { alertas: mensaje } })
 
-      if (result.modifiedCount === 1) {
-          res.send(result)
-      } else {
-          res.status(404).send('Usuario no encontrado')
-      }
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Usuario no encontrado')
+    }
   } catch (error) {
-      res.status(500).send(error.message)
+    res.status(500).send(error.message)
   }
 })
 
 // Usa este método para obtener los mensajes de alerta de un usuario
 app.get('/user/:id/alertas', async (req, res) => {
   try {
-      const database = client.db('construccion')
-      const collection = database.collection('users')
-      const consulta = {_id: new ObjectId(req.params.id)}
-      const usuario = await collection.findOne(consulta)
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const usuario = await collection.findOne(consulta)
 
-      if (usuario) {
-          res.send(usuario.alertas)
-      } else {
-          res.status(404).send('Usuario no encontrado')
-      }
+    if (usuario) {
+      res.send(usuario.alertas)
+    } else {
+      res.status(404).send('Usuario no encontrado')
+    }
   } catch (error) {
-      res.status(500).send(error.message)
+    res.status(500).send(error.message)
   }
 })
 
@@ -320,7 +318,6 @@ const obtenerAlertas = async () => {
 // Se llama a obtenerAlertas cada 5 segundos
 setInterval(obtenerAlertas, 5000)
 */
-;
 
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
@@ -331,12 +328,45 @@ app.post('/sesion', async (req, res) => {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
       participantes: []
-    };
-    console.log("enviando", newSession.nombre, newSession.descripcion)
-    const result = await collection.insertOne(newSession);
-    res.sendStatus(200);
+    }
+    console.log('enviando', newSession.nombre, newSession.descripcion)
+    const result = await collection.insertOne(newSession)
+    res.sendStatus(200)
   } catch (error) {
-    console.error('Error inserting document:', error);
-    res.status(500).send('Error inserting document');
+    console.error('Error inserting document:', error)
+    res.status(500).send('Error inserting document')
+  }
+})
+
+// Banear a un alumno de una sesión
+/* Dadas las dudas presentes en el momento, esta función estará presente como un comentario
+app.post('/sesion/:id/ban', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const bannedEmail = req.body.email;
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    // Actualiza la lista de correos baneados de la sesión
+    const result = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $addToSet: { bannedEmails: bannedEmail } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Alumno baneado de la sesión' });
+    } else {
+      res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+*/
