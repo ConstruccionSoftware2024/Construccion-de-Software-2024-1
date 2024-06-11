@@ -8,6 +8,7 @@
         </div>
         <div class="navbarRight" :class="{ open: isOpen }">
           <RouterLink to="/" class="navLink" @click.native="closeMenu">Home</RouterLink>
+        <RouterLink to="/sesionesAlum" class="navLink">Sesiones</RouterLink>
 
           <!-- Mostrar About y Contact para todos menos si el usuario es profesor -->
           <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">

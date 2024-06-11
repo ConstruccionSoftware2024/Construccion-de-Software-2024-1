@@ -33,6 +33,9 @@ export default {
 .subject-list {
   list-style-type: none;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .subject-list li {
@@ -46,9 +49,12 @@ export default {
   padding: 12px 32px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
   font-size: 18px;
-  margin: 4px 2px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.subject-button:hover {
+  background-color: #FFD591;
 }
 </style>
