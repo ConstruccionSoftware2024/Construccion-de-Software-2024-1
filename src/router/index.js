@@ -15,6 +15,7 @@ import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
+import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -126,6 +127,11 @@ const router = createRouter({
       path: '/perfil',
       name: 'perfil',
       component: ProfileView
+    },
+    {
+      path: '/navegacion',
+      name: 'navegacion',
+      component: () => import('../components/ComponentesGrupoFelipe/navegacion.vue')
     },
   ]
 })
