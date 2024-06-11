@@ -1,9 +1,20 @@
+<template>
+  <div id="app">
+    <Navbar />
+    <div class="main-content">
+      <RouterView />
+    </div>
+    <Footer />
+  </div>
+</template>
+
 <script setup>
-import { onMounted } from 'vue';
+import { computed, watch, onMounted } from 'vue'
+import { useThemeStore } from '../back-end/src/store.js'
+import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
+import Footer from './components/ComponentesGrupoJoaquin/Footer.vue'
+import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router';
-import { useThemeStore } from '../back-end/src/store.js';
-import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue';
-import { RouterView } from 'vue-router';
 
 const themeStore = useThemeStore();
 const router = useRouter();
@@ -44,22 +55,22 @@ window.addEventListener('beforeunload', function (event) {
 });
 </script>
 
-<template>
-  <div id="app">
-    <Navbar />
-    <RouterView />
-  </div>
-</template>
-
 <style scoped>
 #app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .main-content {
-  flex: 1 0 auto;
+  flex: 1;
   min-height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+footer {
+  flex-shrink: 0;
 }
 </style>
