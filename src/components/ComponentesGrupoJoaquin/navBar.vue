@@ -7,6 +7,7 @@
       </div>
       <div class="navbarRight">
         <RouterLink to="/" class="navLink">Home</RouterLink>
+        <RouterLink to="/sesionesAlum" class="navLink">Sesiones</RouterLink>
         <RouterLink to="/about" class="navLink">About</RouterLink>
         <RouterLink to="/contact" class="navLink">Contact</RouterLink>
         <RouterLink to="/settings" class="navLink">Settings</RouterLink>
@@ -44,6 +45,7 @@ const goLogin = () => {
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .container {
   display: flex;
   justify-content: space-between;
@@ -52,22 +54,27 @@ const goLogin = () => {
   max-width: 1200px;
   margin: 0 auto;
 }
+
 .navbarLeft {
   display: flex;
   align-items: center;
 }
+
 .logo {
   height: 40px;
   margin-right: 10px;
 }
+
 .text {
   font-size: 1.5rem;
   font-weight: bold;
 }
+
 .navbarRight {
   display: flex;
   gap: 1.5rem;
 }
+
 .navLink {
   color: white;
   text-decoration: none;
@@ -75,6 +82,7 @@ const goLogin = () => {
   padding: 0.5rem 1rem;
   transition: all 0.3s ease;
 }
+
 .navLink:hover {
   color: #08cccc;
   border-radius: 4px;

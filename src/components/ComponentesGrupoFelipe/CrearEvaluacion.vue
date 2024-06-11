@@ -23,7 +23,7 @@
       </div>
 
       <div class="form-group">
-        <router-link to="/home">
+        <router-link to="/modulos">
           <button type="submit" class="subject-button">Crear</button>
         </router-link>
       </div>
@@ -32,10 +32,9 @@
 </template>
 
 <style scoped>
-
 h1 {
-  text-align: center; 
-  margin-bottom: 60px; 
+  text-align: center;
+  margin-bottom: 60px;
 }
 
 .subject-list {
@@ -58,8 +57,8 @@ h1 {
   max-width: 500px;
   display: flex;
   flex-direction: column;
-  align-items: center; 
-  justify-content: center; 
+  align-items: center;
+  justify-content: center;
 }
 
 .input-field {

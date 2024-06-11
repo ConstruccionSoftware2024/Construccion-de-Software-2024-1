@@ -8,31 +8,16 @@
             <label for="email">Correo Electrónico</label>
             <div class="inputWrapper">
               <i class="fas fa-at"></i>
-              <input
-                type="email"
-                id="email"
-                v-model="email"
-                placeholder="Ingresa tu email"
-                required
-              />
+              <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
             </div>
           </div>
           <div class="inputGroup">
             <label for="password">Contraseña</label>
             <div class="inputWrapper">
               <i class="fas fa-lock"></i>
-              <input
-                :type="passwordFieldType"
-                id="password"
-                v-model="password"
-                placeholder="Ingresa tu contraseña"
-                required
-              />
-              <i
-                :class="passwordToggleIcon"
-                class="togglePassword"
-                @click="togglePasswordVisibility"
-              ></i>
+              <input :type="passwordFieldType" id="password" v-model="password" placeholder="Ingresa tu contraseña"
+                required />
+              <i :class="passwordToggleIcon" class="togglePassword" @click="togglePasswordVisibility"></i>
             </div>
           </div>
           <div class="options">
@@ -46,127 +31,69 @@
               <label for="email">Correo Electrónico</label>
               <div class="inputWrapper">
                 <i class="fas fa-at"></i>
-                <input
-                  type="email"
-                  id="email"
-                  v-model="email"
-                  placeholder="Ingresa tu email"
-                  required
-                />
+                <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="username">Nombre de Usuario</label>
               <div class="inputWrapper">
                 <i class="fas fa-user"></i>
-                <input
-                  type="text"
-                  id="username"
-                  v-model="username"
-                  placeholder="Ingresa tu nombre de usuario"
-                  required
-                />
+                <input type="text" id="username" v-model="username" placeholder="Ingresa tu nombre de usuario"
+                  required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="firstName">Nombre</label>
               <div class="inputWrapper">
                 <i class="fas fa-id-badge"></i>
-                <input
-                  type="text"
-                  id="firstName"
-                  v-model="firstName"
-                  placeholder="Ingresa tu nombre"
-                  required
-                />
+                <input type="text" id="firstName" v-model="firstName" placeholder="Ingresa tu nombre" required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="lastName">Apellido</label>
               <div class="inputWrapper">
                 <i class="fas fa-id-badge"></i>
-                <input
-                  type="text"
-                  id="lastName"
-                  v-model="lastName"
-                  placeholder="Ingresa tu apellido"
-                  required
-                />
+                <input type="text" id="lastName" v-model="lastName" placeholder="Ingresa tu apellido" required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="secondLastName">Segundo Apellido</label>
               <div class="inputWrapper">
                 <i class="fas fa-id-badge"></i>
-                <input
-                  type="text"
-                  id="secondLastName"
-                  v-model="secondLastName"
-                  placeholder="Ingresa tu segundo apellido"
-                  required
-                />
+                <input type="text" id="secondLastName" v-model="secondLastName"
+                  placeholder="Ingresa tu segundo apellido" required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="campus">Campus</label>
               <div class="inputWrapper">
                 <i class="fas fa-university"></i>
-                <input
-                  type="text"
-                  id="campus"
-                  v-model="campus"
-                  placeholder="Ingresa tu campus"
-                  required
-                />
+                <input type="text" id="campus" v-model="campus" placeholder="Ingresa tu campus" required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="major">Carrera</label>
               <div class="inputWrapper">
                 <i class="fas fa-graduation-cap"></i>
-                <input
-                  type="text"
-                  id="major"
-                  v-model="major"
-                  placeholder="Ingresa tu carrera"
-                  required
-                />
+                <input type="text" id="major" v-model="major" placeholder="Ingresa tu carrera" required />
               </div>
             </div>
             <div class="inputGroup">
               <label for="password">Contraseña</label>
               <div class="inputWrapper">
                 <i class="fas fa-lock"></i>
-                <input
-                  :type="passwordFieldType"
-                  id="password"
-                  v-model="password"
-                  placeholder="Ingresa tu contraseña"
-                  required
-                />
-                <i
-                  :class="passwordToggleIcon"
-                  class="togglePassword"
-                  @click="togglePasswordVisibility"
-                ></i>
+                <input :type="passwordFieldType" id="password" v-model="password" placeholder="Ingresa tu contraseña"
+                  required />
+                <i :class="passwordToggleIcon" class="togglePassword" @click="togglePasswordVisibility"></i>
               </div>
             </div>
             <div class="inputGroup">
               <label for="confirmPassword">Confirmar Contraseña</label>
               <div class="inputWrapper">
                 <i class="fas fa-lock"></i>
-                <input
-                  :type="passwordFieldType"
-                  id="confirmPassword"
-                  v-model="confirmPassword"
-                  placeholder="Confirma tu contraseña"
-                  required
-                />
-                <i
-                  :class="passwordToggleIcon"
-                  class="togglePassword"
-                  @click="togglePasswordVisibility"
-                ></i>
+                <input :type="passwordFieldType" id="confirmPassword" v-model="confirmPassword"
+                  placeholder="Confirma tu contraseña" required />
+                <i :class="passwordToggleIcon" class="togglePassword" @click="togglePasswordVisibility"></i>
               </div>
             </div>
           </div>
@@ -177,14 +104,14 @@
         <span>{{ isLogin ? 'No tienes una cuenta? ' : 'Ya tienes una cuenta? ' }}</span>
         <a href="#" @click.prevent="toggleForm">{{ isLogin ? 'REGISTRARSE' : 'INICIAR SESIÓN' }}</a>
       </div>
-    <div v-if="showPopup" class="error-popup">
-      <div class="error-popup-content">
-        {{ errorMessage }}
-        <button @click="showPopup = false">Cerrar</button>
+      <div v-if="showPopup" class="error-popup">
+        <div class="error-popup-content">
+          {{ errorMessage }}
+          <button @click="showPopup = false">Cerrar</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script>
@@ -233,8 +160,11 @@ export default {
         });
 
         if (response.data.success) {
+          console.log('Datos del alumno:', response.data.alumno);
+          // Guardar datos en LocalStorage
+          localStorage.setItem('alumno', JSON.stringify(response.data.alumno));
 
-          this.$router.push('/about'); //Cambiar '/about' por la ruta de la página a la que se redirigirá al iniciar sesión
+          this.$router.push('/sesionesAlum'); // Cambiar '/modulosAlum' por la ruta de la página a la que se redirigirá al iniciar sesión
         } else {
           this.showError('Correo electrónico o contraseña incorrectos');
         }
@@ -243,46 +173,46 @@ export default {
       }
     },
     async register() {
-    try {
-      // Verificar si el correo electrónico ya existe
-      const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
-        email: this.email
-      });
+      try {
+        // Verificar si el correo electrónico ya existe
+        const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
+          email: this.email
+        });
 
-      if (checkEmailResponse.data.exists) {
-        this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
-        return;
+        if (checkEmailResponse.data.exists) {
+          this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
+          return;
+        }
+        if (!this.validateEmail()) {
+          this.showError('El correo electrónico debe ser un correo institucional de la UTalca.');
+          return;
+        }
+        const response = await axios.post('http://localhost:8080/register', {
+          email: this.email,
+          username: this.username,
+          password: this.password,
+          confirmPassword: this.confirmPassword,
+          firstName: this.firstName,
+          lastName: this.lastName,
+          secondLastName: this.secondLastName,
+          campus: this.campus,
+          major: this.major
+        });
+        if (response.data.success) {
+          this.email = '';
+          this.username = '';
+          this.password = '';
+          this.confirmPassword = '';
+          this.firstName = '';
+          this.lastName = '';
+          this.secondLastName = '';
+          this.campus = '';
+          this.major = '';
+        }
+      } catch (error) {
+        console.error('error in register function:', error);
       }
-      if (!this.validateEmail()) {
-        this.showError('El correo electrónico debe ser un correo institucional de la UTalca.');
-        return;
-      }
-      const response = await axios.post('http://localhost:8080/register', {
-        email: this.email,
-        username: this.username,
-        password: this.password,
-        confirmPassword: this.confirmPassword,
-        firstName: this.firstName,
-        lastName: this.lastName,
-        secondLastName: this.secondLastName,
-        campus: this.campus,
-        major: this.major
-      });
-      if (response.data.success) {
-        this.email = '';
-        this.username = '';
-        this.password = '';
-        this.confirmPassword = '';
-        this.firstName = '';
-        this.lastName = '';
-        this.secondLastName = '';
-        this.campus = '';
-        this.major = '';
-      }
-    } catch (error) {
-      console.error('error in register function:', error);
-    }
-  },
+    },
     togglePasswordVisibility() {
       this.passwordVisible = !this.passwordVisible
     },
@@ -493,9 +423,11 @@ input:focus {
   .loginForm.login {
     width: 90%;
   }
+
   .loginForm.register {
     width: 90%;
   }
+
   .formGrid {
     grid-template-columns: 1fr;
   }

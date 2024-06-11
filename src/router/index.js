@@ -3,7 +3,7 @@ import HomeView from '../views/VistasGrupoJoaquin/HomeView.vue'
 import ListaAlumnos from '@/components/ComponentesGrupoClaudio/ListaAlumnos.vue'
 import HistorialAlumno from '../views/VistasGrupoFelipe/HistorialAlumno.vue'
 import InicioSesion from '@/components/ComponentesGrupoFelipe/InicioSesion.vue'
-import ComponenteModulos from '@/components/ComponentesGrupoFelipe/ComponenteModulos.vue'
+import ComponenteModulos from '../components/ComponentesGrupoFelipe/ComponenteModulos.vue'
 import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOpciones.vue'
 import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
@@ -12,7 +12,7 @@ import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
-
+import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +27,11 @@ const router = createRouter({
       path: '/modulos',
       name: 'modulos',
       component: ComponenteModulos
+    },
+    {
+      path: '/sesionesAlum',
+      name: 'sesionesAlum',
+      component: SesionesAlumnos
     },
     {
       path: '/opciones',
