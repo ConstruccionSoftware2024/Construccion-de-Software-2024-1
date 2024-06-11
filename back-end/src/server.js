@@ -263,6 +263,67 @@ app.post('/register', async (req, res) => {
   })
 })
 
+app.post('/resetPassword', async (req, res) => {
+  const { email } = req.body;
+
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  const user = await User.findOne({ email })
+  if (!user) {
+    return res.status(404).send('Usuario no encontrado.');
+  }
+
+  const token = jwt.sign({ userId: user.id }, SECRET_KEY, { expiresIn: '10m' });
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  })
+
+  const resetPasswordUrl = `http://localhost:8080/reset-password?token=${token}`;
+  const mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: 'Restablecimiento de contraseña',
+    text: `Para restablecer tu contraseña, por favor sigue este enlace: <a href="${resetPasswordUrl}">Reestablecer contraseña</a>`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).send('Error al enviar el correo de restablecimiento de contraseña.');
+    } else {
+      console.log('Email enviado: ' + info.response);
+      return res.status(200).send({ success: true, message: 'Correo de restablecimiento enviado.' });
+    }
+  });
+});
+
+app.get('/reset-password', async (req, res) => {
+  const { token } = req.query;
+  try {
+    jwt.verify(token, SECRET_KEY);
+    res.redirect('http://localhost:8080/pagina-de-restablecimiento?token=' + token);
+  } catch (error) {
+    res.status(400).send('El enlace de restablecimiento no es válido o ha expirado.');
+  }
+});
+
+app.post('/update-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = decoded.userId;
+    await updateUserPassword(userId, newPassword);
+    res.send('Contraseña actualizada con éxito.');
+  } catch (error) {
+    res.status(400).send('Error al actualizar la contraseña.');
+  }
+});
+
 app.get('/verify', async (req, res) => {
   const { token } = req.query
   try {
