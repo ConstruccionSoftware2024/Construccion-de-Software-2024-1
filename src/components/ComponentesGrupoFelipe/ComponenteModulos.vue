@@ -67,12 +67,18 @@ export default {
 </script>
 
 <style scoped>
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-  left: 12em;
+.subject-list {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
+
+.subject-list li {
+  margin-bottom: 10px;
+}
+
 
 .dropdown {
   position: relative;
