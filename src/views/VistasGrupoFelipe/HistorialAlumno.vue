@@ -73,6 +73,14 @@ export default {
 </script>
 
 <style scoped>
+
+h1 {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  font-weight: bold;
+}
+
 .sitio-link {
   color: #00aeff;
 }
@@ -97,8 +105,9 @@ th {
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
-  background-color: #c58940;
-  color: white;
+  background-color: #08cccc;
+  color: black;
+  font-weight: bold;
 }
 
 body.dark-mode {
