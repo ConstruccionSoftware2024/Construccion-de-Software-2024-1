@@ -31,13 +31,6 @@ const router = createRouter({
       name: 'VistaProfesor',
       component: VistaProfesor
     },
-
-    {
-      path: '/about',
-      name: 'AboutView',
-      component: AboutView
-    },
-
     {
       path: '/modulos',
       name: 'modulos',
@@ -133,6 +126,21 @@ const router = createRouter({
       name: 'navegacion',
       component: () => import('../components/ComponentesGrupoFelipe/navegacion.vue')
     },
+    {
+      path: '/historial',
+      name: 'historial',
+      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/VistasGrupoFelipe/about.vue')
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: () => import('../views/VistasGrupoFelipe/contact.vue')
+    }
   ]
 })
 
