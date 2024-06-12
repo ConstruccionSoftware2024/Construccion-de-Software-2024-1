@@ -11,10 +11,11 @@ import VistaAlumno from '../views/VistasGrupoJoaquin/VistaAlumno.vue'
 import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
-import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
+import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
+import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,13 +31,6 @@ const router = createRouter({
       name: 'VistaProfesor',
       component: VistaProfesor
     },
-
-    {
-      path: '/about',
-      name: 'AboutView',
-      component: AboutView
-    },
-
     {
       path: '/modulos',
       name: 'modulos',
@@ -108,12 +102,10 @@ const router = createRouter({
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
-    {
-      path: '/estadoAlumnos',
-      name: 'EstadoAlumnos',
-      component: EstadoAlumnos
-    },
-    { path: '/lista-alumnos', name: 'lista-alumnos', component: ListaAlumnos },
+    { 
+      path: '/lista-alumnos', 
+      name: 'lista-alumnos', 
+      component: ListaAlumnos },
     {
       path: '/historial',
       name: 'historial',
@@ -123,6 +115,31 @@ const router = createRouter({
       path: '/vistaalumno',
       name: 'vista-alumno',
       component: VistaAlumno
+    },
+    {
+      path: '/perfil',
+      name: 'perfil',
+      component: ProfileView
+    },
+    {
+      path: '/navegacion',
+      name: 'navegacion',
+      component: () => import('../components/ComponentesGrupoFelipe/navegacion.vue')
+    },
+    {
+      path: '/historial',
+      name: 'historial',
+      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/VistasGrupoFelipe/about.vue')
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: () => import('../views/VistasGrupoFelipe/contact.vue')
     }
   ]
 })
