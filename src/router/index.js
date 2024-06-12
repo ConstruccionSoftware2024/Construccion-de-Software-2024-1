@@ -107,6 +107,16 @@ const router = createRouter({
       path: '/historial',
       name: 'historial',
       component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/VistasGrupoFelipe/about.vue')
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: () => import('../views/VistasGrupoFelipe/contact.vue')
     }
   ]
 })
