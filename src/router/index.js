@@ -7,7 +7,7 @@ import ComponenteModulos from '../components/ComponentesGrupoFelipe/ComponenteMo
 import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOpciones.vue'
 import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
-import VistaAlumno from '../views/VistasGrupoFelipe/VistaAlumno.vue'
+import VistaAlumno from '../views/VistasGrupoJoaquin/VistaAlumno.vue'
 import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
@@ -112,7 +112,7 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
     },
     {
-      path: '/alumnovista',
+      path: '/vistaalumno',
       name: 'vista-alumno',
       component: VistaAlumno
     },
