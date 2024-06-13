@@ -1,0 +1,39 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const { exec } = require('child_process');
+
+// Access your API key as an environment variable (see "Set up your API key" above)
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+async function run() {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+  exec('tasklist', async (error, stdout, stderr) => {
+    if (error) {
+        console.error(`Error executing tasklist: ${error}`);
+        return;
+    }
+
+    if (stderr) {
+        console.error(`Error in stderr: ${stderr}`);
+        return;
+    }
+
+    const prompt = "Dada las lista de procesos: " + stdout + "Por favor, Clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar, debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales.";
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    console.log(text);
+    // save the response to a file markdown file
+    const fs = require('fs');
+    fs.writeFile('response.md', text, (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.log('File has been created');
+    });
+  });
+}
+
+run();
