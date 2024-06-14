@@ -270,7 +270,7 @@ input:focus {
 }
 </style>
 //------------------Para la tarjerta de perfil----------------------------------------
-<style>
+<style scoped>
 p {
   text-align: left;
   margin-left: 2%;

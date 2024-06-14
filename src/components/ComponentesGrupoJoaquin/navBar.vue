@@ -79,7 +79,7 @@ const goLogin = () => {
 }
 
 const goProfile = () => {
-  router.push('/about')
+  router.push('/perfil')
   closeMenu()
 }
 
