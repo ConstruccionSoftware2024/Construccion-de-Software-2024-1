@@ -9,16 +9,17 @@
         <div class="navbarRight" :class="{ open: isOpen }">
           <RouterLink to="/" class="navLink" @click.native="closeMenu">Inicio</RouterLink>
 
-          <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">
+          <template v-if="isAuthenticated && user && user.role === 'alumno'">
             <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
-            <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
-            <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
           </template>
 
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
+
+          <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
+          <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
 
           <template v-if="isAuthenticated && (user && user.role === 'alumno' || user.role === 'profesor')">
             <template v-if="isOpen">

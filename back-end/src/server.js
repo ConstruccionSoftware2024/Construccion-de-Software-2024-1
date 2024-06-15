@@ -53,6 +53,18 @@ app.get('/users', async (req, res) => {
   }
 })
 
+app.get('/asignaturas', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find().toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -245,7 +257,7 @@ app.post('/resetPassword', async (req, res) => {
   if (!user) {
     return res.status(404).send('Usuario no encontrado.');
   }
-  
+
 });
 
 app.get('/reset-password', async (req, res) => {
