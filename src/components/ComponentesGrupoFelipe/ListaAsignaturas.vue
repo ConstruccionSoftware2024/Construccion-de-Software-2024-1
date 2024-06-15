@@ -1,13 +1,13 @@
 <template>
     <div class="dashboard" id="app">
         <div class="text-container">
-            <h1 class="greeting">Hola @usuario</h1>
-            <p class="description">Lorem ipsum dolor sit amet consectetur adipisicing elit. Totam vitae, sunt
-                consequuntur quo accusantium placeat minima doloremque quidem voluptas. Nulla soluta quasi omnis.</p>
+            <h1 class="greeting">Hola {{ userStore.user.firstName }} {{ userStore.user.lastName }}!</h1>
+            <p class="description">{{ welcomeMessage }}</p>
         </div>
         <div class="content-wrapper">
             <div class="card-container">
-                <div class="card" v-for="(project, index) in projects" :key="index" @click="goToProject(project._id)">
+                <div class="card" v-for="(project, index) in filteredProjects" :key="index"
+                    @click="goToProject(project._id)">
                     <div class="card-header">
                         <img :src="project.image" alt="Project image" class="project-image">
                         <div class="card-title">{{ project.title }}</div>
@@ -35,18 +35,47 @@
 
 <script>
 import axios from 'axios';
+import { useUserStore } from '../../../back-end/src/store.js';
 
 export default {
+    setup() {
+        const userStore = useUserStore();
+        return {
+            userStore
+        }
+    },
     data() {
         return {
             projects: []
+        }
+    },
+    computed: {
+        filteredProjects() {
+            if (this.userStore.user.role === 'alumno') {
+                return this.projects.filter(project =>
+                    project.members.includes(this.userStore.user._id)
+                );
+            } else if (this.userStore.user.role === 'profesor') {
+                return this.projects.filter(project =>
+                    project.profesorId === this.userStore.user._id
+                );
+            }
+            return [];
+        },
+        welcomeMessage() {
+            if (this.userStore.user.role === 'alumno') {
+                return '¡Bienvenido/a a tu perfil de asignaturas! Aquí puedes ver todas las asignaturas en las que estás inscrito/a. Explora tus cursos y accede fácilmente a cada uno de ellos.';
+            } else if (this.userStore.user.role === 'profesor') {
+                return '¡Bienvenido/a a tu perfil de profesor! Aquí puedes ver todas las asignaturas que estás impartiendo. Explora tus cursos y gestiona tus clases.';
+            }
+            return '';
         }
     },
     methods: {
         async fetchProjects() {
             try {
                 const response = await axios.get('http://localhost:8080/asignaturas');
-                console.log('Response data:', response.data); // Añadir este log para verificar
+                console.log('Response data:', response.data);
                 this.projects = response.data;
             } catch (error) {
                 console.error('Error fetching projects:', error);
@@ -63,6 +92,7 @@ export default {
 </script>
 
 <style scoped>
+/* Tu CSS aquí */
 body {
     background-color: var(--background-color);
 }
@@ -97,6 +127,7 @@ body {
 
 .description {
     margin-bottom: 16px;
+    font-size: 20px;
 }
 
 .content-wrapper {

@@ -14,7 +14,7 @@
           </template>
 
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
-            <RouterLink to="#" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
+            <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
 
