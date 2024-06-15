@@ -53,6 +53,18 @@ app.get('/users', async (req, res) => {
   }
 })
 
+app.get('/asignaturas', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find().toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -245,7 +257,7 @@ app.post('/resetPassword', async (req, res) => {
   if (!user) {
     return res.status(404).send('Usuario no encontrado.');
   }
-  
+
 });
 
 app.get('/reset-password', async (req, res) => {
@@ -371,7 +383,6 @@ app.post('/edit_username', async (req, res) => {
     const update = { username: req.body.new_username }
     if (update != '') {
       const poster = await User.updateOne(filter, { $set: update })
-      console.log(poster)
     }
   } catch (error) {
     console.error(error)
@@ -386,7 +397,6 @@ app.post('/edit_password', async (req, res) => {
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
       const poster = await User.updateOne(filter, { $set: update1 })
-      console.log(poster)
     }
   } catch (error) {
     console.error(error)
@@ -411,8 +421,6 @@ app.get('/sesion/:id', async (req, res) => {
 app.get('/user/:id', async (req, res) => {
   try {
 
-    //console.log("here")
-
     const database = client.db('construccion')
     const collection = database.collection('users')
     const consulta = { _id: new ObjectId(req.params.id) }
@@ -426,6 +434,24 @@ app.get('/user/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+// Actualizar datos usuario especifico
+app.post('/user/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, { $set: req.body })
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Ususaio no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario

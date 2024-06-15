@@ -1,74 +1,72 @@
 <script setup>
+import { ref, onMounted } from 'vue';
 
-import { ref, onMounted } from 'vue'
-
-let idUsuario = ref(null)
-let alertas = ref([])
-let mostrarDropdown = ref(false)
+let idUsuario = ref(null);
+let alertas = ref([]);
+let mostrarDropdown = ref(false);
 
 onMounted(() => {
-    getUsers()
-})
+    getUsers();
+});
 
 const getUsers = async () => {
     try {
         let respuesta = await fetch('http://localhost:8080/users');
         let usuarios = await respuesta.json();
-        console.log('Usuarios:', usuarios);
-        idUsuario = usuarios[0]._id;
-        console.log('id Usuario:', idUsuario);
+        idUsuario.value = usuarios[0]._id;
         obtenerAlertas();
+    } catch (error) {
+        //console.error('Error al obtener los usuarios:', error);
     }
-    catch (error) {
-        console.error('Error al obtener las usuarios:', error)
-    }
-}
+};
 
 const obtenerAlertas = async () => {
     try {
-        let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`);
-        alertas = await respuesta.json();
-        //console.log('Alertas:', alertas);
+        let respuesta = await fetch(`http://localhost:8080/user/${idUsuario.value}/alertas`);
+        alertas.value = await respuesta.json();
+    } catch (error) {
+        //console.error('Error al obtener las alertas:', error);
     }
-    catch (error) {
-        console.error('Error al obtener las alertas:', error)
-    }
-}
+};
 
-// Se llama a obtenerAlertas cada 5 segundos
-setInterval(obtenerAlertas, 5000)
+setInterval(obtenerAlertas, 5000);
 
 const toggleNotifications = () => {
-    mostrarDropdown.value = !mostrarDropdown.value
-}
-
+    mostrarDropdown.value = !mostrarDropdown.value;
+};
 </script>
 
 <template>
-    <div class="container">
+    <div class="notifications-container">
         <i class="fa-solid fa-bell icon" @click="toggleNotifications"></i>
-    </div>
-    <div class="dropdown" v-show="mostrarDropdown">
-        <ul class="lista" v-for="alerta in alertas" :key="alerta.id">
-            <li class="notificacion">
-                {{ alerta }}
-            </li>
-        </ul>
+        <div class="dropdown" v-show="mostrarDropdown">
+            <div class="notification" v-for="alerta in alertas" :key="alerta.id">
+                <img :src="'https://professional.mit.edu/sites/default/files/styles/person_photo/public/2022-11/Erdin-Beshimov.png?h=5f8472e3&itok=8JV2nGFp'"
+                    alt="icon" class="icono">
+                <div class="texto">
+                    <p class="titulo">{{ alerta.title }}</p>
+                    <p class="descripcion">{{ alerta }}</p>
+                </div>
+                <span :class="['estado', alerta.status === 'Success' ? 'success' : 'failed']">{{ alerta.status }}</span>
+            </div>
+            <a href="#" class="show-all">Ver todas las notificaciones</a>
+        </div>
     </div>
 </template>
 
 <style scoped>
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.notifications-container {
+    position: relative;
+    display: inline-block;
 }
 
 .icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     color: white;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: color 0.3s;
+    user-select: none;
+    position: relative;
 }
 
 .icon:hover {
@@ -77,26 +75,87 @@ const toggleNotifications = () => {
 
 .dropdown {
     position: absolute;
-    top: 74px;
-    right: 2px;
-    color: white;
-    background-color: #2c2c2e;
-    border: 1px solid black;
+    top: 180%;
+    right: 0;
+    width: 300px;
+    background-color: var(--container-background-color);
     border-radius: 12px;
+    border-top-right-radius: 0;
     padding: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    user-select: none;
 }
 
-.lista {
-    margin-top: 5px;
+.dropdown::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: 0px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid var(--container-background-color);
 }
 
-.notificacion {
-    list-style-type: none;
-    padding: 5px;
-    border: 1px solid white;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 5px;
-    transition: all 0.3s;
+.notification {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.icono {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
+.texto {
+    flex-grow: 1;
+}
+
+.titulo {
+    font-weight: bold;
+    margin: 0;
+}
+
+.descripcion {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.estado {
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.success {
+    color: green;
+}
+
+.failed {
+    color: red;
+}
+
+.show-all {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    color: #08cccc;
+    text-decoration: none;
+    user-select: none;
+}
+
+.show-all:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .icon {
+        display: none;
+    }
 }
 </style>
