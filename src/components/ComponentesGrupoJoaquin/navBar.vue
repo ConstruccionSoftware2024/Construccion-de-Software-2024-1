@@ -34,12 +34,16 @@
           <template v-if="isAuthenticated">
             <div class="dropwdown-container">
               <button class="loginButtonLogged" @click="toggleDropwDown">
-              <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
-            </button>
-            <div v-if="showDropDown" class="dropDownMenu">
-              <RouterLink to="/perfil" class="dropdownOption" @click="closeMenu"><font-awesome-icon :icon="['fas', 'user']" class="dropDownIcon" /> Perfil</RouterLink>
-              <RouterLink to="/settings" class="dropdownOption" @click="closeMenu"><font-awesome-icon :icon="['fas', 'gear']" class="dropDownIcon"  /> Configuración</RouterLink>
-              <RouterLink to="/" class="dropdownOption" @click="logout"><font-awesome-icon :icon="['fas', 'right-from-bracket']" class="dropDownIcon" /> Cerrar Sesión</RouterLink>
+                <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
+              </button>
+              <div v-if="showDropDown" class="dropDownMenu">
+                <RouterLink to="/perfil" class="dropdownOption" @click="closeMenu"><font-awesome-icon
+                    :icon="['fas', 'user']" class="dropDownIcon" /> Perfil</RouterLink>
+                <RouterLink to="/settings" class="dropdownOption" @click="closeMenu"><font-awesome-icon
+                    :icon="['fas', 'gear']" class="dropDownIcon" /> Configuración</RouterLink>
+                <RouterLink to="/" class="dropdownOption" @click="logout"><font-awesome-icon
+                    :icon="['fas', 'right-from-bracket']" class="dropDownIcon" /> Cerrar Sesión</RouterLink>
+              </div>
             </div>
           </template>
           <template v-else>
@@ -136,8 +140,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-
-.dropDownIcon{
+.dropDownIcon {
   margin-right: 0.2rem;
 }
 
@@ -233,7 +236,7 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.dropdownOption{
+.dropdownOption {
   color: var(--text-color);
   text-decoration: none;
   font-size: 1rem;
@@ -264,7 +267,7 @@ onUnmounted(() => {
   background-color: #08cccc;
 }
 
-.loginButtonLogged{
+.loginButtonLogged {
   position: relative;
   display: flex;
   align-items: center;
@@ -301,7 +304,7 @@ onUnmounted(() => {
   transition-duration: 0.3s;
 }
 
-.loginButtonActive{
+.loginButtonActive {
   width: 100px;
   border-radius: 40px;
   transition-duration: 0.3s;
