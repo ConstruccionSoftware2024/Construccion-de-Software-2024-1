@@ -102,10 +102,14 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
-      path: '/session/:id',
-      name: 'sesionid',
-      component: () => import('../views/VistasGrupoClaudio/Sesion.vue'),
-      props: true
+      path: '/vistaProfesor/:id',
+      name: 'vistaProfesor',
+      component: VistaProfesor
+    },
+    {
+      path: '/vistaAlumno/:id',
+      name: 'vistaAlumno',
+      component: VistaAlumno
     },
     {
       path: '/faltaAlumnos',
@@ -163,7 +167,10 @@ const router = createRouter({
       name: 'not-found',
       component: notFound
     }
-  ]
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    return { top: 0 }
+  }
 })
 
 router.beforeEach((to, from, next) => {
@@ -177,5 +184,7 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
+
+
 
 export default router;

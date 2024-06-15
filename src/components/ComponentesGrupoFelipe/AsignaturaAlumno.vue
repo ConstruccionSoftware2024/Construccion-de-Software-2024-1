@@ -13,7 +13,7 @@
             <div class="sesiones">
                 <h3 class="subtitulo">Listado de Sesiones</h3>
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="'/session/' + sesion._id" class="navLink">{{ sesion.nombre }}</router-link>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink">{{ sesion.nombre }}</router-link>
                 </div>
             </div>
 
@@ -81,9 +81,13 @@
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { useUserStore } from '../../../back-end/src/store.js';
 
 const route = useRoute();
 const id = route.params.id;
+
+const userStore = useUserStore();
+const rolUsuario = userStore.user.role;
 
 const asignatura = ref({
     nombre: 'Nombre Ejemplo',
@@ -128,10 +132,20 @@ async function recuperarProfesor(id){
     await axios.get(`http://localhost:8080/user/${id}`)
     .then(response => {
         asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
+        const algo = response.data.role
+        console.log(algo)
     })
     .catch(error => {
         console.error(error);
     });
+}
+
+function determinarRuta(id, rol){
+    if(rol === 'profesor'){
+        return `/vistaProfesor/${id}`;
+    } else {
+        return `/vistaAlumno/${id}`;
+    }
 }
 
 onMounted( async  () => {
