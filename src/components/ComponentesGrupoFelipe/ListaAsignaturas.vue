@@ -151,12 +151,14 @@ body {
     padding: 24px;
     margin: 16px;
     width: 300px;
+    height: 250px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     text-align: left;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
 }
 
 .card:hover {
@@ -188,8 +190,13 @@ body {
 }
 
 .card-body {
-    margin-top: 8px;
     flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    max-height: 120px;
 }
 
 .section-info,
@@ -199,6 +206,17 @@ body {
     margin-top: 8px;
     color: var(--button-background-color-light);
     transition: color 0.2s;
+    position: absolute;
+    bottom: 40px;
+}
+
+.section-info {
+    left: 24px;
+}
+
+.date-info {
+    left: 24px;
+    bottom: 16px;
 }
 
 .section-info i,
