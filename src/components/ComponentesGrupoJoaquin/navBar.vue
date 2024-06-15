@@ -7,13 +7,13 @@
           <span class="text">Cheat Detector</span>
         </div>
         <div class="navbarRight" :class="{ open: isOpen }">
-          <RouterLink to="/" class="navLink" @click.native="closeMenu">Home</RouterLink>
+          <RouterLink to="/" class="navLink" @click.native="closeMenu">Inicio</RouterLink>
         <RouterLink to="/sesionesAlum" class="navLink">Sesiones</RouterLink>
 
           <!-- Mostrar About y Contact para todos menos si el usuario es profesor -->
           <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">
-            <RouterLink to="/about" class="navLink" @click.native="closeMenu">About</RouterLink>
-            <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
+            <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
+            <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
           </template>
 
           <RouterLink to="/navegacion" class="navLink" @click.native="closeMenu">Navegación</RouterLink>
@@ -23,14 +23,19 @@
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba1</RouterLink>
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba2</RouterLink>
           </template>
-
-          <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
                     <Notificaciones />
-          <template v-if="isAuthenticated">
-            <button class="loginButton" @click="goProfile">
+          <template v-if="isAuthenticated" >
+            <div class="dropwdown-container">
+              <button class="loginButton" :class="{'loginButtonActive': showDropDown, 'loginButtonActiveText': showDropDown}" @click="toggleDropwDown">
               <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
               <div class="loginText">{{ user.username }}</div>
             </button>
+            <div v-if="showDropDown" class="dropDownMenu">
+              <RouterLink to="/perfil" class="navLink" @click="closeMenu">Perfil</RouterLink>
+              <RouterLink to="/settings" class="navLink" @click="closeMenu">Configuración</RouterLink>
+              <button class="logoutButton" @click="logout">Cerrar Sesión</button>
+            </div>
+            </div>
           </template>
           <template v-else>
             <button class="loginButton" @click="goLogin">
@@ -49,7 +54,6 @@
           </svg>
         </label>
       </div>
-      
     </nav>
     <main class="main-content">
       <slot></slot>
@@ -62,13 +66,14 @@
 
 <script setup>
 import Notificaciones from '../ComponentesGrupoClaudio/Notificaciones.vue';
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../back-end/src/store.js'
 
 const router = useRouter()
 const isOpen = ref(false)
 const userStore = useUserStore()
+const showDropDown = ref(false)
 
 const isAuthenticated = computed(() => userStore.isAuthenticated)
 const user = computed(() => userStore.user)
@@ -91,13 +96,75 @@ const toggleMenu = () => {
   }
 }
 
+
 const closeMenu = () => {
   isOpen.value = false
   document.body.style.overflow = 'auto'
 }
+
+const toggleDropwDown = () => {
+  showDropDown.value = !showDropDown.value
+}
+
+const logout = () => {
+  userStore.logout()
+  showDropDown.value = false
+  router.push('/')
+}
+
+const closeDropDown = (event) => {
+  if (!event.target.closest('.dropDownMenu') && !event.target.closest('.loginButton')) {
+    showDropDown.value = false;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', closeDropDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeDropDown);
+});
+
 </script>
 
 <style scoped>
+
+.dropDownMenu {
+  position: absolute;
+  top: 100%;
+  background-color: #2c2c2e;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1000;
+}
+
+.logoutButton{
+  color: white;
+  background-color: #2c2c2e;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: start;
+  align-items: start;
+}
+
+.logoutButton:hover {
+  color: #08cccc;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+
 .navbar {
   position: fixed;
   top: 0;
@@ -157,6 +224,7 @@ const closeMenu = () => {
 }
 
 .loginButton {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -192,8 +260,14 @@ const closeMenu = () => {
   transition-duration: 0.3s;
 }
 
+.loginButtonActive{
+  width: 130px;
+  border-radius: 40px;
+  transition-duration: 0.3s;
+}
+
 .loginButton:hover {
-  width: 100px;
+  width: 130px;
   border-radius: 40px;
   transition-duration: 0.3s;
 }
