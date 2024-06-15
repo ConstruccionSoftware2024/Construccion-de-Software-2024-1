@@ -33,17 +33,13 @@
 
           <template v-if="isAuthenticated">
             <div class="dropwdown-container">
-              <button class="loginButton"
-                :class="{ 'loginButtonActive': showDropDown, 'loginButtonActiveText': showDropDown }"
-                @click="toggleDropwDown">
-                <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
-                <div class="loginText">{{ user.username }}</div>
-              </button>
-              <div v-if="showDropDown" class="dropDownMenu">
-                <RouterLink to="/perfil" class="navLink" @click="closeMenu">Perfil</RouterLink>
-                <RouterLink to="/settings" class="navLink" @click="closeMenu">Configuración</RouterLink>
-                <button class="logoutButton" @click="logout">Cerrar Sesión</button>
-              </div>
+              <button class="loginButtonLogged" @click="toggleDropwDown">
+              <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
+            </button>
+            <div v-if="showDropDown" class="dropDownMenu">
+              <RouterLink to="/perfil" class="dropdownOption" @click="closeMenu"><font-awesome-icon :icon="['fas', 'user']" class="dropDownIcon" /> Perfil</RouterLink>
+              <RouterLink to="/settings" class="dropdownOption" @click="closeMenu"><font-awesome-icon :icon="['fas', 'gear']" class="dropDownIcon"  /> Configuración</RouterLink>
+              <RouterLink to="/" class="dropdownOption" @click="logout"><font-awesome-icon :icon="['fas', 'right-from-bracket']" class="dropDownIcon" /> Cerrar Sesión</RouterLink>
             </div>
           </template>
           <template v-else>
@@ -110,6 +106,7 @@ const toggleMenu = () => {
 const closeMenu = () => {
   isOpen.value = false
   document.body.style.overflow = 'auto'
+  showDropDown.value = false
 }
 
 const toggleDropwDown = () => {
@@ -123,7 +120,7 @@ const logout = () => {
 }
 
 const closeDropDown = (event) => {
-  if (!event.target.closest('.dropDownMenu') && !event.target.closest('.loginButton')) {
+  if (!event.target.closest('.dropDownMenu') && !event.target.closest('.loginButtonLogged')) {
     showDropDown.value = false;
   }
 }
@@ -139,12 +136,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+.dropDownIcon{
+  margin-right: 0.2rem;
+}
+
 .dropDownMenu {
   position: absolute;
-  top: 100%;
-  background-color: #2c2c2e;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  top: 75%;
+  background-color: var(--container-background-color);
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 0;
   display: flex;
@@ -232,7 +233,38 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
+.dropdownOption{
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.dropdownOption:hover {
+  color: var(--button-hover-background-color);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
 .loginButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 35px;
+  height: 35px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition-duration: 0.3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+  background-color: #08cccc;
+}
+
+.loginButtonLogged{
   position: relative;
   display: flex;
   align-items: center;
@@ -269,14 +301,14 @@ onUnmounted(() => {
   transition-duration: 0.3s;
 }
 
-.loginButtonActive {
-  width: 130px;
+.loginButtonActive{
+  width: 100px;
   border-radius: 40px;
   transition-duration: 0.3s;
 }
 
 .loginButton:hover {
-  width: 130px;
+  width: 100px;
   border-radius: 40px;
   transition-duration: 0.3s;
 }

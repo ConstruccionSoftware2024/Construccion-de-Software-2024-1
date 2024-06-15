@@ -5,7 +5,7 @@
                 <img class="alumno-img" :src="imagen" />
                 <div class="alumno-text">
                     <h2>{{ alumno.firstName }} {{ alumno.lastName }}</h2>
-                    <p class="texto-major"> {{ alumno.major }} , {{ alumno.campus }}</p>
+                    <p class="texto-major"> {{ alumno.major }}, {{ alumno.campus }}</p>
                 </div>
             </div>
         </div>
@@ -91,15 +91,15 @@ const alumno = ref({
     username: '',
     firstName: '',
     lastName: '',
-    campus: 'Curico',
-    pais: 'Chile',
-    major: 'Ingenieria Civil en Computación',
-    matricula: '2000000',
-    rut: '111111111-1',
-    email: 'hola@gmail.com',
-    fechaNacimiento: '01 Enero 2000',
-    telefono: 'Telefono',
-    direccion: 'Direccion',
+    campus: '',
+    pais: '',
+    major: '',
+    matricula: '',
+    rut: '',
+    email: '',
+    fechaNacimiento: '',
+    telefono: '',
+    direccion: '',
 });
 
 const alumnoEditado = reactive({ ...alumno.value });
@@ -124,6 +124,7 @@ function toggleFormulario() {
                 showConfirmButton: false,
                 timer: 1200
             });
+            actualizarDatosUsuario();
         }
     } else {
         Object.assign(alumnoEditado, alumno.value);
@@ -133,21 +134,28 @@ function toggleFormulario() {
 
 // Recuperar datos del usuario mediante el ._id
 
-function cargarDatosUsuario() {
-    axios.get(`http://localhost:8080/user/${user.value._id}`)
-        .then((response) => {
-            const data = response.data;
-            console.log(data);
-            alumno.value = data;
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+async function cargarDatosUsuario() {
+    try {
+        const response = await axios.get(`http://localhost:8080/user/${user.value._id}`);
+        const data = response.data;
+        alumno.value = data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function actualizarDatosUsuario() {
+    try {
+        const { _id, ...datosActualizados } = alumnoEditado;
+        await axios.post(`http://localhost:8080/user/${user.value._id}`, datosActualizados);
+        cargarDatosUsuario();
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 
 const cancelarEdicion = () => {
-
     if (cambiosRealizados.value) {
         Swal.fire({
             title: '¿Estás seguro?',
@@ -170,7 +178,6 @@ const cancelarEdicion = () => {
 };
 
 cargarDatosUsuario();
-
 </script>
 
 
@@ -181,8 +188,8 @@ cargarDatosUsuario();
     justify-content: center;
     align-items: stretch;
     gap: 3rem;
-    margin-left: 5%;
-    margin-right: 5%;
+    margin-left: 10%;
+    margin-right: 10%;
     margin-top: 2rem;
 
 }
