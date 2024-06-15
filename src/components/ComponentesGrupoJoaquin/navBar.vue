@@ -8,24 +8,43 @@
         </div>
         <div class="navbarRight" :class="{ open: isOpen }">
           <RouterLink to="/" class="navLink" @click.native="closeMenu">Home</RouterLink>
-          <RouterLink to="/about" class="navLink" @click.native="closeMenu">About</RouterLink>
-          <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
+        <RouterLink to="/sesionesAlum" class="navLink">Sesiones</RouterLink>
+
+          <!-- Mostrar About y Contact para todos menos si el usuario es profesor -->
+          <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">
+            <RouterLink to="/about" class="navLink" @click.native="closeMenu">About</RouterLink>
+            <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
+          </template>
+
+          <RouterLink to="/navegacion" class="navLink" @click.native="closeMenu">Navegación</RouterLink>
+
+          <!-- Mostrar Prueba1, Prueba2 solo si el usuario es profesor -->
+          <template v-if="isAuthenticated && user && user.role === 'profesor'">
+            <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba1</RouterLink>
+            <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba2</RouterLink>
+          </template>
+
           <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
-          <RouterLink to="/newsession" class="navLink">Sesiones</RouterLink>
-          <Notificaciones />
-          <button class="loginButton" @click="goLogin">
-            <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
-            <div class="loginText">Login</div>
-          </button>
-          
+                    <Notificaciones />
+          <template v-if="isAuthenticated">
+            <button class="loginButton" @click="goProfile">
+              <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
+              <div class="loginText">{{ user.username }}</div>
+            </button>
+          </template>
+          <template v-else>
+            <button class="loginButton" @click="goLogin">
+              <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
+              <div class="loginText">Login</div>
+            </button>
+          </template>
         </div>
         <label class="hamburger">
           <input type="checkbox" v-model="isOpen" @change="toggleMenu" />
           <svg viewBox="0 0 32 32">
-            <path
-              class="line line-top-bottom"
-              d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"
-            ></path>
+            <path class="line line-top-bottom"
+              d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22">
+            </path>
             <path class="line" d="M7 16 27 16"></path>
           </svg>
         </label>
@@ -36,21 +55,31 @@
       <slot></slot>
     </main>
     <div v-if="isOpen" class="mobileLoginButtonContainer">
-      <button class="mobileLoginButton" @click="goLogin">Login</button>
+      <button class="mobileLoginButton" @click="goProfile">{{ isAuthenticated ? 'Mi perfil' : 'Login' }}</button>
     </div>
   </div>
 </template>
 
 <script setup>
 import Notificaciones from '../ComponentesGrupoClaudio/Notificaciones.vue';
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../../../back-end/src/store.js'
 
 const router = useRouter()
 const isOpen = ref(false)
+const userStore = useUserStore()
+
+const isAuthenticated = computed(() => userStore.isAuthenticated)
+const user = computed(() => userStore.user)
 
 const goLogin = () => {
   router.push('/login')
+  closeMenu()
+}
+
+const goProfile = () => {
+  router.push('/about')
   closeMenu()
 }
 
@@ -207,13 +236,16 @@ const closeMenu = () => {
   position: relative;
   z-index: 1100;
 }
+
 .hamburger input {
   display: none;
 }
+
 .hamburger svg {
   height: 3em;
   transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .line {
   fill: none;
   stroke: white;
@@ -224,13 +256,16 @@ const closeMenu = () => {
     stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
     stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .line-top-bottom {
   stroke-dasharray: 12 63;
 }
-.hamburger input:checked + svg {
+
+.hamburger input:checked+svg {
   transform: rotate(-45deg);
 }
-.hamburger input:checked + svg .line-top-bottom {
+
+.hamburger input:checked+svg .line-top-bottom {
   stroke-dasharray: 20 300;
   stroke-dashoffset: -32.42;
 }
@@ -259,13 +294,16 @@ const closeMenu = () => {
       opacity 0.3s ease-in-out;
     z-index: 1000;
   }
+
   .navbarRight.open {
     max-height: 100%;
     opacity: 1;
   }
+
   .hamburger {
     display: flex;
   }
+
   .navLink {
     width: 100%;
     padding: 1.5rem;
@@ -275,29 +313,37 @@ const closeMenu = () => {
       transform 0.3s ease,
       opacity 0.3s ease;
   }
+
   .navbarRight.open .navLink {
     transform: translateX(0);
     opacity: 1;
   }
+
   .navLink {
     transform: translateX(-100%);
     opacity: 0;
   }
+
   .navLink:nth-child(1) {
     transition-delay: 0.1s;
   }
+
   .navLink:nth-child(2) {
     transition-delay: 0.2s;
   }
+
   .navLink:nth-child(3) {
     transition-delay: 0.3s;
   }
+
   .navLink:nth-child(4) {
     transition-delay: 0.4s;
   }
+
   .loginButton {
     display: none;
   }
+
   .mobileLoginButtonContainer {
     position: fixed;
     bottom: 2rem;
@@ -306,6 +352,7 @@ const closeMenu = () => {
     text-align: center;
     z-index: 1001;
   }
+
   .mobileLoginButton {
     width: 100%;
     padding: 1rem;
@@ -321,9 +368,11 @@ const closeMenu = () => {
       opacity 0.3s ease;
     transition-delay: 0.5s;
   }
+
   .mobileLoginButton:hover {
     background-color: #06b6b6;
   }
+
   .mobileLoginButton:active {
     transform: translateY(2px);
   }

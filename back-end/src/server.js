@@ -4,12 +4,15 @@ import { MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
 import dotenv from 'dotenv'
 import { log } from 'console'
-
+import nodemailer from 'nodemailer'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 dotenv.config()
 
 // Configuración de la aplicación
 const url = process.env.MONGODB_URI
 const app = express()
+const SECRET_KEY = '8jP@4k#Dq^2Lw!x9u&T7zR*Y0o'
 
 const client = new MongoClient(url)
 let db
@@ -150,6 +153,8 @@ app.post('/login', async (req, res) => {
       return res.json({ success: false })
     }
 
+    // Excluir la contraseña de la respuesta
+    const { password, ...userWithoutPassword } = user
     // Guardar el usuario en el historial de login
     await historialLogin.insertOne({
       IdUsuario: user._id,
@@ -162,21 +167,162 @@ app.post('/login', async (req, res) => {
     const historial = await historialLogin.find().toArray()
     console.log('Historial de login:', historial)
 
-    res.json({ success: true })
+    res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
 
+
+
+
+
 app.post('/register', async (req, res) => {
+  const {
+    email,
+    username,
+    password,
+    confirmPassword,
+    firstName,
+    lastName,
+    secondLastName,
+    campus,
+    major,
+    role,
+    rut,
+    matricula
+  } = req.body
+  const verificationToken = jwt.sign(
+    {
+      email,
+      username,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      secondLastName,
+      campus,
+      major,
+      rut,
+      role,
+      matricula
+    },
+    SECRET_KEY,
+    { expiresIn: '24h' }
+  )
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  })
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: 'Verificación de Correo Electrónico en Cheat Detector',
+    html: `<p>Haz clic en el siguiente enlace para verificar tu correo electrónico: <a href="http://localhost:8080/verify?token=${verificationToken}">Verificar Correo</a></p>`
+  }
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return res.status(500).send('Error al enviar el correo de verificación')
+    } else {
+      return res.status(200).json({ success: true, message: 'Correo de verificación enviado' })
+    }
+  })
+})
+
+app.post('/resetPassword', async (req, res) => {
+  const { email } = req.body;
+
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  const user = await User.findOne({ email })
+  if (!user) {
+    return res.status(404).send('Usuario no encontrado.');
+  }
+  
+});
+
+app.get('/reset-password', async (req, res) => {
+  const { token } = req.query;
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('users')
-    await collection.insertOne(req.body)
-    res.send({ success: true, message: 'Registro exitoso' })
+    jwt.verify(token, SECRET_KEY);
+    res.redirect('http://localhost:8080/pagina-de-restablecimiento?token=' + token);
   } catch (error) {
-    console.log(error)
+    res.status(400).send('El enlace de restablecimiento no es válido o ha expirado.');
+  }
+});
+
+app.post('/update-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = decoded.userId;
+    await updateUserPassword(userId, newPassword);
+    res.send('Contraseña actualizada con éxito.');
+  } catch (error) {
+    res.status(400).send('Error al actualizar la contraseña.');
+  }
+});
+
+app.get('/verify', async (req, res) => {
+  const { token } = req.query
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY)
+    const rol = 'Estudiante'
+    const {
+      email,
+      username,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      secondLastName,
+      campus,
+      major,
+      role,
+      rut,
+      matricula
+    } = decoded
+
+    const emailDomain = email.split('@')[1];
+    if (emailDomain === 'utalca.cl') {
+      rol = 'Profesor';
+    }
+
+    const database = client.db('construccion')
+    const User = database.collection('users')
+
+    const verificacionUser = await User.findOne({ email })
+
+    if (verificacionUser) {
+      res.redirect('http://localhost:5173/')
+    } else {
+      await User.insertOne({
+        email: email,
+        username: username,
+        password: password,
+        confirmPassword: confirmPassword,
+        firstName: firstName,
+        lastName: lastName,
+        secondLastName: secondLastName,
+        rut: rut,
+        matricula: matricula,
+        campus: campus,
+        role: rol,
+        major: major
+      })
+    }
+
+    res.redirect('http://localhost:5173/')
+  } catch (error) {
+    console.error('Error al verificar el token:', error)
+    return res.status(500).send('Error al verificar el correo electrónico')
   }
 })
 
@@ -196,6 +342,58 @@ app.post('/checkEmail', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+//actualizar ciertos datos del perfil
+app.post('/verify_password', async (req, res) => {
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  try {
+    const email = { email: req.body.email }
+    const val_password = { val_password: req.body.val_password }
+
+    // Busca al usuario en la base de datos
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({ passwordCorrect: false })
+    }
+    const passwordCorrect = await bcrypt.compare(val_password, user.password)
+    res.json(passwordCorrect)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/edit_username', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const filter = { email: req.body.email }
+    const update = { username: req.body.new_username }
+    if (update != '') {
+      const poster = await User.updateOne(filter, { $set: update })
+      console.log(poster)
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/edit_password', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const filter = { email: req.body.email }
+    const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
+    if (update1 != '' || update1 != ' ') {
+      const poster = await User.updateOne(filter, { $set: update1 })
+      console.log(poster)
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+//--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
@@ -379,3 +577,24 @@ app.post('/agregarParticipante', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+
+// HU-8 BlackList
+app.get('/sesion/:idSesion/blacklist', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const idSesion = new ObjectId(req.params.idSesion);
+
+    // Obtener la sesión y su banlist
+    const sesion = await collection.findOne({ _id: idSesion }, { projection: { banlist: 1 } });
+
+    if (sesion) {
+      res.send(sesion.banlist);
+    } else {
+      res.status(404).send('Sesión no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
