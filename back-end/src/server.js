@@ -64,7 +64,20 @@ app.get('/asignaturas', async (req, res) => {
     res.status(500).send('Failed to fetch asignaturas from database');
   }
 });
-
+app.get('/asignatura/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignatura = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    if (asignatura) {
+      res.send(asignatura);
+    } else {
+      res.status(404).send('Asignatura not found');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')
