@@ -65,6 +65,23 @@ app.get('/asignaturas', async (req, res) => {
   }
 });
 
+// Recuperar una asignatura segun id
+app.get('/asignatura/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const asignatura = await collection.findOne(consulta);
+    if (asignatura) {
+      res.send(asignatura);
+    } else {
+      res.status(404).send('Asignatura no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')

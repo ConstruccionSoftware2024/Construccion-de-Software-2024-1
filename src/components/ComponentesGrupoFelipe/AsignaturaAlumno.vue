@@ -4,15 +4,16 @@
         <div class="seccion1">
 
             <div class="containerTitle">
-                <h2 class="title">Asignatura: {{ asignatura.nombre }}</h2>
+                <h2 class="title">Asignatura: {{ asignatura.title }}</h2>
                 <p>Profesor: {{ asignatura.profesor }}</p>
+                <p>Descripción: {{asignatura.description}}</p>
                 <hr>
             </div>
 
             <div class="sesiones">
                 <h3 class="subtitulo">Listado de Sesiones</h3>
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="'/session/' + sesion._id" class="navLink">{{ sesion.nombre }}</router-link>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink">{{ sesion.nombre }}</router-link>
                 </div>
             </div>
 
@@ -32,15 +33,6 @@
                 <button @click="publicarPregunta">Publicar Pregunta</button>
             </div>
 
-            <div class="actividades">
-                <h3 class="subtitulo">Actividades Recientes</h3>
-                <ul>
-                    <li>Entrega Tarea 1</li>
-                    <li>Participación en Foro</li>
-                    <li>Acceso a PDF de Estudio</li>
-                </ul>
-            </div>
-
         </div>
 
         <div class="seccion2">
@@ -55,6 +47,15 @@
                 <p>Próxima Tarea: [Fecha]</p>
                 <p>Próximo Examen: [Fecha]</p>
                 <button>Ver Calendario</button>
+            </div>
+
+            <div class="actividades">
+                <h3 class="subtitulo">Actividades Recientes</h3>
+                <ul>
+                    <li>Entrega Tarea 1</li>
+                    <li>Participación en Foro</li>
+                    <li>Acceso a PDF de Estudio</li>
+                </ul>
             </div>
 
 
@@ -79,6 +80,14 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
+import { useUserStore } from '../../../back-end/src/store.js';
+
+const route = useRoute();
+const id = route.params.id;
+
+const userStore = useUserStore();
+const rolUsuario = userStore.user.role;
 
 const asignatura = ref({
     nombre: 'Nombre Ejemplo',
@@ -88,6 +97,7 @@ const asignatura = ref({
     subjectName: 'Matemáticas',
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
 });
+
 
 const sesiones = ref([]);
 
@@ -106,7 +116,40 @@ const publicarPregunta = () => {
     alert('Pregunta Publicada');
 };
 
+// Recuperar datos de la asignatura con el id proporcionado
+async function recuperarAsignatura(id){
+    await axios.get(`http://localhost:8080/asignatura/${id}`)
+    .then(response => {
+        asignatura.value = response.data;
+        recuperarProfesor(response.data.profesorId);
+    })
+    .catch(error => {
+        console.error(error);
+    });
+}
+
+async function recuperarProfesor(id){
+    await axios.get(`http://localhost:8080/user/${id}`)
+    .then(response => {
+        asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
+        const algo = response.data.role
+        console.log(algo)
+    })
+    .catch(error => {
+        console.error(error);
+    });
+}
+
+function determinarRuta(id, rol){
+    if(rol === 'profesor'){
+        return `/vistaProfesor/${id}`;
+    } else {
+        return `/vistaAlumno/${id}`;
+    }
+}
+
 onMounted( async  () => {
+    recuperarAsignatura(id);
     recuperarSesiones();
 });
 
