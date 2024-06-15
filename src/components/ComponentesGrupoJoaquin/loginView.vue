@@ -210,7 +210,7 @@ export default {
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);
-          this.$router.push('/about');  // Cambiar '/about' por la ruta de la página a la que se redirigirá al iniciar sesión
+          this.$router.push('/'); // Cambiar '/modulosAlum' por la ruta de la página a la que se redirigirá al iniciar sesión
         } else {
           this.showError('Correo electrónico o contraseña incorrectos');
         }
