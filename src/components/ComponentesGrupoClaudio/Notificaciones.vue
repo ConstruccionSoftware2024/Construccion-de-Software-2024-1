@@ -14,9 +14,7 @@ const getUsers = async () => {
     try {
         let respuesta = await fetch('http://localhost:8080/users');
         let usuarios = await respuesta.json();
-        console.log('Usuarios:', usuarios);
         idUsuario = usuarios[0]._id;
-        console.log('id Usuario:', idUsuario);
         obtenerAlertas();
     }
     catch (error) {
@@ -28,7 +26,6 @@ const obtenerAlertas = async () => {
     try {
         let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`);
         alertas = await respuesta.json();
-        console.log('Alertas:', alertas);
     }
     catch (error) {
         console.error('Error al obtener las alertas:', error)
