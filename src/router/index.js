@@ -19,6 +19,7 @@ import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
 import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import { useThemeStore, useUserStore } from '/back-end/src/store.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -152,9 +153,10 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoFelipe/contact.vue')
     },
     {
-      path: '/asignaturaAlumno',
+      path: '/asignatura/:id',
       name: 'asignaturaAlumno',
-      component: AsignaturaAlumno
+      component: AsignaturaAlumno,
+      meta: { requiresAuth: true }
     },
     {
       path: '/:catchAll(.*)/',
@@ -162,6 +164,18 @@ const router = createRouter({
       component: notFound
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+
+  const userStore = useUserStore()
+
+  if (requiresAuth && !userStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router;

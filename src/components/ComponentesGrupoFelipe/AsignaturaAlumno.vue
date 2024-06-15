@@ -11,9 +11,9 @@
 
             <div class="sesiones">
                 <h3 class="subtitulo">Listado de Sesiones</h3>
-                <p>Sesion 1</p>
-                <p>Sesion 2</p>
-                <p>Sesion 3</p>
+                <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
+                    <router-link :to="'/session/' + sesion._id" class="navLink">{{ sesion.nombre }}</router-link>
+                </div>
             </div>
 
             <div class="recursos">
@@ -77,10 +77,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
 
 const asignatura = ref({
-    nombre: 'Arquitectura de Software',
+    nombre: 'Nombre Ejemplo',
     profesor: 'Profesor Ejemplo',
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
@@ -88,34 +89,26 @@ const asignatura = ref({
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
 });
 
-const faltas = ref([
-    { fecha: '01/10/2021', motivo: 'Falta sin justificar' },
-    { fecha: '03/10/2021', motivo: 'Retraso en la entrega de tarea' },
-    { fecha: '05/10/2021', motivo: 'Falta sin justificar' },
-    { fecha: '07/10/2021', motivo: 'Falta sin justificar' },
-    { fecha: '09/10/2021', motivo: 'Falta sin justificar' }
-]);
+const sesiones = ref([]);
+
+function recuperarSesiones(){
+    axios.get(`http://localhost:8080/sesion`)
+    .then(response => {
+        sesiones.value = response.data;
+    })
+    .catch(error => {
+        console.error(error);
+    });
+}
+
 
 const publicarPregunta = () => {
     alert('Pregunta Publicada');
 };
 
-const verDetallesFaltas = () => {
-    alert('Detalles de las Faltas');
-};
-
-const verCalendario = () => {
-    alert('Calendario de Tareas y Exámenes');
-};
-
-const contactarProfesor = () => {
-    alert('Contactar al Profesor');
-};
-
-const reportarProblema = () => {
-    alert('Reportar un Problema');
-};
-
+onMounted( async  () => {
+    recuperarSesiones();
+});
 
 </script>
 
@@ -139,14 +132,14 @@ const reportarProblema = () => {
 
 .seccion1 {
     padding: 20px;
-    width: 75%;
+    width: 70%;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
 
 .seccion2 {
     padding: 20px;
-    width: 20%;
+    width: 26%;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
@@ -165,6 +158,7 @@ const reportarProblema = () => {
     font-size: 20px;
     margin: 0;
     font-weight: bold;
+    margin-bottom: 5px;
 }
 
 button {
@@ -176,12 +170,28 @@ button {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 12px;
 }
 
 .sesiones {
     background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
+}
+
+.sesionesItem{
+    border-bottom: 1px solid #ccc;
+}
+
+.navLink {
+    text-decoration: none;
+    color: #333;
+    display: block;
+    padding: 10px 0;
+}
+
+.navLink:hover {
+    color: #08cccc;
 }
 
 .recursos {
@@ -209,6 +219,12 @@ ul {
 
 li {
     margin-bottom: 10px;
+    text-decoration: none;
+}
+
+a{
+    text-decoration: none;
+    color: #333;
 }
 
 .team-members {

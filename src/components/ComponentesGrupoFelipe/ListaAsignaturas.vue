@@ -7,7 +7,7 @@
         </div>
         <div class="content-wrapper">
             <div class="card-container">
-                <div class="card" v-for="(project, index) in projects" :key="index">
+                <div class="card" v-for="(project, index) in projects" :key="index" @click="goToProject(project.id)">
                     <div class="card-header">
                         <img :src="project.image" alt="Project image" class="project-image">
                         <div class="card-title">{{ project.title }}</div>
@@ -39,6 +39,7 @@ export default {
         return {
             projects: [
                 {
+                    id: 1, // Despues se cambia por la de la base de datos
                     title: 'Análisis y Diseño de Software',
                     description: 'Principios y técnicas de análisis y diseño de software.',
                     section: 'Sección C',
@@ -47,6 +48,7 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 },
                 {
+                    id: 2,
                     title: 'Desarrollo de Software Ágil',
                     description: 'Metodologías ágiles y prácticas de desarrollo de software.',
                     section: 'Sección A',
@@ -55,6 +57,7 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 },
                 {
+                    id: 3,
                     title: 'Pruebas de Software',
                     description: 'Técnicas y herramientas para pruebas de software.',
                     section: 'Sección A',
@@ -63,6 +66,7 @@ export default {
                     members: ['https://via.placeholder.com/24']
                 },
                 {
+                    id: 4,
                     title: 'Ingeniería de Requisitos',
                     description: 'Procesos y técnicas para la gestión de requisitos.',
                     section: 'Sección D',
@@ -71,6 +75,7 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 },
                 {
+                    id: 5,
                     title: 'Arquitectura de Software',
                     description: 'Diseño y evaluación de arquitecturas de software.',
                     section: 'Sección B',
@@ -79,6 +84,7 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 },
                 {
+                    id: 6,
                     title: 'Gestión de Proyectos de Software',
                     description: 'Principios y prácticas para la gestión de proyectos de software.',
                     section: 'Sección A',
@@ -87,6 +93,7 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 },
                 {
+                    id: 7,
                     title: 'Mantenimiento de Software',
                     description: 'Técnicas y herramientas para el mantenimiento de software.',
                     section: 'Sección D',
@@ -95,6 +102,7 @@ export default {
                     members: ['https://via.placeholder.com/24']
                 },
                 {
+                    id: 8,
                     title: 'Calidad de Software',
                     description: 'Modelos y estándares de calidad de software.',
                     section: 'Sección A',
@@ -103,6 +111,7 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 },
                 {
+                    id: 9,
                     title: 'Seguridad de Software',
                     description: 'Prácticas y técnicas para el desarrollo seguro de software.',
                     section: 'Sección A',
@@ -111,6 +120,11 @@ export default {
                     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24']
                 }
             ]
+        }
+    },
+    methods: {
+        goToProject(id) {
+            this.$router.push(`/asignatura/${id}`);
         }
     }
 }
