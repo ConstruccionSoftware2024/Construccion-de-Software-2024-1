@@ -16,6 +16,10 @@ import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
 import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
+import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
+import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
+import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import { useThemeStore, useUserStore } from '/back-end/src/store.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,6 +28,12 @@ const router = createRouter({
       path: '/',
       name: 'HomeView',
       component: HomeView
+    },
+
+    {
+      path: '/listaAsignaturas',
+      name: 'asignaturas',
+      component: asignaturas
     },
 
     {
@@ -102,10 +112,11 @@ const router = createRouter({
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
-    { 
-      path: '/lista-alumnos', 
-      name: 'lista-alumnos', 
-      component: ListaAlumnos },
+    {
+      path: '/lista-alumnos',
+      name: 'lista-alumnos',
+      component: ListaAlumnos
+    },
     {
       path: '/historial',
       name: 'historial',
@@ -140,8 +151,31 @@ const router = createRouter({
       path: '/contact',
       name: 'contact',
       component: () => import('../views/VistasGrupoFelipe/contact.vue')
+    },
+    {
+      path: '/asignatura/:id',
+      name: 'asignaturaAlumno',
+      component: AsignaturaAlumno,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/:catchAll(.*)/',
+      name: 'not-found',
+      component: notFound
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+
+  const userStore = useUserStore()
+
+  if (requiresAuth && !userStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router;
