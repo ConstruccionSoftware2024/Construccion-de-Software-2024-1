@@ -178,6 +178,7 @@ onMounted( async  () => {
     width: 70%;
     border: 1px solid #ccc;
     border-radius: 5px;
+    background-color: var(--container-background-color);
 }
 
 .seccion2 {
@@ -185,6 +186,7 @@ onMounted( async  () => {
     width: 26%;
     border: 1px solid #ccc;
     border-radius: 5px;
+    background-color: var(--container-background-color);
 }
 
 .sesiones,
@@ -195,6 +197,8 @@ onMounted( async  () => {
 .fechas,
 .acciones {
     margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .subtitulo {
@@ -208,16 +212,20 @@ button {
     padding: 10px;
     margin-top: 10px;
     margin-right: 10px;
-    background-color: #08cccc;
-    color: #fff;
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 12px;
 }
 
+button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
 .sesiones {
-    background-color: #f1f1f1;
+    background-color: var(--background-color);
     padding: 10px;
     border-radius: 5px;
 }
@@ -228,29 +236,26 @@ button {
 
 .navLink {
     text-decoration: none;
-    color: #333;
+    color: var(--text-color);
     display: block;
     padding: 10px 0;
 }
 
 .navLink:hover {
-    color: #08cccc;
+    color: var(--button-hover-background-color);
 }
 
 .recursos {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
 }
 
 .foro {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
 }
 
 .actividades {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
 }
@@ -267,7 +272,7 @@ li {
 
 a{
     text-decoration: none;
-    color: #333;
+    color: var(--text-color);
 }
 
 .team-members {
