@@ -92,7 +92,6 @@ export default {
 </script>
 
 <style scoped>
-/* Tu CSS aquí */
 body {
     background-color: var(--background-color);
 }
