@@ -60,9 +60,7 @@ window.addEventListener('beforeunload', function (event) {
 }
 
 .main-content {
-  flex: 1;
   min-height: 90vh;
-  margin: 0 10%;
   justify-content: center;
   align-items: center;
 }

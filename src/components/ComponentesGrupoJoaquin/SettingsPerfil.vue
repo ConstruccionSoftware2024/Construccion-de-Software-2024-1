@@ -268,9 +268,7 @@ input:focus {
   font-size: 1rem;
   text-align: center;
 }
-</style>
-//------------------Para la tarjerta de perfil----------------------------------------
-<style scoped>
+
 p {
   text-align: left;
   margin-left: 2%;
