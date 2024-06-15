@@ -94,17 +94,16 @@ const asignatura = ref({
     profesor: 'Profesor Ejemplo',
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
-    subjectName: 'Matemáticas',
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
 });
 
 
 const sesiones = ref([]);
 
-function recuperarSesiones(){
-    axios.get(`http://localhost:8080/sesion`)
+function recuperarSesiones(id){
+    return axios.get(`http://localhost:8080/sesion/${id}`)
     .then(response => {
-        sesiones.value = response.data;
+        return response.data;
     })
     .catch(error => {
         console.error(error);
@@ -116,12 +115,15 @@ const publicarPregunta = () => {
     alert('Pregunta Publicada');
 };
 
-// Recuperar datos de la asignatura con el id proporcionado
 async function recuperarAsignatura(id){
     await axios.get(`http://localhost:8080/asignatura/${id}`)
-    .then(response => {
+    .then(async response => {
         asignatura.value = response.data;
         recuperarProfesor(response.data.profesorId);
+        const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
+        const sesionesResultados = await Promise.all(sesionesPromesas);
+        sesiones.value = sesionesResultados;
+        console.log(sesiones.value);
     })
     .catch(error => {
         console.error(error);
@@ -132,8 +134,6 @@ async function recuperarProfesor(id){
     await axios.get(`http://localhost:8080/user/${id}`)
     .then(response => {
         asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
-        const algo = response.data.role
-        console.log(algo)
     })
     .catch(error => {
         console.error(error);
@@ -150,7 +150,7 @@ function determinarRuta(id, rol){
 
 onMounted( async  () => {
     recuperarAsignatura(id);
-    recuperarSesiones();
+
 });
 
 </script>
@@ -280,5 +280,20 @@ a{
     height: 24px;
     border-radius: 50%;
     margin-right: 5px;
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .seccion1 {
+        width: 100%;
+    }
+
+    .seccion2 {
+        width: 100%;
+        margin-top: 20px;
+    }
 }
 </style>
