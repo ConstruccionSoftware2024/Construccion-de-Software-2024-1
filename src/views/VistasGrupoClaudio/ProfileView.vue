@@ -188,8 +188,8 @@ cargarDatosUsuario();
     justify-content: center;
     align-items: stretch;
     gap: 3rem;
-    margin-left: 5%;
-    margin-right: 5%;
+    margin-left: 10%;
+    margin-right: 10%;
     margin-top: 2rem;
 
 }
