@@ -1,30 +1,151 @@
-<script>
+<template>
+    <div class="container">
+        <h1>{{ asignatura }}</h1>
+        <div class="content">
+            <div class="left-column">
+                <div class="section">
+                    <h2>Listado de Sesiones</h2>
+                    <router-link v-for="(sesion, index) in info" :key="index" :to="'/session/' + sesion._id"
+                        class="session-item">
+                        <div class="session-content">
+                            <p class="session-name">{{ sesion.nombre }}</p>
+                            <p>Participantes: {{ sesion.participantes.length }}</p>
+                            <p>Creado por: {{ sesion.creador }}</p>
+                        </div>
+                    </router-link>
+                    <button @click="mostrarPopup = true" class="new-section-button btn">Nueva sesión</button>
+                </div>
 
+                <div class="section">
+                    <h2>Recursos de la Asignatura</h2>
+                    <div v-for="(recurso, index) in recursos" :key="index" class="resource-item">
+                        {{ recurso.nombre }}
+                    </div>
+                    <button @click="mostrarPopupRecurso = true" class="btn">Añadir Recurso</button>
+                </div>
+
+                <div class="section">
+                    <h2>Tareas</h2>
+                    <div v-for="(tarea, index) in tareas" :key="index" class="activity-item">
+                        {{ tarea.nombre }}
+                    </div>
+                    <button @click="mostrarPopupTarea = true" class="btn">Agregar Tarea</button>
+                </div>
+
+                <div class="section">
+                    <h2>Foro de Preguntas</h2>
+                    <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
+                    <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <div class="section">
+                    <h2>Listado de Faltas</h2>
+                    <p>Resumen de Faltas: [Número de Faltas]</p>
+                    <button class="btn">Ver Detalles</button>
+                </div>
+
+                <div class="section">
+                    <h2>Acciones Rápidas</h2>
+                    <button class="btn">Contactar a un Alumno</button>
+                    <button class="btn">Reportar un Problema</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popup for creating session -->
+        <div v-if="mostrarPopup" class="popup">
+            <form @submit.prevent="enviarFormulario">
+                <h3>Crear nueva sesión</h3>
+                <input required placeholder="Nombre de la sesión" type="text" id="nombre" v-model="formulario.nombre">
+                <input required placeholder="Descripción" type="text" id="descripcion" v-model="formulario.descripcion">
+                <input type="submit" class="btn" value="Crear sesión">
+                <button @click="mostrarPopup = false" class="btn-cerrar">Cerrar</button>
+            </form>
+        </div>
+
+        <!-- Popup for adding resource -->
+        <div v-if="mostrarPopupRecurso" class="popup">
+            <form @submit.prevent="enviarRecurso">
+                <h3>Añadir nuevo recurso</h3>
+                <input required placeholder="Nombre del recurso" type="text" v-model="nuevoRecurso.nombre">
+                <input required placeholder="Enlace del recurso" type="text" v-model="nuevoRecurso.enlace">
+                <input type="submit" class="btn" value="Añadir Recurso">
+                <button @click="mostrarPopupRecurso = false" class="btn-cerrar">Cerrar</button>
+            </form>
+        </div>
+    </div>
+</template>
+<script>
 import { ref, reactive, onMounted } from 'vue'
-import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue';
+import { useRouter } from 'vue-router'
 
 export default {
-
-    components: {
-        InvitarAlumnos
-    },
-
     setup() {
+        const router = useRouter()
+
+        const asignatura = ref('Nombre Ejemplo')
+        const mostrarPopup = ref(false)
+        const mostrarPopupRecurso = ref(false)
+        const mostrarPopupTarea = ref(false)
+        const nuevaPregunta = ref('')
+        const nuevoRecurso = reactive({
+            nombre: '',
+            enlace: ''
+        })
+        const nuevaTarea = reactive({
+            nombre: '',
+            descripcion: ''
+        })
+        const info = ref([])
+        const recursos = ref([])
+        const tareas = ref([])
+
         const formulario = reactive({
             nombre: '',
             descripcion: '',
             creador: 'default'
         })
-        let info = ref({})
-        let finish = ref({
-            tried: false,
-            success: false
-        })
-        let enviado = ref(false)
+
+        const cargarSesiones = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/sesion')
+
+                if (respuesta.ok) {
+                    const datos = await respuesta.json()
+                    info.value = datos
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        }
+
+        const cargarRecursos = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/recursos')
+
+                if (respuesta.ok) {
+                    const datos = await respuesta.json()
+                    recursos.value = datos
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        }
+
+        const publicarPregunta = () => {
+            if (nuevaPregunta.value.trim()) {
+                console.log('Pregunta publicada:', nuevaPregunta.value)
+                nuevaPregunta.value = ''
+            }
+        }
 
         const enviarFormulario = async () => {
-
-            console.log(formulario.nombre, formulario.descripcion)
             try {
                 const respuesta = await fetch('http://localhost:8080/sesion', {
                     method: 'POST',
@@ -32,252 +153,245 @@ export default {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formulario)
-                });
+                })
 
                 if (respuesta.ok) {
-                    //const datos = await respuesta.json();
-                    console.log('Datos enviados y subidos');
-                    //refrescamos los datos
-                    enviado.value = true
                     cargarSesiones()
+                    mostrarPopup.value = false
                 } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText);
+                    console.error('Error al enviar los datos:', respuesta.statusText)
                 }
             } catch (error) {
-                console.error('Error en la petición fetch:', error);
+                console.error('Error en la petición fetch:', error)
             }
-        };
+        }
 
-        const cargarSesiones = async () => {
-            console.log("cargando")
+        const enviarRecurso = async () => {
             try {
-                const respuesta = await fetch('http://localhost:8080/sesion');
+                const respuesta = await fetch('http://localhost:8080/recursos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(nuevoRecurso)
+                })
 
                 if (respuesta.ok) {
-                    const datos = await respuesta.json();
-                    info.value = datos
-                    console.log('Datos recibidos:', info.value);
-                    finish.value.tried = true
-                    finish.value.success = true
+                    cargarRecursos()
+                    mostrarPopupRecurso.value = false
                 } else {
-                    console.error('Error al obtener los datos:', respuesta.statusText);
-                    finish.value.tried = true
-                    finish.value.success = false
+                    console.error('Error al enviar los datos:', respuesta.statusText)
                 }
             } catch (error) {
-                console.error('Error en la petición fetch:', error);
+                console.error('Error en la petición fetch:', error)
             }
-        };
+        }
 
-        onMounted(cargarSesiones)
+        const enviarTarea = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/tareas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(nuevaTarea)
+                })
+
+                if (respuesta.ok) {
+                    cargarTareas()
+                    mostrarPopupTarea.value = false
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        }
+
+        const cargarTareas = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/tareas')
+
+                if (respuesta.ok) {
+                    const datos = await respuesta.json()
+                    tareas.value = datos
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        }
+
+        onMounted(() => {
+            cargarSesiones()
+            cargarRecursos()
+            cargarTareas()
+        })
 
         return {
+            asignatura,
+            mostrarPopup,
+            mostrarPopupRecurso,
+            mostrarPopupTarea,
+            nuevaPregunta,
+            nuevoRecurso,
+            nuevaTarea,
+            info,
+            recursos,
+            tareas,
             formulario,
             enviarFormulario,
-            info,
-            finish,
-            enviado
-        };
+            enviarRecurso,
+            enviarTarea,
+            publicarPregunta
+        }
     }
-
-
 }
-
 </script>
 
 
-<template>
-    <div class="container">
-
-        <div class=" ar_form formcont">
-            <h1>Crear una nueva sesión de monitoreo </h1>
-            <form @submit.prevent="enviarFormulario">
-                <div>
-                    <!-- <label for="nombre">Nombre de la sesión</label> -->
-                    <input required placeholder="nombre sesion" type="text" id="nombre" v-model="formulario.nombre">
-                    <!-- <label for="mensaje">Descripción</label> -->
-                    <input required placeholder="descripcion" type="text" id="mensaje" v-model="formulario.descripcion">
-                </div>
-
-                <input type="submit" v-if="!enviado" class="btn" value="Crear sesion">
-                <p>{{ enviado ? 'Sesión creada con exito' : '' }}</p>
-            </form>
-        </div>
-        <h2>Lista de sesiones </h2>
-        <div class="cont" v-if="finish">
-            <div v-for="(sesion, index) in info" :key="index" class="sombrabkn session-container">
-                <a :href="'/session/' + sesion._id" class="card">
-                    <div>
-
-                        <h2>
-                            {{ sesion.nombre }}
-                        </h2>
-                        <!-- <p>
-                            Id: {{ sesion._id }}
-                        </p> -->
-                    </div>
-                    <p>
-                        {{ sesion.descripcion }}
-                    </p>
-                </a>
-                <InvitarAlumnos :datosSesion="sesion._id" />
-            </div>
-
-        </div>
-
-    </div>
-
-</template>
-
 <style scoped>
-h1 {
-    font-size: 2rem;
-    font-weight: bolder;
-
-}
-
-@media (min-width: 1024px) {
-    .about {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-    }
-}
-
-.formcont {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    margin: 2rem auto;
-}
-
-.card {
-    display: flex;
-    flex-direction: column;
-    gap: .5rem;
-    width: 100%;
-    padding: 1rem;
-    justify-content: center;
-    align-items: center;
-    border-radius: 15px;
-    /* border: 1px solid rgb(46, 46, 46); */
-    /* box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2); */
-    color: #1C1C1C;
-    text-decoration: none;
-    transition: all .3s ease;
-}
-
-.card:hover {
-    background-color: #ededed;
-}
-
-.card>div>h2 {
-    text-align: center;
-    font-weight: bold;
-    color: #08CCCC;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid gray;
-    border-radius: 1rem;
-    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
-    width: 30rem;
-    padding: 1rem;
-    height: 20rem;
-    margin: 0 auto;
-    overflow: hidden;
-    gap: 1rem;
-}
-
 .container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-}
-
-form>div {
-    display: flex;
-    flex-direction: column;
-    padding: .5rem;
-    width: 100%;
-    gap: .5rem;
-    margin: 0 auto;
-}
-
-
-.cont {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    width: 95%;
-    margin: auto auto;
-    justify-content: center;
     padding: 1rem;
+    width: 80%;
+    margin: auto;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    margin-top: 1rem;
 }
 
-.session-container {
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
-    border: 2px solid gray;
-    border-radius: 1rem;
-    /* box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2); */
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.content {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.left-column {
+    flex: 2;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    transition: all .3s ease;
+    gap: 1.5rem;
 }
 
-.sombrabkn:hover {
-    box-shadow: rgba(8, 204, 204, 0.199) -6px 6px, rgba(8, 204, 204, 0.19) -12px 12px;
-    transform: scale(0.99);
+.right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.ar_form * {
-    transition: .3s ease-in-out;
-    box-sizing: border-box;
+.section {
+    background-color: #f9f9f9;
+    padding: 1.5rem;
+    /* Aumentamos el padding de las secciones para mayor separación */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.ar_form form input {
-    width: 90%;
-    /* margin: .6em 0; */
-    margin: 0 auto;
-    padding: 10px 10px;
-    border: 0;
-    font-weight: 700;
-    background-color: transparent;
-    outline: none;
-    border-color: #08CCCC;
-    border-radius: 20px;
-    /* margin-left: 50%; */
-    /* transform: translateX(-50%); */
+.section:not(:last-child) {
+    margin-bottom: 1.5rem;
+    /* Espacio entre las secciones */
 }
 
-.ar_form form input[type="text"] {
-    border: 2px solid gray;
-    /* color: black; */
+.session-list {
+    border-top: 1px solid #ddd;
+    /* Borde superior para el listado de sesiones */
 }
 
-/* #03273D; */
-.ar_form form input[type="text"]:focus {
-    border-color: #08CCCC;
-    width: 100%
+.session-item {
+    padding: 1rem 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
-.ar_form form input[type="submit"] {
+.session-item:hover {
+    background-color: #f0f0f0;
+}
+
+.session-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.new-section-button {
+    margin-top: 0.7rem;
+}
+
+.session-content {
+    display: flex;
+    flex-direction: column;
+    padding: 0.2rem;
+    margin: 0.5rem;
+    border-bottom: 1px solid #ccc;
+}
+
+.session-content:hover {
+    background-color: #f0f0f0;
+
+}
+
+.resource-item,
+.activity-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button.btn {
     background-color: #06a0a0;
     color: white;
-    width: 70%;
-    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.ar_form form input[type="submit"]:hover {
-    width: 80%;
-    background-color: #08CCCC;
+button.btn:hover {
+    background-color: #08cccc;
+}
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
 }
 </style>

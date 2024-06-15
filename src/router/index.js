@@ -82,8 +82,8 @@ const router = createRouter({
       component: InvitarAlumnos
     },
     {
-      path: '/newsession',
-      name: 'create',
+      path: '/asignatura',
+      name: 'asignatura',
       component: () => import('../views/VistasGrupoClaudio/CrearSesion.vue')
     },
     {
@@ -102,10 +102,11 @@ const router = createRouter({
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
-    { 
-      path: '/lista-alumnos', 
-      name: 'lista-alumnos', 
-      component: ListaAlumnos },
+    {
+      path: '/lista-alumnos',
+      name: 'lista-alumnos',
+      component: ListaAlumnos
+    },
     {
       path: '/historial',
       name: 'historial',

@@ -28,7 +28,7 @@ const obtenerAlertas = async () => {
     try {
         let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`);
         alertas = await respuesta.json();
-        console.log('Alertas:', alertas);
+        //console.log('Alertas:', alertas);
     }
     catch (error) {
         console.error('Error al obtener las alertas:', error)
