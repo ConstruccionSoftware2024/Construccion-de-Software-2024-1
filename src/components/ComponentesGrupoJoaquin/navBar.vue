@@ -10,6 +10,7 @@
           <RouterLink to="/" class="navLink" @click.native="closeMenu">Inicio</RouterLink>
 
           <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">
+            <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
             <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
             <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
           </template>
@@ -19,11 +20,9 @@
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
 
-          <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Ajustes</RouterLink>
-
           <template v-if="isAuthenticated && (user && user.role === 'alumno' || user.role === 'profesor')">
             <template v-if="isOpen">
-              <RouterLink to="/notificaciones" class="navLink" @click.native="closeMenu">Ver todas las notificaciones
+              <RouterLink to="/notificaciones" class="navLink" @click.native="closeMenu">Notificaciones
               </RouterLink>
             </template>
             <template v-else>
@@ -393,6 +392,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1024px) {
+  .loginButtonLogged {
+    display: none;
+  }
+
   .navbarRight {
     position: fixed;
     top: 0;
