@@ -7,25 +7,30 @@
           <span class="text">Cheat Detector</span>
         </div>
         <div class="navbarRight" :class="{ open: isOpen }">
-          <RouterLink to="/" class="navLink" @click.native="closeMenu">Home</RouterLink>
-        <RouterLink to="/sesionesAlum" class="navLink">Sesiones</RouterLink>
+          <RouterLink to="/" class="navLink" @click.native="closeMenu">Inicio</RouterLink>
 
-          <!-- Mostrar About y Contact para todos menos si el usuario es profesor -->
           <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">
             <RouterLink to="/about" class="navLink" @click.native="closeMenu">About</RouterLink>
             <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
           </template>
 
-          <RouterLink to="/navegacion" class="navLink" @click.native="closeMenu">Navegación</RouterLink>
-
-          <!-- Mostrar Prueba1, Prueba2 solo si el usuario es profesor -->
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
-            <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba1</RouterLink>
-            <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba2</RouterLink>
+            <RouterLink to="#" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
+            <RouterLink to="#" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
 
-          <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
-                    <Notificaciones />
+          <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Ajustes</RouterLink>
+
+          <template v-if="isAuthenticated && (user && user.role === 'alumno' || user.role === 'profesor')">
+            <template v-if="isOpen">
+              <RouterLink to="/notificaciones" class="navLink" @click.native="closeMenu">Ver todas las notificaciones
+              </RouterLink>
+            </template>
+            <template v-else>
+              <Notificaciones />
+            </template>
+          </template>
+
           <template v-if="isAuthenticated">
             <button class="loginButton" @click="goProfile">
               <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
@@ -49,7 +54,6 @@
           </svg>
         </label>
       </div>
-      
     </nav>
     <main class="main-content">
       <slot></slot>
@@ -59,6 +63,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import Notificaciones from '../ComponentesGrupoClaudio/Notificaciones.vue';
