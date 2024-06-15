@@ -17,6 +17,8 @@ import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
 import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
+import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
+import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -148,6 +150,16 @@ const router = createRouter({
       path: '/contact',
       name: 'contact',
       component: () => import('../views/VistasGrupoFelipe/contact.vue')
+    },
+    {
+      path: '/asignaturaAlumno',
+      name: 'asignaturaAlumno',
+      component: AsignaturaAlumno
+    },
+    {
+      path: '/:catchAll(.*)/',
+      name: 'not-found',
+      component: notFound
     }
   ]
 })
