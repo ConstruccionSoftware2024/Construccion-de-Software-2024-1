@@ -45,11 +45,6 @@
                 Historial alumno
             </button>
         </RouterLink>
-        <RouterLink to="/alumnovista" class="navLink">
-            <button>
-                Vista Alumno
-            </button>
-        </RouterLink>
     </div>
 
     <div class="container">
@@ -64,7 +59,11 @@
                 Vista Profesor
             </button>
         </RouterLink>
-        
+        <RouterLink to="/vistaalumno" class="navLink">
+            <button>
+                Vista Alumno
+            </button>
+        </RouterLink>
     </div>
 
         

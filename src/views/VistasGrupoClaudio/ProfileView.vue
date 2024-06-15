@@ -4,9 +4,8 @@
             <div class="alumno-info">
                 <img class="alumno-img" :src="imagen" />
                 <div class="alumno-text">
-                    <h2>{{ alumno.nombre }} {{ alumno.apellido }}</h2>
-                    <p class="texto-carrera"> {{ alumno.carrera }} </p>
-                    <p class="texto-ciudad">{{ alumno.ciudad }}, {{ alumno.pais }} </p>
+                    <h2>{{ alumno.firstName }} {{ alumno.lastName }}</h2>
+                    <p class="texto-major"> {{ alumno.major }} , {{ alumno.campus }}</p>
                 </div>
             </div>
         </div>
@@ -33,8 +32,8 @@
                     </div>
 
                     <div class="input-group">
-                        <label for="correo">Correo: </label>
-                        <input id="correo" class="inputEditable" v-model="alumnoEditado.correo" placeholder="Correo">
+                        <label for="email">email: </label>
+                        <input id="email" class="inputEditable" v-model="alumnoEditado.email" placeholder="email">
                     </div>
 
                     <div class="input-group">
@@ -50,16 +49,16 @@
                     </div>
                 </template>
                 <template v-else>
-                    <p><span class="atributo-nombre">Matrícula</span><span class="dospuntos">:</span> {{
+                    <p><span class="atributo-username">Matrícula</span><span class="dospuntos">:</span> {{
                         alumno.matricula }}</p>
-                    <p><span class="atributo-nombre">Rut</span><span class="dospuntos">:</span> {{ alumno.rut }}</p>
-                    <p><span class="atributo-nombre">Fecha de Nacimiento</span><span class="dospuntos">:</span> {{
+                    <p><span class="atributo-username">Rut</span><span class="dospuntos">:</span> {{ alumno.rut }}</p>
+                    <p><span class="atributo-username">Fecha de Nacimiento</span><span class="dospuntos">:</span> {{
                         alumno.fechaNacimiento }}</p>
-                    <p><span class="atributo-nombre">Correo</span><span class="dospuntos">:</span> {{ alumno.correo }}
+                    <p><span class="atributo-username">email</span><span class="dospuntos">:</span> {{ alumno.email }}
                     </p>
-                    <p><span class="atributo-nombre">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono
+                    <p><span class="atributo-username">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono
                         }}</p>
-                    <p><span class="atributo-nombre">Dirección</span><span class="dospuntos">:</span> {{
+                    <p><span class="atributo-username">Dirección</span><span class="dospuntos">:</span> {{
                         alumno.direccion }}</p>
                 </template>
             </div>
@@ -79,6 +78,9 @@
 <script setup>
 import { ref, reactive, computed } from 'vue';
 import Swal from 'sweetalert2';
+import { useUserStore } from '../../../back-end/src/store.js';
+import axios from 'axios';
+
 
 // Datos de prueba
 
@@ -86,14 +88,15 @@ const imagen = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-pic
 
 
 const alumno = ref({
-    nombre: 'Nombre',
-    apellido: 'Apellido',
-    ciudad: 'Curico',
+    username: '',
+    firstName: '',
+    lastName: '',
+    campus: 'Curico',
     pais: 'Chile',
-    carrera: 'Ingenieria Civil en Computación',
+    major: 'Ingenieria Civil en Computación',
     matricula: '2000000',
     rut: '111111111-1',
-    correo: 'hola@gmail.com',
+    email: 'hola@gmail.com',
     fechaNacimiento: '01 Enero 2000',
     telefono: 'Telefono',
     direccion: 'Direccion',
@@ -106,6 +109,9 @@ const mostrarFormulario = ref(false);
 const cambiosRealizados = computed(() => {
     return Object.keys(alumno.value).some(key => alumno.value[key] !== alumnoEditado[key]);
 });
+
+const userStore = useUserStore();
+const user = computed(() => userStore.user);
 
 function toggleFormulario() {
     if (mostrarFormulario.value) {
@@ -124,6 +130,21 @@ function toggleFormulario() {
     }
     mostrarFormulario.value = !mostrarFormulario.value;
 }
+
+// Recuperar datos del usuario mediante el ._id
+
+function cargarDatosUsuario() {
+    axios.get(`http://localhost:8080/user/${user.value._id}`)
+        .then((response) => {
+            const data = response.data;
+            console.log(data);
+            alumno.value = data;
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+}
+
 
 const cancelarEdicion = () => {
 
@@ -145,10 +166,10 @@ const cancelarEdicion = () => {
         });
     } else
 
-
-
     mostrarFormulario.value = false;
 };
+
+cargarDatosUsuario();
 
 </script>
 
@@ -160,8 +181,8 @@ const cancelarEdicion = () => {
     justify-content: center;
     align-items: stretch;
     gap: 3rem;
-    margin-left: 10%;
-    margin-right: 10%;
+    margin-left: 5%;
+    margin-right: 5%;
     margin-top: 2rem;
 
 }
@@ -265,16 +286,16 @@ const cancelarEdicion = () => {
     margin-right: 6px;
 }
 
-.atributo-nombre {
+.atributo-username {
     font-weight: 600;
 }
 
-.texto-ciudad {
+.texto-campus {
     font-size: 0.9rem;
     color: var(--text-color);
 }
 
-.texto-carrera {
+.texto-major {
     font-size: 1rem;
     color: var(--text-color);
     margin-top: 0.8rem;
