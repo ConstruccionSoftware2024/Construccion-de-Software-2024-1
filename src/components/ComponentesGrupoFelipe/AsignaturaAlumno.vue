@@ -64,6 +64,16 @@
                 <button>Reportar un Problema</button>
             </div>
 
+            <button @click="mostrarPopup = true">Crear sesión</button>
+
+            <div v-if="mostrarPopup" class="popup">
+                <h2>Crear sesión</h2>
+                <label>Nombre de la sesión: <input v-model="nuevaSesion.nombre" type="text"></label>
+                <label>Descripción: <input v-model="nuevaSesion.descripcion" type="text"></label>
+                <button @click="enviarFormulario">Crear</button>
+                <button @click="mostrarPopup = false">Cancelar</button>
+            </div>
+
             <div class="participantes">
                 <h3 class="subtitulo">Participantes</h3>
                 <div class="team-members">
@@ -76,43 +86,103 @@
     </div>
 </template>
 
-<script setup>
+<script>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 
-const asignatura = ref({
-    nombre: 'Nombre Ejemplo',
-    profesor: 'Profesor Ejemplo',
-    proximaTarea: '10/10/2021',
-    proximoExamen: '15/10/2021',
-    subjectName: 'Matemáticas',
-    members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
-});
+export default {
+    data() {
+        return {
+            asignatura: {
+                nombre: 'Nombre Ejemplo',
+                profesor: 'Profesor Ejemplo',
+                proximaTarea: '10/10/2021',
+                proximoExamen: '15/10/2021',
+                subjectName: 'Matemáticas',
+                members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
+            },
+            sesiones: [],
+            mostrarPopup: false,
+            nuevaSesion: {
+                nombre: '',
+                descripcion: '',
+                asignatura: ''
+            },
+        }
+    },
+    methods: {
+        recuperarSesiones() {
+            axios.get(`http://localhost:8080/sesion`)
+                .then(response => {
+                    this.sesiones = response.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        publicarPregunta() {
+            alert('Pregunta Publicada');
+        },
+        async fetchProjects() {
+            try {
+                const response = await axios.get('http://localhost:8080/asignaturas');
+                this.projects = response.data;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        },
+        goToProject(id) {
+            this.$router.push(`/asignatura/${id}`);
+        },
+        async enviarFormulario() {
+            try {
+                // Obtiene la id de la asignatura de la URL
+                const asignaturaId = this.$route.params.id;
 
-const sesiones = ref([]);
+                if (!asignaturaId) {
+                    console.error('No se encontró la id de la asignatura');
+                    return;
+                }
 
-function recuperarSesiones(){
-    axios.get(`http://localhost:8080/sesion`)
-    .then(response => {
-        sesiones.value = response.data;
-    })
-    .catch(error => {
-        console.error(error);
-    });
+                // Agrega la id de la asignatura al objeto nuevaSesion
+                this.nuevaSesion.asignatura = asignaturaId;
+                console.log('Datos a enviar:', this.nuevaSesion);
+
+                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
+
+                if (respuesta.status === 200) {
+                    this.fetchProjects();
+                    this.mostrarPopup = false;
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+    },
+    created() {
+        this.fetchProjects();
+    },
+    mounted() {
+        this.recuperarSesiones();
+    }
 }
-
-
-const publicarPregunta = () => {
-    alert('Pregunta Publicada');
-};
-
-onMounted( async  () => {
-    recuperarSesiones();
-});
-
 </script>
 
 <style scoped>
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
+}
+
 .container {
     margin: 40px 10%;
     padding: 20px;
@@ -179,7 +249,7 @@ button {
     border-radius: 5px;
 }
 
-.sesionesItem{
+.sesionesItem {
     border-bottom: 1px solid #ccc;
 }
 
@@ -222,7 +292,7 @@ li {
     text-decoration: none;
 }
 
-a{
+a {
     text-decoration: none;
     color: #333;
 }

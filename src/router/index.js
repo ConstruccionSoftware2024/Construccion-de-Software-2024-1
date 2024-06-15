@@ -20,6 +20,7 @@ import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.v
 import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
+import CrearSesion from '../views/VistasGrupoClaudio/CrearSesion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,6 +35,12 @@ const router = createRouter({
       path: '/listaAsignaturas',
       name: 'asignaturas',
       component: asignaturas
+    },
+
+    {
+      path: '/newsession',
+      name: 'create',
+      component: CrearSesion
     },
 
     {

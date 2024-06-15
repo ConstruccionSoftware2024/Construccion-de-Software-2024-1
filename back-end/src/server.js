@@ -523,7 +523,7 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
-
+      asignatura: req.body.asignatura,
       creador: req.body.creador,
       participantes: [],
       banlist: [],
