@@ -31,17 +31,19 @@
             </template>
           </template>
 
-          <template v-if="isAuthenticated" >
+          <template v-if="isAuthenticated">
             <div class="dropwdown-container">
-              <button class="loginButton" :class="{'loginButtonActive': showDropDown, 'loginButtonActiveText': showDropDown}" @click="toggleDropwDown">
-              <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
-              <div class="loginText">{{ user.username }}</div>
-            </button>
-            <div v-if="showDropDown" class="dropDownMenu">
-              <RouterLink to="/perfil" class="navLink" @click="closeMenu">Perfil</RouterLink>
-              <RouterLink to="/settings" class="navLink" @click="closeMenu">Configuración</RouterLink>
-              <button class="logoutButton" @click="logout">Cerrar Sesión</button>
-            </div>
+              <button class="loginButton"
+                :class="{ 'loginButtonActive': showDropDown, 'loginButtonActiveText': showDropDown }"
+                @click="toggleDropwDown">
+                <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
+                <div class="loginText">{{ user.username }}</div>
+              </button>
+              <div v-if="showDropDown" class="dropDownMenu">
+                <RouterLink to="/perfil" class="navLink" @click="closeMenu">Perfil</RouterLink>
+                <RouterLink to="/settings" class="navLink" @click="closeMenu">Configuración</RouterLink>
+                <button class="logoutButton" @click="logout">Cerrar Sesión</button>
+              </div>
             </div>
           </template>
           <template v-else>
@@ -137,13 +139,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-
 .dropDownMenu {
   position: absolute;
   top: 100%;
   background-color: #2c2c2e;
-  border-bottom-left-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 0;
   display: flex;
@@ -152,7 +153,7 @@ onUnmounted(() => {
   z-index: 1000;
 }
 
-.logoutButton{
+.logoutButton {
   color: white;
   background-color: #2c2c2e;
   border: none;
@@ -268,7 +269,7 @@ onUnmounted(() => {
   transition-duration: 0.3s;
 }
 
-.loginButtonActive{
+.loginButtonActive {
   width: 130px;
   border-radius: 40px;
   transition-duration: 0.3s;
