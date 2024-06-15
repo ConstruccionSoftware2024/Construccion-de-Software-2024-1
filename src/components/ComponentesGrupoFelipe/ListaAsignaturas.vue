@@ -35,7 +35,9 @@
 
 <script>
 import axios from 'axios';
+import { computed } from 'vue';
 
+const user = computed(() => userStore.user);
 export default {
     data() {
         return {
@@ -53,7 +55,13 @@ export default {
             }
         },
         goToProject(id) {
-            this.$router.push(`/asignatura/${id}`);
+            console.log(user)
+            if (user.role == 'alumno') {
+                this.$router.push(`/asignaturaAlumno/${id}`);
+            }
+            else {
+                this.$router.push(`/asignaturaProfesor/${id}`);
+            }
         }
     },
     created() {

@@ -1,11 +1,11 @@
 <template>
     <div class="container">
-        <h1>{{ asignatura }}</h1>
+        <h1>{{ asignatura.title }} - {{ asignatura.section }}</h1>
         <div class="content">
             <div class="left-column">
                 <div class="section">
                     <h2>Listado de Sesiones</h2>
-                    <router-link v-for="(sesion, index) in info" :key="index" :to="'/session/' + sesion._id"
+                    <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/session/' + sesion._id"
                         class="session-item">
                         <div class="session-content">
                             <p class="session-name">{{ sesion.nombre }}</p>
@@ -79,12 +79,14 @@
 </template>
 <script>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import axios from 'axios'
 
 export default {
     setup() {
-        const router = useRouter()
-
+        const sesiones = ref([]);
+        const route = useRoute()
+        const asignaturaId = route.params.id
         const asignatura = ref('Nombre Ejemplo')
         const mostrarPopup = ref(false)
         const mostrarPopupRecurso = ref(false)
@@ -109,33 +111,10 @@ export default {
         })
 
         const cargarSesiones = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/sesion')
 
-                if (respuesta.ok) {
-                    const datos = await respuesta.json()
-                    info.value = datos
-                } else {
-                    console.error('Error al obtener los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
         }
 
         const cargarRecursos = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/recursos')
-
-                if (respuesta.ok) {
-                    const datos = await respuesta.json()
-                    recursos.value = datos
-                } else {
-                    console.error('Error al obtener los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
         }
 
         const publicarPregunta = () => {
@@ -209,26 +188,28 @@ export default {
         }
 
         const cargarTareas = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/tareas')
 
-                if (respuesta.ok) {
-                    const datos = await respuesta.json()
-                    tareas.value = datos
-                } else {
-                    console.error('Error al obtener los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
         }
 
         onMounted(() => {
-            cargarSesiones()
             cargarRecursos()
             cargarTareas()
         })
-
+        onMounted(async () => {
+            try {
+                const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
+                asignatura.value = response.data;
+                if (asignatura.value.sesiones) {
+                    for (const sesionId of asignatura.value.sesiones) {
+                        const sesionResponse = await axios.get(`http://localhost:8080/sesion/${sesionId}`);
+                        sesiones.value.push(sesionResponse.data);
+                    }
+                    console.log(sesiones)
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
         return {
             asignatura,
             mostrarPopup,
@@ -244,6 +225,7 @@ export default {
             enviarFormulario,
             enviarRecurso,
             enviarTarea,
+            sesiones,
             publicarPregunta
         }
     }
@@ -256,11 +238,11 @@ export default {
     display: flex;
     flex-direction: column;
     padding: 1rem;
-    width: 80%;
+    width: 70%;
     margin: auto;
     justify-content: space-between;
     margin-bottom: 3rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
 h1 {
@@ -279,7 +261,6 @@ h1 {
     flex: 2;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
 }
 
 .right-column {
@@ -302,13 +283,8 @@ h1 {
     /* Espacio entre las secciones */
 }
 
-.session-list {
-    border-top: 1px solid #ddd;
-    /* Borde superior para el listado de sesiones */
-}
 
 .session-item {
-    padding: 1rem 0;
     cursor: pointer;
     transition: background-color 0.3s ease;
     text-decoration: none;
@@ -331,8 +307,6 @@ h1 {
 .session-content {
     display: flex;
     flex-direction: column;
-    padding: 0.2rem;
-    margin: 0.5rem;
     border-bottom: 1px solid #ccc;
 }
 

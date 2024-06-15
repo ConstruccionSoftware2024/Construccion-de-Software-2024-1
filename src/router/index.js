@@ -99,11 +99,6 @@ const router = createRouter({
       component: InvitarAlumnos
     },
     {
-      path: '/asignatura',
-      name: 'asignatura',
-      component: () => import('../views/VistasGrupoClaudio/CrearSesion.vue')
-    },
-    {
       path: '/session',
       name: 'sesion',
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
@@ -160,7 +155,12 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoFelipe/contact.vue')
     },
     {
-      path: '/asignatura/:id',
+      path: '/asignaturaProfesor/:id',
+      name: 'asignatura',
+      component: () => import('../views/VistasGrupoClaudio/AsignaturaProfesor.vue')
+    },
+    {
+      path: '/asignaturaAlumno/:id',
       name: 'asignaturaAlumno',
       component: AsignaturaAlumno,
       meta: { requiresAuth: true }
