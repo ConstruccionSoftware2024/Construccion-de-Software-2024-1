@@ -81,6 +81,10 @@
     font-family: sans-serif;
 }
 
+a {
+    text-decoration: none;
+}
+
 .text {
     font-size: 3rem;
     font-weight: bold;
