@@ -4,15 +4,17 @@
         <div class="seccion1">
 
             <div class="containerTitle">
-                <h2 class="title">Asignatura: {{ asignatura.nombre }}</h2>
+                <h2 class="title">Asignatura: {{ asignatura.title }}</h2>
                 <p>Profesor: {{ asignatura.profesor }}</p>
+                <p>Descripción: {{ asignatura.description }}</p>
                 <hr>
             </div>
 
             <div class="sesiones">
                 <h3 class="subtitulo">Listado de Sesiones</h3>
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="'/session/' + sesion._id" class="navLink">{{ sesion.nombre }}</router-link>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink">{{ sesion.nombre
+                        }}</router-link>
                 </div>
             </div>
 
@@ -32,15 +34,6 @@
                 <button @click="publicarPregunta">Publicar Pregunta</button>
             </div>
 
-            <div class="actividades">
-                <h3 class="subtitulo">Actividades Recientes</h3>
-                <ul>
-                    <li>Entrega Tarea 1</li>
-                    <li>Participación en Foro</li>
-                    <li>Acceso a PDF de Estudio</li>
-                </ul>
-            </div>
-
         </div>
 
         <div class="seccion2">
@@ -55,6 +48,15 @@
                 <p>Próxima Tarea: [Fecha]</p>
                 <p>Próximo Examen: [Fecha]</p>
                 <button>Ver Calendario</button>
+            </div>
+
+            <div class="actividades">
+                <h3 class="subtitulo">Actividades Recientes</h3>
+                <ul>
+                    <li>Entrega Tarea 1</li>
+                    <li>Participación en Foro</li>
+                    <li>Acceso a PDF de Estudio</li>
+                </ul>
             </div>
 
 
@@ -86,88 +88,81 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
+import { useUserStore } from '../../../back-end/src/store.js';
 
-export default {
-    data() {
-        return {
-            asignatura: {
-                nombre: 'Nombre Ejemplo',
-                profesor: 'Profesor Ejemplo',
-                proximaTarea: '10/10/2021',
-                proximoExamen: '15/10/2021',
-                subjectName: 'Matemáticas',
-                members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
-            },
-            sesiones: [],
-            mostrarPopup: false,
-            nuevaSesion: {
-                nombre: '',
-                descripcion: '',
-                asignatura: ''
-            },
-        }
-    },
-    methods: {
-        recuperarSesiones() {
-            axios.get(`http://localhost:8080/sesion`)
-                .then(response => {
-                    this.sesiones = response.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
-        publicarPregunta() {
-            alert('Pregunta Publicada');
-        },
-        async fetchProjects() {
-            try {
-                const response = await axios.get('http://localhost:8080/asignaturas');
-                this.projects = response.data;
-            } catch (error) {
-                console.error('Error fetching projects:', error);
-            }
-        },
-        goToProject(id) {
-            this.$router.push(`/asignatura/${id}`);
-        },
-        async enviarFormulario() {
-            try {
-                // Obtiene la id de la asignatura de la URL
-                const asignaturaId = this.$route.params.id;
+const route = useRoute();
+const id = route.params.id;
 
-                if (!asignaturaId) {
-                    console.error('No se encontró la id de la asignatura');
-                    return;
-                }
+const userStore = useUserStore();
+const rolUsuario = userStore.user.role;
 
-                // Agrega la id de la asignatura al objeto nuevaSesion
-                this.nuevaSesion.asignatura = asignaturaId;
-                console.log('Datos a enviar:', this.nuevaSesion);
+const asignatura = ref({
+    nombre: 'Nombre Ejemplo',
+    profesor: 'Profesor Ejemplo',
+    proximaTarea: '10/10/2021',
+    proximoExamen: '15/10/2021',
+    members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
+});
 
-                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
 
-                if (respuesta.status === 200) {
-                    this.fetchProjects();
-                    this.mostrarPopup = false;
-                } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
-        },
-    },
-    created() {
-        this.fetchProjects();
-    },
-    mounted() {
-        this.recuperarSesiones();
+const sesiones = ref([]);
+
+function recuperarSesiones(id) {
+    return axios.get(`http://localhost:8080/sesion/${id}`)
+        .then(response => {
+            return response.data;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+const publicarPregunta = () => {
+    alert('Pregunta Publicada');
+};
+
+async function recuperarAsignatura(id) {
+    await axios.get(`http://localhost:8080/asignatura/${id}`)
+        .then(async response => {
+            asignatura.value = response.data;
+            recuperarProfesor(response.data.profesorId);
+            const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
+            const sesionesResultados = await Promise.all(sesionesPromesas);
+            sesiones.value = sesionesResultados;
+            console.log(sesiones.value);
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function recuperarProfesor(id) {
+    await axios.get(`http://localhost:8080/user/${id}`)
+        .then(response => {
+            asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+function determinarRuta(id, rol) {
+    if (rol === 'profesor') {
+        return { name: 'VistaProfesor', params: { id: id } };
+    } else {
+        return { name: 'VistaAlumno', params: { id: id } };
     }
 }
+
+onMounted(async () => {
+    recuperarAsignatura(id);
+
+});
+
 </script>
 
 <style scoped>
@@ -205,6 +200,7 @@ export default {
     width: 70%;
     border: 1px solid #ccc;
     border-radius: 5px;
+    background-color: var(--container-background-color);
 }
 
 .seccion2 {
@@ -212,6 +208,7 @@ export default {
     width: 26%;
     border: 1px solid #ccc;
     border-radius: 5px;
+    background-color: var(--container-background-color);
 }
 
 .sesiones,
@@ -222,6 +219,8 @@ export default {
 .fechas,
 .acciones {
     margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .subtitulo {
@@ -235,16 +234,20 @@ button {
     padding: 10px;
     margin-top: 10px;
     margin-right: 10px;
-    background-color: #08cccc;
-    color: #fff;
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 12px;
 }
 
+button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
 .sesiones {
-    background-color: #f1f1f1;
+    background-color: var(--background-color);
     padding: 10px;
     border-radius: 5px;
 }
@@ -255,29 +258,26 @@ button {
 
 .navLink {
     text-decoration: none;
-    color: #333;
+    color: var(--text-color);
     display: block;
     padding: 10px 0;
 }
 
 .navLink:hover {
-    color: #08cccc;
+    color: var(--button-hover-background-color);
 }
 
 .recursos {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
 }
 
 .foro {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
 }
 
 .actividades {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 5px;
 }
@@ -294,7 +294,7 @@ li {
 
 a {
     text-decoration: none;
-    color: #333;
+    color: var(--text-color);
 }
 
 .team-members {
@@ -307,5 +307,20 @@ a {
     height: 24px;
     border-radius: 50%;
     margin-right: 5px;
+}
+
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .seccion1 {
+        width: 100%;
+    }
+
+    .seccion2 {
+        width: 100%;
+        margin-top: 20px;
+    }
 }
 </style>
