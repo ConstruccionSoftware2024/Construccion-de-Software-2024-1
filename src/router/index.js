@@ -97,7 +97,7 @@ const router = createRouter({
     },
     {
       path: '/vistaAlumno/:id',
-      name: 'vistaAlumno',
+      name: 'VistaAlumno',
       component: VistaAlumno
     },
     {
