@@ -66,6 +66,16 @@
                 <button>Reportar un Problema</button>
             </div>
 
+            <button @click="mostrarPopup = true">Crear sesión</button>
+
+            <div v-if="mostrarPopup" class="popup">
+                <h2>Crear sesión</h2>
+                <label>Nombre de la sesión: <input v-model="nuevaSesion.nombre" type="text"></label>
+                <label>Descripción: <input v-model="nuevaSesion.descripcion" type="text"></label>
+                <button @click="enviarFormulario">Crear</button>
+                <button @click="mostrarPopup = false">Cancelar</button>
+            </div>
+
             <div class="participantes">
                 <h3 class="subtitulo">Participantes</h3>
                 <div class="team-members">
@@ -110,7 +120,6 @@ function recuperarSesiones(id) {
             console.error(error);
         });
 }
-
 
 const publicarPregunta = () => {
     alert('Pregunta Publicada');
@@ -157,6 +166,18 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
+}
+
 .container {
     margin: 40px 10%;
     padding: 20px;

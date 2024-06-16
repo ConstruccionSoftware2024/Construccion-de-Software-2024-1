@@ -155,7 +155,7 @@ section {
   margin-bottom: 60em; /*se edito esto ya que en la rama original no existia el footer*/
 }
 
-.add-icon { /* Pensado para que se agreguen módulos */ 
+.add-icon { /* Pensado para que se agreguen módulos */
   cursor: pointer;
   position: absolute;
   right: 6.5em;

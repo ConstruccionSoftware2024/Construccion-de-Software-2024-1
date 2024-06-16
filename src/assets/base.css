@@ -16,7 +16,8 @@
   --button-background-color-dark: #08cccc;
   --button-hover-background-color-dark: #06bfbf;
   --grey-hover-color: #f1f1f1;
-  --gray-text-color: #858585;
+  --gray-text-color: #eeeeee;
+  --gray-hover-color: #585858;
 }
 
 body.light-mode {
@@ -29,7 +30,8 @@ body.light-mode {
   --border-color: #d6d6d6;
   --table-button-color: #08cccc;
   --grey-hover-color: #f1f1f1;
-  --gray-text-color: #858585;
+  --gray-text-color: #eeeeee;
+  --gray-hover-color: #dfdfdf;
 }
 
 body.dark-mode {
@@ -42,7 +44,8 @@ body.dark-mode {
   --border-color: #39393a;
   --table-button-color: #088181;
   --grey-hover-color: #858585;
-  --gray-text-color: #838383;
+  --gray-text-color: #3a3a3c;
+  --gray-hover-color: #333333;
 }
 
 * {
