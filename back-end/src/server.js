@@ -245,7 +245,7 @@ app.post('/resetPassword', async (req, res) => {
   if (!user) {
     return res.status(404).send('Usuario no encontrado.');
   }
-  
+
 });
 
 app.get('/reset-password', async (req, res) => {
@@ -598,3 +598,112 @@ app.get('/sesion/:idSesion/blacklist', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+////////Funciones asociadas a los mensajes
+
+// Crear un nuevo mensaje
+app.post('/message', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    const newMessage = {
+      destinatario: req.body.destinatario,
+      mensaje: req.body.mensaje,
+      remitente: req.body.remitente,
+      visto: false,
+      alerta: ''
+    }
+    const result = await collection.insertOne(newMessage)
+    res.sendStatus(200)
+  } catch (error) {
+    console.error('Error inserting document:', error)
+    res.status(500).send('Error inserting document')
+  }
+})
+
+//traer todos los mensajes (No muy util)
+app.get('/message/', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    res.status(200).send(result)
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// traer los mensajes recibidos por un alumno especifico
+app.get('/message/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    let mensajesEspecificos = []
+    // revisamos todos los mensajes y guardamos aquellos que tengan remitente igual al id
+
+    if (!result) {
+      res.status(404).send('user not found')
+    }
+
+    result.forEach(element => {
+      if (element.destinatario == req.params.id) {
+        mensajesEspecificos.push(element)
+      }
+    });
+
+    res.status(200).send(mensajesEspecificos)
+
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Actualizar estado de visto de un mensaje
+app.put('/message/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, {
+      $set: { visto: true }
+    })
+
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Mensaje no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
