@@ -6,14 +6,15 @@
             <div class="containerTitle">
                 <h2 class="title">Asignatura: {{ asignatura.title }}</h2>
                 <p>Profesor: {{ asignatura.profesor }}</p>
-                <p>Descripción: {{asignatura.description}}</p>
+                <p>Descripción: {{ asignatura.description }}</p>
                 <hr>
             </div>
 
             <div class="sesiones">
                 <h3 class="subtitulo">Listado de Sesiones</h3>
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink">{{ sesion.nombre }}</router-link>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink">{{ sesion.nombre
+                        }}</router-link>
                 </div>
             </div>
 
@@ -100,14 +101,14 @@ const asignatura = ref({
 
 const sesiones = ref([]);
 
-function recuperarSesiones(id){
+function recuperarSesiones(id) {
     return axios.get(`http://localhost:8080/sesion/${id}`)
-    .then(response => {
-        return response.data;
-    })
-    .catch(error => {
-        console.error(error);
-    });
+        .then(response => {
+            return response.data;
+        })
+        .catch(error => {
+            console.error(error);
+        });
 }
 
 
@@ -115,40 +116,40 @@ const publicarPregunta = () => {
     alert('Pregunta Publicada');
 };
 
-async function recuperarAsignatura(id){
+async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
-    .then(async response => {
-        asignatura.value = response.data;
-        recuperarProfesor(response.data.profesorId);
-        const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
-        const sesionesResultados = await Promise.all(sesionesPromesas);
-        sesiones.value = sesionesResultados;
-        console.log(sesiones.value);
-    })
-    .catch(error => {
-        console.error(error);
-    });
+        .then(async response => {
+            asignatura.value = response.data;
+            recuperarProfesor(response.data.profesorId);
+            const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
+            const sesionesResultados = await Promise.all(sesionesPromesas);
+            sesiones.value = sesionesResultados;
+            console.log(sesiones.value);
+        })
+        .catch(error => {
+            console.error(error);
+        });
 }
 
-async function recuperarProfesor(id){
+async function recuperarProfesor(id) {
     await axios.get(`http://localhost:8080/user/${id}`)
-    .then(response => {
-        asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
-    })
-    .catch(error => {
-        console.error(error);
-    });
+        .then(response => {
+            asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
+        })
+        .catch(error => {
+            console.error(error);
+        });
 }
 
-function determinarRuta(id, rol){
-    if(rol === 'profesor'){
-        return `/vistaProfesor/${id}`;
+function determinarRuta(id, rol) {
+    if (rol === 'profesor') {
+        return { name: 'VistaProfesor', params: { id: id } };
     } else {
-        return `/vistaAlumno/${id}`;
+        return { name: 'VistaAlumno', params: { id: id } };
     }
 }
 
-onMounted( async  () => {
+onMounted(async () => {
     recuperarAsignatura(id);
 
 });
@@ -222,7 +223,7 @@ button {
     border-radius: 5px;
 }
 
-.sesionesItem{
+.sesionesItem {
     border-bottom: 1px solid #ccc;
 }
 
@@ -265,7 +266,7 @@ li {
     text-decoration: none;
 }
 
-a{
+a {
     text-decoration: none;
     color: #333;
 }

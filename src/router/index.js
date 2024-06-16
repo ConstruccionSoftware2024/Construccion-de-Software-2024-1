@@ -35,12 +35,6 @@ const router = createRouter({
       name: 'asignaturas',
       component: asignaturas
     },
-
-    {
-      path: '/vistaProfesor',
-      name: 'VistaProfesor',
-      component: VistaProfesor
-    },
     {
       path: '/modulos',
       name: 'modulos',
@@ -103,7 +97,7 @@ const router = createRouter({
     },
     {
       path: '/vistaProfesor/:id',
-      name: 'vistaProfesor',
+      name: 'VistaProfesor',
       component: VistaProfesor
     },
     {
