@@ -264,11 +264,10 @@ export default {
             this.showModal = false;
         },
         async banExpStudent(student, accion) {
-            let id_prueba = '665d1794a22b8d44afad0793'
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
                     this.alumnos = this.alumnos.filter(al => al !== student);
-                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + id_prueba, { email: student.email, userId: student._id, banear: accion });
+                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
                     if (!response.ok) {
                         throw new Error('Error al actualizar la lista de participantes')
