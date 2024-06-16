@@ -1,3 +1,6 @@
+*/HU6 Como profesor quiero ver el estado de cada alumno (Rojo-Amarillo-Verde) para determinar una
+decisión. /*
+
 <template>
     <div class="profesorPage">
         <h1>Sesion id:1</h1>
@@ -8,12 +11,11 @@
         <div class="mainContainer">
             <div class="chartContainer">
                 <canvas id="studentsPieChart"></canvas>
-                <div class="legend">
-                </div>
+                <div class="legend"></div>
             </div>
             <div class="chartDataContainer">
                 <h2>Datos del Gráfico</h2>
-                <p><strong>Total de Estudiantes:</strong> {{ students.length }}</p>
+                <p><strong>Total de Estudiantes:</strong> {{ alumnos.length }}</p>
                 <p><strong>Aplicaciones Peligrosas Abiertas:</strong> {{ totalDangerousApps }}</p>
                 <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
                 <div class="charts">
@@ -25,27 +27,31 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
                         <th>Matrícula</th>
+                        <th>Nombre</th>
+                        <th>Apellido Paterno</th>
+                        <th>Apellido Materno</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="student in students" :key="student.matricula"
-                        :class="{ peligro: student.status === 'Peligro', advertencia: student.status === 'Advertencia' }">
-                        <td>{{ student.nombre }}</td>
-                        <td>{{ student.apellido }}</td>
-                        <td>{{ student.matricula }}</td>
+                    <tr v-for="alumno in alumnos" :key="alumno._id">
+                        <td>{{ alumno.matricula }}</td>
+                        <td>{{ alumno.firstName }}</td>
+                        <td>{{ alumno.lastName }}</td>
+                        <td>{{ alumno.secondLastName }}</td>
                         <td
-                            :class="{ 'peligro-text': student.status === 'Peligro', 'advertencia-text': student.status === 'Advertencia' }">
-                            {{ student.status }}</td>
+                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            {{ alumno.status }}
+                        </td>
                         <td>
-                            <button class="actionButton ban" @click="banStudent(student)">Banear</button>
-                            <button class="actionButton expel" @click="expelStudent(student)">Expulsar</button>
-                            <button class="actionButton notify" @click="notifyStudent(student)">Notificar</button>
-                            <button class="actionButton view" @click="viewProcesses(student)"><i
+                            <button class="actionButton ban" @click="banStudent(alumno)"
+                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
+                            <button class="actionButton expel" @click="expelStudent(alumno)"
+                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
+                            <button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>
+                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
                     </tr>
@@ -55,7 +61,8 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.nombre }}</h2>
+                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                    selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -67,47 +74,80 @@
     </div>
 </template>
 
+
 <script>
-import { ref, onMounted } from 'vue';
 import Chart from 'chart.js/auto';
+import axios from 'axios';
 
 export default {
-    name: 'ProfesorPage',
-    setup() {
-        const students = ref([
-            { nombre: 'Alumno 1', apellido: 'Apellido 1', matricula: '12345', status: 'Peligro', apps: [{ name: 'Discord', status: 'danger' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Abrió Discord', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 2', apellido: 'Apellido 2', matricula: '12346', status: 'Normal', apps: [{ name: 'Word', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Escribió un documento', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 3', apellido: 'Apellido 3', matricula: '12347', status: 'Advertencia', apps: [{ name: 'Slack', status: 'warning' }, { name: 'Excel', status: 'normal' }], recentActivity: ['Usó Slack', 'Editó una hoja de cálculo'] },
-            { nombre: 'Alumno 4', apellido: 'Apellido 4', matricula: '12348', status: 'Normal', apps: [{ name: 'PowerPoint', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Creó una presentación', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 5', apellido: 'Apellido 5', matricula: '12349', status: 'Peligro', apps: [{ name: 'Teams', status: 'danger' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Usó Teams', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 6', apellido: 'Apellido 6', matricula: '12350', status: 'Normal', apps: [{ name: 'Word', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Escribió un documento', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 7', apellido: 'Apellido 7', matricula: '12351', status: 'Advertencia', apps: [{ name: 'Zoom', status: 'warning' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Usó Zoom', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 8', apellido: 'Apellido 8', matricula: '12352', status: 'Normal', apps: [{ name: 'Excel', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Editó una hoja de cálculo', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 9', apellido: 'Apellido 9', matricula: '12353', status: 'Advertencia', apps: [{ name: 'Skype', status: 'warning' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Usó Skype', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 10', apellido: 'Apellido 10', matricula: '12354', status: 'Peligro', apps: [{ name: 'Discord', status: 'danger' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Abrió Discord', 'Visitó un sitio web'] },
-        ]);
-
-        const totalDangerousApps = ref(students.value.reduce((total, student) => {
-            return total + student.apps.filter(app => app.status === 'danger').length;
-        }, 0));
-
-        const lastActivity = ref(students.value.map(student => student.recentActivity).flat().pop());
-
-        const filteredStudents = ref([]);
-        const showModal = ref(false);
-        const selectedStudent = ref(null);
-
-        const handleChartClick = (event, elements) => {
-            if (elements.length) {
-                const chart = elements[0].element.$context.raw;
-                const index = elements[0].index;
-                const label = chart.data.labels[index];
-                filteredStudents.value = students.value.filter(student => student.status === label);
-                showModal.value = true;
-            }
+    data() {
+        return {
+            alumnos: [],
+            estados: [],
+            needsDescription: [],
+            totalDangerousApps: 0,
+            lastActivity: '',
+            showModal: false,
+            selectedStudent: null
         };
+    },
+    created() {
+        this.fetchUsers();
+    },
+    name: 'ProfesorPage',
+    methods: {
+        assignAppsToStudents(students) {
+            const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
+            const warningApps = ['Slack', 'Zoom', 'Skype'];
+            const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome'];
 
-        const createCharts = () => {
+            return students.map((student, index) => {
+                const apps = [];
+                let status = 'Normal';
+
+                if (index % 3 === 0) {
+                    status = 'Peligro';
+                } else if (index % 3 === 1) {
+                    status = 'Advertencia';
+                }
+
+                const appList = status === 'Peligro' ? dangerApps : (status === 'Advertencia' ? warningApps : normalApps);
+                const randomApps = this.shuffleArray(appList);
+
+                const numberOfApps = Math.floor(Math.random() * 2) + 2;
+                for (let i = 0; i < numberOfApps; i++) {
+                    apps.push({ name: randomApps[i], status });
+                }
+
+                return {
+                    ...student,
+                    apps,
+                    status,
+                };
+            });
+        },
+        shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        },
+        async fetchUsers() {
+            try {
+                const response = await axios.get('http://localhost:8080/users');
+                const studentsWithApps = this.assignAppsToStudents(response.data);
+                this.alumnos = studentsWithApps;
+                this.totalDangerousApps = studentsWithApps.reduce((total, student) => {
+                    return total + student.apps.filter(app => app.status === 'danger').length;
+                }, 0);
+                this.lastActivity = new Date().toLocaleString();
+                this.createCharts();
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -115,9 +155,9 @@ export default {
                 labels: ['Peligro', 'Advertencia', 'Normal'],
                 datasets: [{
                     data: [
-                        students.value.filter(s => s.status === 'Peligro').length,
-                        students.value.filter(s => s.status === 'Advertencia').length,
-                        students.value.filter(s => s.status === 'Normal').length,
+                        this.alumnos.filter(s => s.status === 'Peligro').length,
+                        this.alumnos.filter(s => s.status === 'Advertencia').length,
+                        this.alumnos.filter(s => s.status === 'Normal').length,
                     ],
                     backgroundColor: ['#FF0000', '#f7d547', '#008000'],
                 }],
@@ -139,11 +179,11 @@ export default {
                             text: 'Estado de los Estudiantes',
                         },
                     },
-                    onClick: handleChartClick,
+                    onClick: this.handleChartClick,
                 },
             });
 
-            const appUsage = students.value.reduce((acc, student) => {
+            const appUsage = this.alumnos.reduce((acc, student) => {
                 student.apps.forEach(app => {
                     if (acc[app.name]) {
                         acc[app.name]++;
@@ -184,69 +224,61 @@ export default {
                             ticks: {
                                 maxRotation: 90,
                                 minRotation: 45,
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
             });
-        };
-
-        const closeModal = () => {
-            showModal.value = false;
-        };
-
-        const banStudent = (student) => {
-            alert(`Estudiante ${student.nombre} baneado.`);
-        };
-
-        const expelStudent = (student) => {
-            alert(`Estudiante ${student.nombre} expulsado.`);
-        };
-
-        const notifyStudent = (student) => {
-            alert(`Notificación enviada a ${student.nombre}.`);
-        };
-
-        const viewProcesses = (student) => {
-            selectedStudent.value = student;
-            showModal.value = true;
-        };
-
-        const createSession = () => {
+        },
+        handleChartClick(elements) {
+            if (elements.length) {
+                const chart = elements[0].element.$context.raw;
+                const index = elements[0].index;
+                const label = chart.data.labels[index];
+                this.filteredStudents = this.alumnos.filter(student => student.status === label);
+                this.showModal = true;
+            }
+        },
+        closeModal() {
+            this.showModal = false;
+        },
+        banStudent(student) {
+            if (student.status === 'Peligro' || student.status === 'Advertencia') {
+                alert(`Estudiante ${student.firstName} ${student.lastName} baneado.`);
+            } else {
+                alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
+            }
+        },
+        expelStudent(student) {
+            if (student.status === 'Peligro' || student.status === 'Advertencia') {
+                this.alumnos = this.alumnos.filter(al => al !== student);
+                alert(`Estudiante ${student.firstName} ${student.lastName} expulsado.`);
+            } else {
+                alert(`La acción de expulsar solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
+            }
+        },
+        notifyStudent(student) {
+            alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
+        },
+        viewProcesses(student) {
+            this.selectedStudent = student;
+            this.showModal = true;
+        },
+        createSession() {
             alert('Sesión creada.');
-        };
-
-        const otherOptions = () => {
+        },
+        otherOptions() {
             alert('Otras opciones.');
-        };
-
-        onMounted(() => {
-            createCharts();
-        });
-
-        return {
-            students,
-            filteredStudents,
-            showModal,
-            closeModal,
-            totalDangerousApps,
-            lastActivity,
-            selectedStudent,
-            banStudent,
-            expelStudent,
-            notifyStudent,
-            viewProcesses,
-            createSession,
-            otherOptions,
-        };
-    },
+        },
+    }
 };
 </script>
 
 <style scoped>
-h1 {
-    margin-bottom: 20px;
-    color: var(--text-color);
+.actionButton[disabled] {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    color: #666666;
 }
 
 .profesorPage {
@@ -433,11 +465,16 @@ th {
     color: #FF0000;
 }
 
+.normal-text {
+    font-weight: bold;
+    color: #008000;
+
+}
+
 .advertencia-text {
     font-weight: bold;
     color: #f7d547;
 }
-
 
 .modal {
     display: flex;
@@ -507,58 +544,5 @@ th {
 
 .closeButton:hover {
     background-color: var(--button-hover-background-color);
-}
-
-
-@media (max-width: 1200px) {
-    .mainContainer {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .chartContainer,
-    .chartDataContainer {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .dashboard button {
-        margin-bottom: 10px;
-        width: 100%;
-    }
-
-    .legend {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 576px) {
-
-    .chartContainer,
-    .chartDataContainer {
-        height: auto;
-    }
-
-    .chartDataContainer .charts canvas {
-        height: 300px;
-    }
-
-    table,
-    th,
-    td {
-        font-size: 0.8rem;
-    }
-
-    .actionButton {
-        padding: 5px 8px;
-        font-size: 0.8rem;
-    }
 }
 </style>
