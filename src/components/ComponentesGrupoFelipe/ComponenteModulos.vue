@@ -67,12 +67,18 @@ export default {
 </script>
 
 <style scoped>
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-  left: 12em;
+.subject-list {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
+
+.subject-list li {
+  margin-bottom: 10px;
+}
+
 
 .dropdown {
   position: relative;
@@ -146,10 +152,10 @@ section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0em;
+  margin-bottom: 60em; /*se edito esto ya que en la rama original no existia el footer*/
 }
 
-.add-icon { /* Pensado para que se agreguen módulos */ 
+.add-icon { /* Pensado para que se agreguen módulos */
   cursor: pointer;
   position: absolute;
   right: 6.5em;
@@ -191,7 +197,7 @@ section {
   margin: 16px;
   display: flex;
   flex-direction: column;
-  allign-items: center;
+  align-items: center;
   justify-content: center;
 }
 

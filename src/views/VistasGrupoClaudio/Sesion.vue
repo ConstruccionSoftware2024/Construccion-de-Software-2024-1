@@ -1,27 +1,45 @@
 <template>
     <div class="container2" v-if="finish.tried">
-        <div style="">
+        <div class="titlecontainer">
             <h1>{{ info.nombre }}</h1>
+            <h2>creador: {{ info.creador }}</h2>
             <p>{{ info.descripcion }}</p>
         </div>
         <h2>Participantes</h2>
         <div class="container">
             <div class="card" v-for="(participante, index) in participantes" :key="index">
-                <h2 style="color: coral;">
-                    {{ participante.username }}
-                </h2>
-                <h3>
-                    {{ participante.email }}
-                </h3>
-                <h3>
-                    {{ participante.riesgo }}
-                </h3>
+                <div>
+                    <h3>
+                        {{ participante.username }}
+                    </h3>
+                    <h4>
+                        {{ participante.email }}
+                    </h4>
+                    <h4>
+                        {{ participante.riesgo }}
+                    </h4>
+                </div>
                 <div class="container-botones">
-                    <button class="boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
-                    <button class="boton-alerta" @click="alertarParticipante(index)">Enviar Alerta</button>
+                    <button class="btn boton-alerta" @click="alertarParticipante(index)">Alertar</button>
+                    <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
+                    <!-- Implementar logica para banear -->
+                    <button class="btn boton-ban" @click="">Banear</button>
                 </div>
             </div>
         </div>
+        <!-- Implementé esto y despues me di cuenta que no era parte de mi tarea xd -->
+        <!-- <h2>Lista de baneados de la sesion</h2>
+        <div class="container">
+            <div class="card" v-for="(baneado, index) in banlist" :key="index">
+                <h3>
+                    {{ baneado.username }}
+                </h3>
+                <h4>
+                    {{ baneado.email }}
+                </h4>
+            </div>
+        </div> -->
+
     </div>
 </template>
 
@@ -40,7 +58,7 @@ export default {
             success: false
         })
         let participantes = ref([])
-
+        let banlist = ref([])
 
         const cargarSesion = async () => {
             console.log(props.id)
@@ -54,29 +72,35 @@ export default {
                     finish.value.tried = true
                     finish.value.success = true
                     getParticipantes(info.value.participantes)
+                    // getBanlist(info.value.banlist)
+                    //updateInfo(info.value.participantes, info.value.banlist)
                 } else {
                     console.error('Error al obtener los datos:', respuesta.statusText);
-                    finish.tried = true
-                    finish.success = false
+                    finish.value.tried = true
+                    finish.value.success = false
                 }
             } catch (error) {
                 console.error('Error en la petición fetch:', error);
             }
         };
 
-        /*
-        const getParticipantes = async (arr) => {
-            let array = []
-            for (let i = 0; i < arr.length; i++) {
-                let id = arr[i]
-                let respuesta = await fetch(`http://localhost:8080/user/${id}`)
-                let res = await respuesta.json()
-                array.push(res)
-            }
-            console.log(array)
-            participantes.value = array
-        }
-        */
+        // const updateInfo = async (arrPartipantes, arrBaneados) => {
+        //     getParticipantes(arrPartipantes)
+        //     // getBanlist(arrBaneados)
+        // }
+
+        // const getBanlist = async (arr) => {
+        //     let array = []
+        //     for (let i = 0; i < arr.length; i++) {
+        //         let id = arr[i]
+        //         let respuesta = await fetch(`http://localhost:8080/user/${id}`)
+        //         let res = await respuesta.json()
+        //         array.push(res)
+        //     }
+        //     console.log(array)
+        //     banlist.value = array
+        // }
+
 
         const getParticipantes = async (arr) => {
             try {
@@ -110,13 +134,13 @@ export default {
                 participantes.value.splice(index, 1)
 
                 // Se actualiza la lista de participantes en la base de datos
-                let respuesta = await fetch(`http://localhost:8080/sesion/${info.value.id}`, {
+                let respuesta = await fetch(`http://localhost:8080/sesion/${info.value._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        participantes: participantes.value.map(participante => participante.id),
+                        participantes: participantes.value.map(participante => participante._id),
                     }),
                 })
 
@@ -132,7 +156,7 @@ export default {
         const alertarParticipante = async (index) => {
             try {
                 // Se obtiene el id del participante
-                const idParticipante = participantes.value[index].id;
+                const idParticipante = participantes.value[index]._id;
 
                 // Envía una alerta al participante
                 let respuesta = await fetch(`http://localhost:8080/user/${idParticipante}/alerta`, {
@@ -141,7 +165,7 @@ export default {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        mensaje: `Tu valor de riesgo actual es ${participantes.value[index].riesgo}`,
+                        mensaje: `Tu valor de riesgo actual es: ${participantes.value[index].riesgo}`,
                     }),
                 })
 
@@ -161,7 +185,8 @@ export default {
             finish,
             participantes,
             expulsarParticipante,
-            alertarParticipante
+            alertarParticipante,
+            banlist
         }
     }
 }
@@ -169,36 +194,81 @@ export default {
 
 
 <style scoped>
-.card {
-    border: 1px solid black;
-    width: 20rem;
+.titlecontainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: .3rem;
+}
 
+h1 {
+    font-size: 3rem;
+    font-weight: bolder;
+}
+
+p {
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+h2 {
+    font-weight: bold;
+}
+
+h3 {
+    /* color: #08CCCC; */
+    font-weight: bold;
+}
+
+.card {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    width: 22rem;
     padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    border: 1px solid;
+    line-height: 1.5;
+    border-radius: 0.3rem;
+    box-shadow: 3px 3px 0 3px #222;
+    overflow: hidden;
+
+}
+
+.card h4 {
+    color: #2c2c2e;
 
 }
 
 .container-botones {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    /* gap: 8px; */
 }
 
-.boton-expulsar {
-    background-color: white;
+.btn {
     border: none;
-    color: black;
-    padding: 10px 20px;
+    padding: 5px 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: .8rem;
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 12px;
+    width: 100%;
     transition: background-color 0.3s;
+    border: 1px solid black;
+}
+
+.boton-expulsar {
+    background-color: #ccc;
+    color: black;
+
 }
 
 .boton-expulsar:hover {
@@ -206,35 +276,38 @@ export default {
 }
 
 .boton-alerta {
-    background-color: white;
-    border: none;
+    background-color: #ccc;
     color: black;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 12px;
-    transition: background-color 0.3s;
 }
 
 .boton-alerta:hover {
     background-color: yellow;
 }
 
+.boton-ban {
+    color: white;
+    background-color: rgb(117, 0, 0);
+}
+
+.boton-ban:hover {
+    background-color: rgb(94, 1, 1);
+}
+
 .container {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     justify-content: center;
+    flex-wrap: wrap;
+    width: 90%;
 }
 
 .container2 {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 2rem;
     justify-content: center;
     align-items: center;
+    margin: 2rem auto;
+    padding: 1rem 1rem 4rem 1rem;
 }
 </style>

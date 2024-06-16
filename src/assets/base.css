@@ -1,11 +1,12 @@
 /* Estilos para el modo claro y oscuro */
-
 :root {
-  --container-background-color: #ee0000;
+  --container-background-color: #fafafa;
+  --border-color: #d6d6d6;
+  --table-button-color: #08cccc;
 
   --background-color-light: #f5f5f5;
   --text-color-light: #1c1c1c;
-  --input-background-color-light: #f5f5f5;
+  --input-background-color-light: #e7e7e7;
   --button-background-color-light: #08cccc;
   --button-hover-background-color-light: #06bfbf;
 
@@ -15,6 +16,8 @@
   --button-background-color-dark: #08cccc;
   --button-hover-background-color-dark: #06bfbf;
   --grey-hover-color: #f1f1f1;
+  --gray-text-color: #eeeeee;
+  --gray-hover-color: #585858;
 }
 
 body.light-mode {
@@ -24,7 +27,11 @@ body.light-mode {
   --button-background-color: var(--button-background-color-light);
   --button-hover-background-color: var(--button-hover-background-color-light);
   --container-background-color: #fafafa;
+  --border-color: #d6d6d6;
+  --table-button-color: #08cccc;
   --grey-hover-color: #f1f1f1;
+  --gray-text-color: #eeeeee;
+  --gray-hover-color: #dfdfdf;
 }
 
 body.dark-mode {
@@ -34,12 +41,14 @@ body.dark-mode {
   --button-background-color: var(--button-background-color-dark);
   --button-hover-background-color: var(--button-hover-background-color-dark);
   --container-background-color: #2c2c2e;
+  --border-color: #39393a;
+  --table-button-color: #088181;
   --grey-hover-color: #858585;
+  --gray-text-color: #3a3a3c;
+  --gray-hover-color: #333333;
 }
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
