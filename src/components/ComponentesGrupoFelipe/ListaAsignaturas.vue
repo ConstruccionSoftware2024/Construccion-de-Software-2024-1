@@ -36,15 +36,20 @@
 <script>
 import axios from 'axios';
 import { computed } from 'vue';
-
-const user = computed(() => userStore.user);
+import { useUserStore } from '../../../back-end/src/store.js'
+const isAuthenticated = computed(() => userStore.isAuthenticated)
 export default {
+    setup() {
+        const userStore = useUserStore();
+        return { userStore }
+    },
     data() {
         return {
             projects: []
         }
     },
     methods: {
+
         async fetchProjects() {
             try {
                 const response = await axios.get('http://localhost:8080/asignaturas');
@@ -55,11 +60,11 @@ export default {
             }
         },
         goToProject(id) {
-            console.log(user)
-            if (user.role == 'alumno') {
+            console.log(this.userStore.user.role)
+            if (this.userStore.user.role == 'alumno') {
                 this.$router.push(`/asignaturaAlumno/${id}`);
             }
-            else {
+            else if (this.userStore.user.role == 'profesor') {
                 this.$router.push(`/asignaturaProfesor/${id}`);
             }
         }
