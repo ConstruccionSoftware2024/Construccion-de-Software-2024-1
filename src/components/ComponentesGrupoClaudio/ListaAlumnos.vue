@@ -34,7 +34,6 @@
                 <router-link to="/historial">Ver alumno</router-link>
                 <a href="#">Enviar mensaje</a>
                 <a href="#">Bloquear</a>
-                <a href="#" @click="banearAlumno(alumno)">Banear alumno</a>
               </div>
             </div>
           </td>
@@ -72,11 +71,6 @@ export default {
       console.log(this.historial)
       //examinando el localhost, revisando dentro de console se puede verificar que los datos
       //se estan guardando correctamente nombre y matricula
-    },
-    banearAlumno(alumno) {
-      // Placeholder para banear a un alumno sin lógica, dada la falta de la lógica de otros componentes
-      console.log(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
-      alert(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
     }
   },
   created() {
@@ -133,7 +127,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 8px;
   text-align: left;
   border-bottom: 1px solid #ddd;
@@ -160,7 +155,8 @@ body.dark-mode table {
   color: #fff;
 }
 
-body.dark-mode th, body.dark-mode td {
+body.dark-mode th,
+body.dark-mode td {
   border-bottom: 1px solid #888;
 }
 
