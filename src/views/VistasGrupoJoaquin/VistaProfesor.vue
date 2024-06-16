@@ -3,7 +3,7 @@ decisión. /*
 
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:1</h1>
+        <h1>Sesion id:{{ sessionId }}</h1>
         <div class="dashboard">
             <button @click="createSession">Crear Sesión</button>
             <button @click="otherOptions">Otras Opciones</button>
@@ -88,7 +88,8 @@ export default {
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
-            selectedStudent: null
+            selectedStudent: null,
+            sessionId: '665d1794a22b8d44afad0793'
         };
     },
     created() {
@@ -135,8 +136,25 @@ export default {
         },
         async fetchUsers() {
             try {
+                //el gran problema que hubo para hacer filtro y usar los usuarios dentro de la bd fue que no habia usuarios y no existia un metodo para agregarlos
+                //por lo que se tuvo que hacer un metodo para agregar usuarios  directamente en el array de la bd de mongo
+                //pero al menos ya funcion el filtro y se pueden ver los usuarios en la tabla con su respectiva información
+
                 const response = await axios.get('http://localhost:8080/users');
-                const studentsWithApps = this.assignAppsToStudents(response.data);
+                const participantes = response.data;
+
+                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);// + this.sessionId);
+                const sessionUsers = sessionResponse.data;
+
+                console.log("ID de los Usuarios de la Sesion \n" + sessionUsers.participantes);
+
+                const participantesIds = sessionUsers.participantes;
+
+                const studentsWithApps = this.assignAppsToStudents(participantes).filter(user =>
+                    participantesIds.includes(user._id)
+                );
+
+                //const studentsWithApps = this.assignAppsToStudents(response.data);
                 this.alumnos = studentsWithApps;
                 this.totalDangerousApps = studentsWithApps.reduce((total, student) => {
                     return total + student.apps.filter(app => app.status === 'danger').length;
