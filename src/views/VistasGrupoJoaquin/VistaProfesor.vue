@@ -242,9 +242,21 @@ export default {
         closeModal() {
             this.showModal = false;
         },
-        banStudent(student) {
+        async banStudent(student) {
+            console.log(student.email)
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
-                alert(`Estudiante ${student.firstName} ${student.lastName} baneado.`);
+                try {
+                    const response = await axios.post('http://localhost:8080/banear/:' + student.id);
+
+                    if (!response.ok) {
+                        throw new Error('Error al actualizar la lista de participantes')
+                    }
+                    /*alert(`Estudiante ${student.firstName} ${student.lastName} baneado.`);
+                    this.createCharts();*/
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                }
+
             } else {
                 alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
             }

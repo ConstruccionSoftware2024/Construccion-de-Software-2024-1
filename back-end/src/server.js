@@ -513,16 +513,17 @@ app.post('/sesion', async (req, res) => {
 })
 
 // Banear a un alumno de una sesión
-/* Dadas las dudas presentes en el momento, esta función estará presente como un comentario
-app.post('/sesion/:id/ban', async (req, res) => {
+
+app.post('/banear/:id', async (req, res) => {
   try {
     const database = client.db('construccion');
     const collection = database.collection('sesion');
     const sessionId = req.params.id;
     const bannedEmail = req.body.email;
-
+    console.log(sessionId, req.body)
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+
     if (!session) {
       return res.status(404).json({ message: 'Sesión no encontrada' });
     }
@@ -543,7 +544,7 @@ app.post('/sesion/:id/ban', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-*/
+
 
 app.post('/agregarParticipante', async (req, res) => {
   try {
