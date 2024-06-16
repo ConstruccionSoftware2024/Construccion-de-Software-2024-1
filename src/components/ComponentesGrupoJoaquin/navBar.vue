@@ -9,21 +9,21 @@
         <div class="navbarRight" :class="{ open: isOpen }">
           <RouterLink to="/" class="navLink" @click.native="closeMenu">Inicio</RouterLink>
 
-          <template v-if="!isAuthenticated || (isAuthenticated && user && user.role !== 'profesor')">
-            <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
-            <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
+          <template v-if="isAuthenticated && user && user.role === 'alumno'">
+            <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
           </template>
 
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
-            <RouterLink to="#" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
-            <RouterLink to="#" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
+            <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
+            <RouterLink to="/faltaAlumnos" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
 
-          <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Ajustes</RouterLink>
+          <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
+          <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
 
           <template v-if="isAuthenticated && (user && user.role === 'alumno' || user.role === 'profesor')">
             <template v-if="isOpen">
-              <RouterLink to="/notificaciones" class="navLink" @click.native="closeMenu">Ver todas las notificaciones
+              <RouterLink to="/notificaciones" class="navLink" @click.native="closeMenu">Notificaciones
               </RouterLink>
             </template>
             <template v-else>
@@ -31,16 +31,19 @@
             </template>
           </template>
 
-          <template v-if="isAuthenticated" >
+          <template v-if="isAuthenticated">
             <div class="dropwdown-container">
               <button class="loginButtonLogged" @click="toggleDropwDown">
-              <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
-            </button>
-            <div v-if="showDropDown" class="dropDownMenu">
-              <RouterLink to="/perfil" class="dropdownOption" @click="closeMenu"><font-awesome-icon :icon="['fas', 'user']" class="dropDownIcon" /> Perfil</RouterLink>
-              <RouterLink to="/settings" class="dropdownOption" @click="closeMenu"><font-awesome-icon :icon="['fas', 'gear']" class="dropDownIcon"  /> Configuración</RouterLink>
-              <RouterLink to="/" class="dropdownOption" @click="logout"><font-awesome-icon :icon="['fas', 'right-from-bracket']" class="dropDownIcon" /> Cerrar Sesión</RouterLink>
-            </div>
+                <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
+              </button>
+              <div v-if="showDropDown" class="dropDownMenu">
+                <RouterLink to="/perfil" class="dropdownOption" @click="closeMenu"><font-awesome-icon
+                    :icon="['fas', 'user']" class="dropDownIcon" /> Perfil</RouterLink>
+                <RouterLink to="/settings" class="dropdownOption" @click="closeMenu"><font-awesome-icon
+                    :icon="['fas', 'gear']" class="dropDownIcon" /> Configuración</RouterLink>
+                <RouterLink to="/" class="dropdownOption" @click="logout"><font-awesome-icon
+                    :icon="['fas', 'right-from-bracket']" class="dropDownIcon" /> Cerrar Sesión</RouterLink>
+              </div>
             </div>
           </template>
           <template v-else>
@@ -137,8 +140,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-
-.dropDownIcon{
+.dropDownIcon {
   margin-right: 0.2rem;
 }
 
@@ -155,7 +157,7 @@ onUnmounted(() => {
   z-index: 1000;
 }
 
-.logoutButton{
+.logoutButton {
   color: white;
   background-color: #2c2c2e;
   border: none;
@@ -234,7 +236,7 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.dropdownOption{
+.dropdownOption {
   color: var(--text-color);
   text-decoration: none;
   font-size: 1rem;
@@ -265,7 +267,7 @@ onUnmounted(() => {
   background-color: #08cccc;
 }
 
-.loginButtonLogged{
+.loginButtonLogged {
   position: relative;
   display: flex;
   align-items: center;
@@ -302,7 +304,7 @@ onUnmounted(() => {
   transition-duration: 0.3s;
 }
 
-.loginButtonActive{
+.loginButtonActive {
   width: 100px;
   border-radius: 40px;
   transition-duration: 0.3s;
@@ -391,6 +393,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1024px) {
+  .loginButtonLogged {
+    display: none;
+  }
+
   .navbarRight {
     position: fixed;
     top: 0;
