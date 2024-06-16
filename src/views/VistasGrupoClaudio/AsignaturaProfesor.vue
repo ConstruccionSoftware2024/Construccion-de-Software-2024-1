@@ -9,7 +9,7 @@
                         class="session-item">
                         <div class="session-content">
                             <p class="session-name">{{ sesion.nombre }}</p>
-                            <p>Participantes: {{ sesion.participantes.length }}</p>
+                            <p>Participantes: {{ sesion.participantes ? sesion.participantes.length : 0 }}</p>
                             <p>Creado por: {{ sesion.creador }}</p>
                         </div>
                     </router-link>
@@ -54,15 +54,17 @@
             </div>
         </div>
 
-        <!-- Popup for creating session -->
         <div v-if="mostrarPopup" class="popup">
-            <form @submit.prevent="enviarFormulario">
-                <h3>Crear nueva sesión</h3>
-                <input required placeholder="Nombre de la sesión" type="text" id="nombre" v-model="formulario.nombre">
-                <input required placeholder="Descripción" type="text" id="descripcion" v-model="formulario.descripcion">
-                <input type="submit" class="btn" value="Crear sesión">
-                <button @click="mostrarPopup = false" class="btn-cerrar">Cerrar</button>
-            </form>
+            <div class="popup-content">
+                <form>
+                    <h3>Crear nueva sesión</h3>
+                    <input required placeholder="Nombre de la sesión" type="text" id="nombre" v-model="nuevaSesion.nombre">
+                    <input required placeholder="Descripción" type="text" id="descripcion"
+                        v-model="nuevaSesion.descripcion">
+                    <button @click.prevent="enviarFormulario">Crear</button>
+                    <button @click="mostrarPopup = false" class="btn-cerrar">Cerrar</button>
+                </form>
+            </div>
         </div>
 
         <!-- Popup for adding resource -->
@@ -83,6 +85,17 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 
 export default {
+    data() {
+        return {
+            sesiones: [],
+            mostrarPopup: false,
+            nuevaSesion: {
+                nombre: '',
+                descripcion: '',
+                asignatura: ''
+            },
+        }
+    },
     setup() {
         const sesiones = ref([]);
         const route = useRoute()
@@ -121,27 +134,6 @@ export default {
             if (nuevaPregunta.value.trim()) {
                 console.log('Pregunta publicada:', nuevaPregunta.value)
                 nuevaPregunta.value = ''
-            }
-        }
-
-        const enviarFormulario = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/sesion', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formulario)
-                })
-
-                if (respuesta.ok) {
-                    cargarSesiones()
-                    mostrarPopup.value = false
-                } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
             }
         }
 
@@ -204,7 +196,6 @@ export default {
                         const sesionResponse = await axios.get(`http://localhost:8080/sesion/${sesionId}`);
                         sesiones.value.push(sesionResponse.data);
                     }
-                    console.log(sesiones)
                 }
             } catch (error) {
                 console.error(error);
@@ -222,12 +213,72 @@ export default {
             recursos,
             tareas,
             formulario,
-            enviarFormulario,
             enviarRecurso,
             enviarTarea,
             sesiones,
             publicarPregunta
         }
+    },
+    methods: {
+        recuperarSesiones() {
+            axios.get(`http://localhost:8080/sesion`)
+                .then(response => {
+                    this.sesiones = response.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        publicarPregunta() {
+            alert('Pregunta Publicada');
+        },
+        async fetchProjects() {
+            try {
+                const response = await axios.get('http://localhost:8080/asignaturas');
+                this.projects = response.data;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        },
+        goToProject(id) {
+            this.$router.push(`/asignatura/${id}`);
+        },
+        async enviarFormulario() {
+            try {
+                // Obtiene la id de la asignatura de la URL
+                const asignaturaId = this.$route.params.id;
+
+                if (!asignaturaId) {
+                    console.error('No se encontró la id de la asignatura');
+                    return;
+                }
+
+                // Agrega la id de la asignatura al objeto nuevaSesion
+                this.nuevaSesion.asignatura = asignaturaId;
+                console.log('Datos a enviar:', this.nuevaSesion);
+
+                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
+
+                if (respuesta.status === 200) {
+                    // Obtiene la id de la sesión creada
+                    const sessionId = respuesta.data._id;
+
+                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
+
+                    console.log('Sesión creada con ID:', sessionId);
+
+                    this.fetchProjects();
+                    this.mostrarPopup = false;
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+    },
+    created() {
+        this.fetchProjects();
     }
 }
 </script>
@@ -358,14 +409,26 @@ button.btn-cerrar:hover {
 }
 
 .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 2rem;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+
+}
+
+.pop-content {
+  background-color: #e9e9e9;
+  background-color: var(--container-background-color);
+  padding: 2rem;
+  width: 65%;
+  min-height: 35%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 </style>

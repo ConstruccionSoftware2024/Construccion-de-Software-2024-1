@@ -89,6 +89,32 @@ app.get('/faltas', async (req, res) => {
   }
 })
 
+app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturaId = req.params.asignaturaId;
+    const sessionId = req.body.sessionId;
+
+    // Encuentra la asignatura por ID
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
+    if (!asignatura) {
+        return res.status(404).json({ message: 'Asignatura no encontrada' });
+    }
+
+    // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
+    const result = await collection.updateOne(
+        { _id: new ObjectId(asignaturaId) },
+        { $push: { sesiones: new ObjectId(sessionId) } }
+    );
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error updating document:', error);
+    res.status(500).send('Error updating document');
+  }
+});
+
 app.post('/faltas-post', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -544,7 +570,7 @@ app.post('/sesion', async (req, res) => {
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
-    res.sendStatus(200)
+    res.status(200).json({ _id: result.insertedId });
   } catch (error) {
     console.error('Error inserting document:', error)
     res.status(500).send('Error inserting document')
