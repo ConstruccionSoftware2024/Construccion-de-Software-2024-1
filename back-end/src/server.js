@@ -520,7 +520,7 @@ app.post('/banear/:id', async (req, res) => {
     const collection = database.collection('sesion');
     const sessionId = req.params.id;
     const bannedEmail = req.body.email;
-    console.log(sessionId, req.body)
+    console.log(sessionId, bannedEmail)
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
 
@@ -531,7 +531,7 @@ app.post('/banear/:id', async (req, res) => {
     // Actualiza la lista de correos baneados de la sesión
     const result = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
-      { $addToSet: { bannedEmails: bannedEmail } }
+      { $addToSet: { banlist: bannedEmail } }
     );
 
     if (result.modifiedCount === 1) {

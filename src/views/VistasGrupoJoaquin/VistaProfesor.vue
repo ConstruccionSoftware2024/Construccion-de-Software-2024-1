@@ -243,16 +243,14 @@ export default {
             this.showModal = false;
         },
         async banStudent(student) {
-            console.log(student.email)
+            let id_prueba = '665d1794a22b8d44afad0793'
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
-                    const response = await axios.post('http://localhost:8080/banear/:' + student.id);
+                    const response = await axios.post('http://localhost:8080/banear/' + id_prueba, { email: student.email });
 
                     if (!response.ok) {
                         throw new Error('Error al actualizar la lista de participantes')
                     }
-                    /*alert(`Estudiante ${student.firstName} ${student.lastName} baneado.`);
-                    this.createCharts();*/
                 } catch (error) {
                     console.error('Error fetching users:', error);
                 }
