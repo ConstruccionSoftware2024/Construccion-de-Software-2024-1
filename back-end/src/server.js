@@ -512,15 +512,18 @@ app.post('/sesion', async (req, res) => {
   }
 })
 
-// Banear a un alumno de una sesión
+// Banear o expulsar a un alumno de una sesión
 
-app.post('/banear/:id', async (req, res) => {
+app.post('/banearExpulsar/:id', async (req, res) => {
   try {
     const database = client.db('construccion');
     const collection = database.collection('sesion');
     const sessionId = req.params.id;
     const bannedEmail = req.body.email;
-    console.log(sessionId, bannedEmail)
+    const userId = req.body.userId;
+    const banear = req.body.banear;
+    console.log(sessionId, bannedEmail, userId, banear);
+
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
 
@@ -528,22 +531,44 @@ app.post('/banear/:id', async (req, res) => {
       return res.status(404).json({ message: 'Sesión no encontrada' });
     }
 
-    // Actualiza la lista de correos baneados de la sesión
-    const result = await collection.updateOne(
+    let resultMessage = '';
+
+    if (banear) {
+      // Actualiza la lista de correos baneados de la sesión
+      const result = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $addToSet: { banlist: bannedEmail } }
+      );
+
+      if (result.matchedCount == 1) {
+        resultMessage = 'Alumno baneado de la sesión';
+      }
+    }
+
+    const removeResult = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
-      { $addToSet: { banlist: bannedEmail } }
+      { $pull: { participantes: userId } }
     );
 
-    if (result.modifiedCount === 1) {
-      res.json({ success: true, message: 'Alumno baneado de la sesión' });
+    if (removeResult.modifiedCount > 0) {
+      if (resultMessage) {
+        resultMessage += ' y expulsado de la lista de participantes.';
+      } else {
+        resultMessage = 'Alumno expulsado de la lista de participantes.';
+      }
     } else {
-      res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+      if (!resultMessage) {
+        return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+      }
     }
+
+    res.json({ success: true, message: resultMessage });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 app.post('/agregarParticipante', async (req, res) => {
