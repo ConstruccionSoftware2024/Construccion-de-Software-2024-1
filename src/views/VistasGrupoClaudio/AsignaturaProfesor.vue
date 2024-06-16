@@ -4,20 +4,21 @@
         <div class="content">
             <div class="left-column">
                 <div class="section">
-                    <h2>Listado de Sesiones</h2>
+                    <h2><i class="fa-solid fa-list-ul"></i> Listado de Sesiones</h2>
                     <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/session/' + sesion._id"
                         class="session-item">
                         <div class="session-content">
-                            <p class="session-name">{{ sesion.nombre }}</p>
-                            <p>Participantes: {{ sesion.participantes.length }}</p>
-                            <p>Creado por: {{ sesion.creador }}</p>
+                            <p class="session-name"> {{ sesion.nombre }}</p>
+                            <p><i class="fa-solid fa-layer-group"></i> Descripción: {{ sesion.descripcion }}</p>
+                            <p><i class="fa-solid fa-user-group"></i> Participantes: {{ sesion.participantes ?
+                                sesion.participantes.length : 0 }}</p>
                         </div>
                     </router-link>
-                    <button @click="mostrarPopup = true" class="new-section-button btn">Nueva sesión</button>
+                    <button @click="mostrarPopup = true" class="new-section-button btn">Crear sesión</button>
                 </div>
 
                 <div class="section">
-                    <h2>Recursos de la Asignatura</h2>
+                    <h2><i class="fa-solid fa-book"></i> Recursos de la Asignatura</h2>
                     <div v-for="(recurso, index) in recursos" :key="index" class="resource-item">
                         {{ recurso.nombre }}
                     </div>
@@ -25,15 +26,7 @@
                 </div>
 
                 <div class="section">
-                    <h2>Tareas</h2>
-                    <div v-for="(tarea, index) in tareas" :key="index" class="activity-item">
-                        {{ tarea.nombre }}
-                    </div>
-                    <button @click="mostrarPopupTarea = true" class="btn">Agregar Tarea</button>
-                </div>
-
-                <div class="section">
-                    <h2>Foro de Preguntas</h2>
+                    <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
                     <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
                     <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
                 </div>
@@ -41,15 +34,17 @@
 
             <div class="right-column">
                 <div class="section">
-                    <h2>Listado de Faltas</h2>
-                    <p>Resumen de Faltas: [Número de Faltas]</p>
-                    <button class="btn">Ver Detalles</button>
+                    <h2><i class="fa-solid fa-triangle-exclamation"></i> Listado de Faltas</h2>
+                    <p>Ver el detalle de faltas de Alumnos</p>
+                    <button class="btn" @click="goToFaltas">Ver Detalles</button>
                 </div>
 
                 <div class="section">
-                    <h2>Acciones Rápidas</h2>
-                    <button class="btn">Contactar a un Alumno</button>
-                    <button class="btn">Reportar un Problema</button>
+                    <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
+                    <div class="button-container">
+                        <button class="btn">Contactar a un Alumno</button>
+                        <button class="btn">Reportar un Problema</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -67,30 +62,32 @@
 
         <!-- Popup for adding resource -->
         <div v-if="mostrarPopupRecurso" class="popup">
-            <form @submit.prevent="enviarRecurso">
-                <h3>Añadir nuevo recurso</h3>
-                <input required placeholder="Nombre del recurso" type="text" v-model="nuevoRecurso.nombre">
-                <input required placeholder="Enlace del recurso" type="text" v-model="nuevoRecurso.enlace">
-                <input type="submit" class="btn" value="Añadir Recurso">
-                <button @click="mostrarPopupRecurso = false" class="btn-cerrar">Cerrar</button>
-            </form>
+
+            <h3>Añadir nuevo recurso</h3>
+            <input required placeholder="Nombre del recurso" type="text" v-model="nuevoRecurso.nombre">
+            <input required placeholder="Enlace del recurso" type="text" v-model="nuevoRecurso.enlace">
+            <input type="submit" class="btn" value="Añadir Recurso">
+            <button @click="mostrarPopupRecurso = false" class="btn-cerrar">Cerrar</button>
+
         </div>
     </div>
 </template>
+
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 export default {
     setup() {
         const sesiones = ref([]);
+        const router = useRouter();
         const route = useRoute()
         const asignaturaId = route.params.id
         const asignatura = ref('Nombre Ejemplo')
         const mostrarPopup = ref(false)
         const mostrarPopupRecurso = ref(false)
-        const mostrarPopupTarea = ref(false)
         const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
             nombre: '',
@@ -102,7 +99,6 @@ export default {
         })
         const info = ref([])
         const recursos = ref([])
-        const tareas = ref([])
 
         const formulario = reactive({
             nombre: '',
@@ -110,123 +106,62 @@ export default {
             creador: 'default'
         })
 
-        const cargarSesiones = async () => {
-
-        }
-
         const cargarRecursos = async () => {
         }
+        const goToFaltas = () => {
+            router.push('/faltaAlumnos');
+        };
 
         const publicarPregunta = () => {
-            if (nuevaPregunta.value.trim()) {
-                console.log('Pregunta publicada:', nuevaPregunta.value)
-                nuevaPregunta.value = ''
-            }
+            console.log('Pregunta publicada:', nuevaPregunta.value)
+
         }
 
         const enviarFormulario = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/sesion', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formulario)
-                })
-
-                if (respuesta.ok) {
-                    cargarSesiones()
-                    mostrarPopup.value = false
-                } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
+            console.log('Enviando formulario:', formulario)
         }
 
         const enviarRecurso = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/recursos', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(nuevoRecurso)
-                })
-
-                if (respuesta.ok) {
-                    cargarRecursos()
-                    mostrarPopupRecurso.value = false
-                } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
+            console.log('Enviando recurso:')
         }
-
-        const enviarTarea = async () => {
-            try {
-                const respuesta = await fetch('http://localhost:8080/tareas', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(nuevaTarea)
-                })
-
-                if (respuesta.ok) {
-                    cargarTareas()
-                    mostrarPopupTarea.value = false
-                } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
-        }
-
-        const cargarTareas = async () => {
-
-        }
-
-        onMounted(() => {
-            cargarRecursos()
-            cargarTareas()
-        })
-        onMounted(async () => {
+        const cargarSesiones = async () => {
             try {
                 const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
                 asignatura.value = response.data;
                 if (asignatura.value.sesiones) {
-                    for (const sesionId of asignatura.value.sesiones) {
-                        const sesionResponse = await axios.get(`http://localhost:8080/sesion/${sesionId}`);
-                        sesiones.value.push(sesionResponse.data);
-                    }
-                    console.log(sesiones)
+                    const promises = asignatura.value.sesiones.map(sesionId =>
+                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
+                    );
+
+                    const sesionResponses = await Promise.all(promises);
+
+                    sesiones.value = sesionResponses.map(response => response.data);
+
+                    console.log(sesiones);
                 }
             } catch (error) {
                 console.error(error);
             }
-        });
+        };
+        onMounted(() => {
+            cargarRecursos();
+            cargarSesiones();
+        })
+
         return {
             asignatura,
             mostrarPopup,
             mostrarPopupRecurso,
-            mostrarPopupTarea,
             nuevaPregunta,
             nuevoRecurso,
-            nuevaTarea,
             info,
             recursos,
-            tareas,
             formulario,
             enviarFormulario,
             enviarRecurso,
-            enviarTarea,
             sesiones,
-            publicarPregunta
+            publicarPregunta,
+            goToFaltas,
         }
     }
 }
@@ -234,6 +169,24 @@ export default {
 
 
 <style scoped>
+input[type="text"] {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+input[type="text"]:focus {
+    box-shadow: 0 0 0 2px var(--button-background-color);
+    outline: none;
+}
+
 .container {
     display: flex;
     flex-direction: column;
@@ -249,6 +202,10 @@ h1 {
     font-size: 2.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
+}
+
+h2 {
+    font-weight: bold;
 }
 
 .content {
@@ -271,16 +228,15 @@ h1 {
 }
 
 .section {
-    background-color: #f9f9f9;
+    background-color: var(--container-background-color);
     padding: 1.5rem;
-    /* Aumentamos el padding de las secciones para mayor separación */
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
 }
 
 .section:not(:last-child) {
     margin-bottom: 1.5rem;
-    /* Espacio entre las secciones */
 }
 
 
@@ -292,11 +248,11 @@ h1 {
 }
 
 .session-item:hover {
-    background-color: #f0f0f0;
+    background-color: var(--gray-hover-color);
 }
 
 .session-name {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: bold;
 }
 
@@ -305,14 +261,17 @@ h1 {
 }
 
 .session-content {
-    display: flex;
     flex-direction: column;
-    border-bottom: 1px solid #ccc;
+    padding: 0.2rem;
+    border-radius: 5px;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--gray-text-color);
 }
 
 .session-content:hover {
-    background-color: #f0f0f0;
-
+    background-color: var(--gray-hover-color);
+    color: var(--text-color);
 }
 
 .resource-item,
@@ -330,7 +289,7 @@ h1 {
 }
 
 button.btn {
-    background-color: #06a0a0;
+    background-color: var(--button-background-color);
     color: white;
     padding: 0.75rem 1.5rem;
     border: none;
@@ -340,7 +299,8 @@ button.btn {
 }
 
 button.btn:hover {
-    background-color: #08cccc;
+    background-color: var(--button-hover-background-color);
+    color: black;
 }
 
 button.btn-cerrar {
@@ -355,6 +315,11 @@ button.btn-cerrar {
 
 button.btn-cerrar:hover {
     background-color: #ff1a1a;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
 }
 
 .popup {
