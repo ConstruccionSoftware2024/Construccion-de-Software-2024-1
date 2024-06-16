@@ -54,16 +54,31 @@
             </div>
         </div>
 
-        <div v-if="mostrarPopup" class="popup">
-            <div class="popup-content">
-                <form>
-                    <h3>Crear nueva sesión</h3>
-                    <input required placeholder="Nombre de la sesión" type="text" id="nombre" v-model="nuevaSesion.nombre">
-                    <input required placeholder="Descripción" type="text" id="descripcion"
-                        v-model="nuevaSesion.descripcion">
-                    <button @click.prevent="enviarFormulario">Crear</button>
-                    <button @click="mostrarPopup = false" class="btn-cerrar">Cerrar</button>
-                </form>
+        <div class="modal" v-if="mostrarPopup">
+            <div class="modal-content">
+                <span class="close" @click="mostrarPopup = false">&times;</span>
+                <div class="add-falta">
+                    <h2>Crear nueva sesión</h2>
+                    <div class="input-group">
+                        <div class="input-middle" style="display: flex; justify-content: space-between;">
+                            <div style="flex: 1; margin-right: 10px;">
+                                <p class="text-form">Nombre de la sesión</p>
+                                <input required placeholder="Nombre de la sesión" type="text" id="nombre"
+                                    v-model="nuevaSesion.nombre">
+                            </div>
+                            <div style="flex: 1; margin-left: 10px;">
+                                <p class="text-form">Descripción</p>
+                                <input required placeholder="Descripción" type="text" id="descripcion"
+                                    v-model="nuevaSesion.descripcion">
+                            </div>
+                        </div>
+                        <div v-if="showError" class="error-message">
+                            Por favor complete todos los campos.
+                        </div>
+                    </div>
+                    <button @click.prevent="enviarFormulario" class="saveButton"
+                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                </div>
             </div>
         </div>
 
@@ -244,6 +259,10 @@ export default {
             this.$router.push(`/asignatura/${id}`);
         },
         async enviarFormulario() {
+            if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                this.showError = true;
+                return;
+            }
             try {
                 // Obtiene la id de la asignatura de la URL
                 const asignaturaId = this.$route.params.id;
@@ -260,6 +279,8 @@ export default {
                 const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
 
                 if (respuesta.status === 200) {
+                    this.nuevaSesion.nombre = '';
+                    this.nuevaSesion.descripcion = '';
                     // Obtiene la id de la sesión creada
                     const sessionId = respuesta.data._id;
 
@@ -408,27 +429,89 @@ button.btn-cerrar:hover {
     background-color: #ff1a1a;
 }
 
-.popup {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+h2 {
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
 
 }
 
-.pop-content {
-  background-color: #e9e9e9;
-  background-color: var(--container-background-color);
-  padding: 2rem;
-  width: 65%;
-  min-height: 35%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
+.modal-content {
+    background-color: #e9e9e9;
+    background-color: var(--container-background-color);
+    padding: 2rem;
+    width: 65%;
+    min-height: 35%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content textarea {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+.modal-content textarea {
+    max-height: 550px;
+    min-height: 50px;
+    max-width: 385px;
+    min-width: 200px;
+    width: 385px;
+    height: 118px;
+}
+
+.modal-content input[type="text"]:focus,
+.modal-content input[type="date"]:focus,
+.modal-content textarea:focus {
+    box-shadow: 0 0 0 2px var(--button-background-color);
+    outline: none;
+}
+
+.saveButton {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: #08cccc;
+    color: white;
+    border: none;
+    height: 2.5rem;
+    width: 9rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.saveButton:hover {
+    background-color: var(--button-hover-background-color);
+    border: var(--border-color);
+    color: black;
 }
 </style>
