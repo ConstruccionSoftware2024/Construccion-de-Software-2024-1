@@ -39,9 +39,10 @@
                             {{ alumno.status }}
                         </td>
                         <td>
-                            <button class="actionButton ban" @click="banStudent(alumno)"
+                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
-                            <button class="actionButton expel" @click="expelStudent(alumno)"
+                            <!-- Si "accion" es true se banea, si no, no -->
+                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
@@ -73,16 +74,9 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 
 export default {
-    setup() {
-        const route = useRoute();
-        const idRuta = route.params.id;
-
-        return {
-            idRuta
-        }
-    },
 
     data() {
+
         return {
             alumnos: [],
             session: {},
@@ -248,19 +242,21 @@ export default {
         closeModal() {
             this.showModal = false;
         },
-        banStudent(student) {
+        async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
-                alert(`Estudiante ${student.firstName} ${student.lastName} baneado.`);
+                try {
+                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
+
+                    if (!response.ok) {
+                        throw new Error('Error al actualizar la lista de participantes')
+                    }
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                }
+
             } else {
                 alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
-            }
-        },
-        expelStudent(student) {
-            if (student.status === 'Peligro' || student.status === 'Advertencia') {
-                this.alumnos = this.alumnos.filter(al => al !== student);
-                alert(`Estudiante ${student.firstName} ${student.lastName} expulsado.`);
-            } else {
-                alert(`La acción de expulsar solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
             }
         },
         notifyStudent(student) {
