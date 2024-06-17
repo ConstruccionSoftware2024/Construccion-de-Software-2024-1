@@ -160,7 +160,12 @@ const router = createRouter({
       path: '/:catchAll(.*)/',
       name: 'not-found',
       component: notFound
-    }
+    },
+    {
+      path: '/ContactoAlumno',
+      name: 'contactoalumno',
+      component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue')
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     return { top: 0 }
