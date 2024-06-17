@@ -1,86 +1,64 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* Estilos para el modo claro y oscuro */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --container-background-color: #fafafa;
+  --border-color: #d6d6d6;
+  --table-button-color: #08cccc;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --background-color-light: #f5f5f5;
+  --text-color-light: #1c1c1c;
+  --input-background-color-light: #e7e7e7;
+  --button-background-color-light: #08cccc;
+  --button-hover-background-color-light: #06bfbf;
 
-  --vt-c-indigo: #2c3e50;
-
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
-
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --background-color-dark: #1c1c1c;
+  --text-color-dark: #f5f5f5;
+  --input-background-color-dark: #3a3a3c;
+  --button-background-color-dark: #08cccc;
+  --button-hover-background-color-dark: #06bfbf;
+  --grey-hover-color: #f1f1f1;
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+body.light-mode {
+  --background-color: var(--background-color-light);
+  --text-color: var(--text-color-light);
+  --input-background-color: var(--input-background-color-light);
+  --button-background-color: var(--button-background-color-light);
+  --button-hover-background-color: var(--button-hover-background-color-light);
+  --container-background-color: #fafafa;
+  --border-color: #d6d6d6;
+  --table-button-color: #08cccc;
+  --grey-hover-color: #f1f1f1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+body.dark-mode {
+  --background-color: var(--background-color-dark);
+  --text-color: var(--text-color-dark);
+  --input-background-color: var(--input-background-color-dark);
+  --button-background-color: var(--button-background-color-dark);
+  --button-hover-background-color: var(--button-hover-background-color-dark);
+  --container-background-color: #2c2c2e;
+  --border-color: #39393a;
+  --table-button-color: #088181;
+  --grey-hover-color: #858585;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+* {
   margin: 0;
-  font-weight: normal;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-body {
+body,
+html {
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
