@@ -20,10 +20,33 @@
                     </h4>
                 </div>
                 <div class="container-botones">
-                    <button class="btn boton-alerta" @click="alertarParticipante(index)">Alertar</button>
+                    <button class="btn boton-alerta"
+                        @click="openModal(participante.username, participante.riesgo, index)">Alertar</button>
                     <button class="btn boton-expulsar" @click="expulsarParticipante(index)">Expulsar</button>
                     <!-- Implementar logica para banear -->
                     <button class="btn boton-ban" @click="">Banear</button>
+                </div>
+            </div>
+            <div v-if="showModal" class="modal">
+                <div class="modal-content">
+                    <h2>Notificar al Estudiante {{ nombreParticipanteActual }}</h2>
+                    <div class="container-cbox">
+                        <label>
+                            <input type="checkbox" id="cboxalerta" v-model="showAlerta"> Incluir Alerta
+                        </label>
+                        <span v-if="showAlerta">Se mostrará al estudiante su estado: {{ estadoParticipanteActual
+                            }}</span>
+                        <label>
+                            <input type="checkbox" id="cboxmensaje" v-model="showMensaje"> Incluir Mensaje
+                        </label>
+                        <textarea v-if="showMensaje" id="mensaje" class="textarea" placeholder="Ingrese aquí su mensaje"
+                            v-model="mensaje"></textarea>
+                    </div>
+                    <div class="container-botones2">
+                        <button class="btn"
+                            @click="notificarParticipante(idParticipanteActual, showAlerta, estadoParticipanteActual, showMensaje, mensaje)">Enviar</button>
+                        <button class="btn" @click="closeModal()">Cancelar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,6 +82,29 @@ export default {
         })
         let participantes = ref([])
         let banlist = ref([])
+
+        let showModal = ref(false)
+        let showAlerta = ref(false)
+        let showMensaje = ref(false)
+        let mensaje = ref('')
+
+        let nombreParticipanteActual = ref('')
+        let estadoParticipanteActual = ref('')
+        let idParticipanteActual = ref('')
+
+        const openModal = (nombre, estado, id) => {
+            showModal.value = true
+            nombreParticipanteActual.value = nombre
+            estadoParticipanteActual.value = estado
+            idParticipanteActual.value = id
+        }
+
+        const closeModal = () => {
+            showModal.value = false
+            nombreParticipanteActual.value = ref('')
+            estadoParticipanteActual.value = ref('')
+            idParticipanteActual.value = ref('')
+        }
 
         const cargarSesion = async () => {
             console.log(props.id)
@@ -153,6 +199,13 @@ export default {
             }
         }
 
+        const notificarParticipante = async (index, includeAlerta, estado, includeMensaje, mensaje) => {
+            if (includeAlerta) {
+                alertarParticipante(index)
+            }
+
+        }
+
         const alertarParticipante = async (index) => {
             try {
                 // Se obtiene el id del participante
@@ -186,7 +239,16 @@ export default {
             participantes,
             expulsarParticipante,
             alertarParticipante,
-            banlist
+            banlist,
+            showModal,
+            showAlerta,
+            showMensaje,
+            mensaje,
+            nombreParticipanteActual,
+            estadoParticipanteActual,
+            idParticipanteActual,
+            openModal,
+            closeModal,
         }
     }
 }
@@ -250,6 +312,13 @@ h3 {
     /* gap: 8px; */
 }
 
+.container-botones2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
 .btn {
     border: none;
     padding: 5px 10px;
@@ -261,14 +330,13 @@ h3 {
     cursor: pointer;
     border-radius: 12px;
     width: 100%;
+    max-width: 100px;
+    background-color: #08cccc;
     transition: background-color 0.3s;
-    border: 1px solid black;
 }
 
 .boton-expulsar {
-    background-color: #ccc;
     color: black;
-
 }
 
 .boton-expulsar:hover {
@@ -276,7 +344,6 @@ h3 {
 }
 
 .boton-alerta {
-    background-color: #ccc;
     color: black;
 }
 
@@ -309,5 +376,54 @@ h3 {
     align-items: center;
     margin: 2rem auto;
     padding: 1rem 1rem 4rem 1rem;
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background-color: white;
+    margin: auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.container-cbox {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 4px;
+}
+
+.textarea {
+    field-sizing: content;
+    outline: none;
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 80px;
+    max-height: 120px;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #08cccc;
 }
 </style>
