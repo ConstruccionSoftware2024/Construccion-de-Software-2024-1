@@ -1,42 +1,28 @@
+from flask import Flask, jsonify
+from flask_cors import CORS
 import psutil
-import time
+from datetime import datetime
 import os
-import numpy as np
-from sklearn.ensemble import IsolationForest
 
-# Función para obtener las características de los procesos .exe
-def obtener_caracteristicas():
-    caracteristicas = {}
-    for proceso in psutil.process_iter(['pid', 'name', 'username', 'cpu_percent', 'memory_percent']):
-        nombre_app = proceso.info['name']
-        if proceso.info['username'] is not None and nombre_app.endswith('.exe'):
-            if nombre_app not in caracteristicas:
-                caracteristicas[nombre_app] = {
-                    'pid': proceso.info['pid'],
-                    'cpu_percent': proceso.info['cpu_percent'],
-                    'memory_percent': proceso.info['memory_percent']
-                }
-            else:
-                caracteristicas[nombre_app]['cpu_percent'] += proceso.info['cpu_percent']
-                caracteristicas[nombre_app]['memory_percent'] += proceso.info['memory_percent']
+app = Flask(__name__)
+CORS(app)
 
-    return caracteristicas
+def obtener_aplicaciones():
+    aplicaciones = []
+    for proceso in psutil.process_iter(['pid', 'name', 'username', 'exe', 'create_time']):
+        if proceso.info['username'] is not None and proceso.info['exe']:
+            exe_path = proceso.info['exe'].lower()
+            filename = os.path.basename(exe_path)
+            if filename.endswith('.exe'):
+                aplicaciones.append({
+                    'time': datetime.fromtimestamp(proceso.info['create_time']).strftime("%H:%M:%S"),
+                    'url': filename
+                })
+    return aplicaciones
 
-# Monitorear los procesos y detectar anomalías
-def monitorear_procesos():
-    # Obtener datos iniciales
-    datos_iniciales = obtener_caracteristicas()
+@app.route('/historial', methods=['GET'])
+def historial():
+    return jsonify(obtener_aplicaciones())
 
-    while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        caracteristicas = obtener_caracteristicas()
-        
-        print(f"Actualizado: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        
-        for nombre_app, proc in caracteristicas.items():
-            print(f"Nombre de la aplicación: {nombre_app}")
-        
-        time.sleep(5)
-
-# Ejecutar la función de monitoreo
-monitorear_procesos()
+if __name__ == '__main__':
+    app.run(debug=True)

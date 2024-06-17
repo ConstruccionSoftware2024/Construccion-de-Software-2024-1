@@ -44,6 +44,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import axios from 'axios';
 import Chart from 'chart.js/auto';
 
 export default {
@@ -54,10 +55,7 @@ export default {
         const lastActivity = ref('');
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
-        const history = ref([
-            { time: '10:00 AM', url: 'http://ejemplo.com' },
-            { time: '10:05 AM', url: 'http://Discord.org' },
-        ]);
+        const history = ref([]);
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -76,7 +74,18 @@ export default {
             // Lógica para unirse a una sesión
         };
 
+        const fetchHistory = async () => {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/historial');
+                history.value = response.data;
+            } catch (error) {
+                console.error('Error fetching history:', error);
+            }
+        };
+
         onMounted(() => {
+            fetchHistory();
+
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
             new Chart(statusChartCtx, {
                 type: 'pie',
