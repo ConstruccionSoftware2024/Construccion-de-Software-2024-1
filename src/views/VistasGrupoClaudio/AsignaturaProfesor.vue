@@ -5,8 +5,8 @@
             <div class="left-column">
                 <div class="section">
                     <h2><i class="fa-solid fa-list-ul"></i> Listado de Sesiones</h2>
-                    <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/vistaProfesor/' + sesion._id"
-                        class="session-item">
+                    <router-link @click="vistaSesion(sesion._id)" v-for="(sesion, index) in sesiones" :key="index"
+                        :to="'/vistaProfesor/' + sesion._id" class="session-item">
                         <div class="session-content">
                             <p class="session-name"> {{ sesion.nombre }}</p>
                             <p><i class="fa-solid fa-layer-group"></i> Descripción: {{ sesion.descripcion }}</p>
@@ -188,6 +188,9 @@ export default {
         }
     },
     methods: {
+        vistaSesion(sesionId) {
+            this.$store.state.sesionId = sesionId
+        },
         recuperarSesiones() {
             axios.get(`http://localhost:8080/sesion`)
                 .then(response => {

@@ -76,7 +76,6 @@
 import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
-
 export default {
 
     data() {
@@ -88,8 +87,13 @@ export default {
             lastActivity: '',
             showModal: false,
             selectedStudent: null,
-            sessionId: '665d1794a22b8d44afad0793'
+            sessionId: this.$store.state.sesionId
         };
+    },
+    mounted() {
+        if (this.$store.state.usuario.role == "alumno") {
+            this.$router.push('/')
+        }
     },
     created() {
         this.fetchUsers();
