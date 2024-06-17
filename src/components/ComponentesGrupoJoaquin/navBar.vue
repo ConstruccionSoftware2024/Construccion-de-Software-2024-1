@@ -16,6 +16,8 @@
             <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contact</RouterLink>
           </template>
 
+          <RouterLink to="/navegacion" class="navLink" @click.native="closeMenu">Navegación</RouterLink>
+
           <!-- Mostrar Prueba1, Prueba2 solo si el usuario es profesor -->
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
             <RouterLink to="#" class="navLink" @click.native="closeMenu">Prueba1</RouterLink>
@@ -23,7 +25,7 @@
           </template>
 
           <RouterLink to="/settings" class="navLink" @click.native="closeMenu">Settings</RouterLink>
-
+                    <Notificaciones />
           <template v-if="isAuthenticated">
             <button class="loginButton" @click="goProfile">
               <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
@@ -47,6 +49,7 @@
           </svg>
         </label>
       </div>
+      
     </nav>
     <main class="main-content">
       <slot></slot>
@@ -58,6 +61,7 @@
 </template>
 
 <script setup>
+import Notificaciones from '../ComponentesGrupoClaudio/Notificaciones.vue';
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../back-end/src/store.js'

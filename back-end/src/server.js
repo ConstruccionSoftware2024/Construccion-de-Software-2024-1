@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
-
+import bcrypt from 'bcrypt'
 dotenv.config()
 
 // Configuración de la aplicación
@@ -41,7 +41,6 @@ const server = http.createServer(app)
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
-
 app.get('/users', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -90,37 +89,13 @@ app.post('/faltas-post', async (req, res) => {
   }
 })
 
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
-  } catch (error) {
-    res.status(500).send(error.message)
-  }
-})
-
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
-  } catch (error) {
-    res.status(500).send(error.message)
-  }
-})
-
 // Cambiar estado de alumno (Peligroso / No Peligroso)
 app.post('/faltas/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
     const result = await collection.updateOne(
-      { id: Number(req.params.id) },
+      { _id: new ObjectId(req.params.id) },
       { $set: { estado: req.body.estado } }
     )
     res.send(result)
@@ -129,24 +104,6 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
-let historial = []
-/* FUNCION DE LOGIN ANTERIOR 
-//funcion que guarda el usuarios que se acaban de logear en un historial
-app.post('/login', async (req, res) => {
-  const { nombre, matricula } = req.body
-
-  const database = client.db('construccion') //aqui debe de ir el nombre de la tabla donde se almacenan los usuarios logeados
-  const collection = database.collection('users')
-  const user = await collection.findOne({ nombre, matricula })
-
-  if (user) {
-    historial.push({ nombre, matricula, fecha: new Date() })
-    res.json({ message: 'usuario guardado' })
-  } else {
-    res.status(401).json({ message: 'usuario no encontrado' })
-  }
-});
-*/
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -186,9 +143,10 @@ app.post('/login', async (req, res) => {
     const database = client.db('construccion')
     const User = database.collection('users')
     const user = await User.findOne({ email: req.body.email })
+    const historialLogin = database.collection('historialLogin') //nueva coleccion para almacenar el historial del login en la pagina
 
     if (!user) {
-      return res.json({ success: false }) //asd
+      return res.json({ success: false })
     }
 
     if (req.body.password !== user.password) {
@@ -197,6 +155,17 @@ app.post('/login', async (req, res) => {
 
     // Excluir la contraseña de la respuesta
     const { password, ...userWithoutPassword } = user
+    // Guardar el usuario en el historial de login
+    await historialLogin.insertOne({
+      IdUsuario: user._id,
+      nombre: user.username,
+      email: user.email,
+      tiempoLogin: new Date()
+    })
+
+    // Mostrar historial de login
+    const historial = await historialLogin.find().toArray()
+    console.log('Historial de login:', historial)
 
     res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
@@ -204,6 +173,10 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+
+
+
+
 
 app.post('/register', async (req, res) => {
   const {
@@ -216,6 +189,7 @@ app.post('/register', async (req, res) => {
     secondLastName,
     campus,
     major,
+    role,
     rut,
     matricula
   } = req.body
@@ -231,6 +205,7 @@ app.post('/register', async (req, res) => {
       campus,
       major,
       rut,
+      role,
       matricula
     },
     SECRET_KEY,
@@ -261,10 +236,45 @@ app.post('/register', async (req, res) => {
   })
 })
 
+app.post('/resetPassword', async (req, res) => {
+  const { email } = req.body;
+
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  const user = await User.findOne({ email })
+  if (!user) {
+    return res.status(404).send('Usuario no encontrado.');
+  }
+  
+});
+
+app.get('/reset-password', async (req, res) => {
+  const { token } = req.query;
+  try {
+    jwt.verify(token, SECRET_KEY);
+    res.redirect('http://localhost:8080/pagina-de-restablecimiento?token=' + token);
+  } catch (error) {
+    res.status(400).send('El enlace de restablecimiento no es válido o ha expirado.');
+  }
+});
+
+app.post('/update-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = decoded.userId;
+    await updateUserPassword(userId, newPassword);
+    res.send('Contraseña actualizada con éxito.');
+  } catch (error) {
+    res.status(400).send('Error al actualizar la contraseña.');
+  }
+});
+
 app.get('/verify', async (req, res) => {
   const { token } = req.query
   try {
     const decoded = jwt.verify(token, SECRET_KEY)
+    const rol = 'Estudiante'
     const {
       email,
       username,
@@ -275,9 +285,15 @@ app.get('/verify', async (req, res) => {
       secondLastName,
       campus,
       major,
+      role,
       rut,
       matricula
     } = decoded
+
+    const emailDomain = email.split('@')[1];
+    if (emailDomain === 'utalca.cl') {
+      rol = 'Profesor';
+    }
 
     const database = client.db('construccion')
     const User = database.collection('users')
@@ -298,6 +314,7 @@ app.get('/verify', async (req, res) => {
         rut: rut,
         matricula: matricula,
         campus: campus,
+        role: rol,
         major: major
       })
     }
@@ -325,6 +342,58 @@ app.post('/checkEmail', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+//actualizar ciertos datos del perfil
+app.post('/verify_password', async (req, res) => {
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  try {
+    const email = { email: req.body.email }
+    const val_password = { val_password: req.body.val_password }
+
+    // Busca al usuario en la base de datos
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({ passwordCorrect: false })
+    }
+    const passwordCorrect = await bcrypt.compare(val_password, user.password)
+    res.json(passwordCorrect)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/edit_username', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const filter = { email: req.body.email }
+    const update = { username: req.body.new_username }
+    if (update != '') {
+      const poster = await User.updateOne(filter, { $set: update })
+      console.log(poster)
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/edit_password', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const filter = { email: req.body.email }
+    const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
+    if (update1 != '' || update1 != ' ') {
+      const poster = await User.updateOne(filter, { $set: update1 })
+      console.log(poster)
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+//--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
@@ -341,7 +410,9 @@ app.get('/sesion/:id', async (req, res) => {
 //obtener usuario especifico
 app.get('/user/:id', async (req, res) => {
   try {
-    console.log('here')
+
+    //console.log("here")
+
     const database = client.db('construccion')
     const collection = database.collection('users')
     const consulta = { _id: new ObjectId(req.params.id) }
@@ -399,24 +470,24 @@ app.get('/user/:id/alertas', async (req, res) => {
 // Para mostrar los mensajes de alerta en algún componente puedes usar la siguiente función
 // USAR SOLO EN EL FRONTEND (NO AQUI)
 /*
-const obtenerAlertas = async () => {
-  try {
-      let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
-      let alertas = await respuesta.json()
+  const obtenerAlertas = async () => {
+    try {
+        let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
+        let alertas = await respuesta.json()
+  
+        // Muestra las alertas al usuario
+        alertas.forEach(alerta => {
+            alert(alerta)
+        })
+    }
+    catch (error) {
+        console.error('Error al obtener las alertas:', error)
+    }
+  }  
+  // Se llama a obtenerAlertas cada 5 segundos
+  setInterval(obtenerAlertas, 5000)
+  */
 
-      // Muestra las alertas al usuario
-      alertas.forEach(alerta => {
-          alert(alerta)
-      })
-  }
-  catch (error) {
-      console.error('Error al obtener las alertas:', error)
-  }
-}
-
-// Se llama a obtenerAlertas cada 5 segundos
-setInterval(obtenerAlertas, 5000)
-*/
 
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
@@ -426,9 +497,13 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
-      participantes: []
+
+      creador: req.body.creador,
+      participantes: [],
+      banlist: [],
+
     }
-    console.log('enviando', newSession.nombre, newSession.descripcion)
+    //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
     res.sendStatus(200)
   } catch (error) {
@@ -436,3 +511,90 @@ app.post('/sesion', async (req, res) => {
     res.status(500).send('Error inserting document')
   }
 })
+
+// Banear a un alumno de una sesión
+/* Dadas las dudas presentes en el momento, esta función estará presente como un comentario
+app.post('/sesion/:id/ban', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const bannedEmail = req.body.email;
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    // Actualiza la lista de correos baneados de la sesión
+    const result = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $addToSet: { bannedEmails: bannedEmail } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: 'Alumno baneado de la sesión' });
+    } else {
+      res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+*/
+
+app.post('/agregarParticipante', async (req, res) => {
+  try {
+    //Implementar lógica para agregar participante a sesion
+    //se asume que se enviaran como parametros el id de la sesion y el id del participante
+
+    //cambiar estos por req.body.idSesion y req.body.idParticipante
+    let idSesion = '665d1794a22b8d44afad0793'
+    let idParticipante = '665cfd84b637ff59e562b66d'
+
+    //obtenemos la sesion
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(idSesion) }
+    const result = await collection.findOne(consulta)
+
+    //Si el usuario fue baneado de la sesion no lo agregamos
+    if (result) {
+      // Verificar si el participante está en la banlist
+      const participanteBaneado = result.banlist.some((element) => idParticipante === element)
+      if (participanteBaneado) {
+        return res.status(403).send('Participante baneado no se puede agregar')
+      }
+    }
+
+    //Continuar con la lógica para agregar participante a sesion
+
+    res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send(error.message)
+  }
+})
+
+
+// HU-8 BlackList
+app.get('/sesion/:idSesion/blacklist', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const idSesion = new ObjectId(req.params.idSesion);
+
+    // Obtener la sesión y su banlist
+    const sesion = await collection.findOne({ _id: idSesion }, { projection: { banlist: 1 } });
+
+    if (sesion) {
+      res.send(sesion.banlist);
+    } else {
+      res.status(404).send('Sesión no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
