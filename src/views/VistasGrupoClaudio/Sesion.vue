@@ -2,7 +2,7 @@
     <div class="container2" v-if="finish.tried">
         <div class="titlecontainer">
             <h1>{{ info.nombre }}</h1>
-            <h2>creador: {{ info.creador }}</h2>
+            <h2>creador: {{ info._id }}</h2>
             <p>{{ info.descripcion }}</p>
         </div>
         <h2>Participantes</h2>
@@ -57,7 +57,7 @@ export default {
             tried: false,
             success: false
         })
-        let participantes = ref([])
+        let participantes = ref([]);
         let banlist = ref([])
 
         const cargarSesion = async () => {
@@ -105,7 +105,7 @@ export default {
         const getParticipantes = async (arr) => {
             try {
                 // Arreglo en el que se guardarán los alumnos participantes
-                let alumnosParticipantes = []
+                let alumnosParticipantes = [];
 
                 // Se recorre con un ciclo el arreglo de id's de los participantes
                 for (let id of arr) {

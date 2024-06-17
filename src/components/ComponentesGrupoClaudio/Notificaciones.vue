@@ -1,7 +1,8 @@
 <script setup>
+import { ref, onMounted } from 'vue';
 
-import { ref, onMounted } from 'vue'
 
+let alertas = ref([]);
 let idUsuario = ref(null)
 let mensajes = ref([])
 let mostrarDropdown = ref(false)
@@ -24,9 +25,9 @@ const getUsers = async () => {
         //console.log('id Usuario:', idUsuario);
     }
     catch (error) {
-        console.error('Error al obtener las usuarios:', error)
+        console.error('Error al obtener los usuarios:', error)
     }
-}
+};
 
 
 // const obtenerAlertas = async () => {
@@ -83,9 +84,8 @@ const mensajesPendientes = (mensajes) => {
 
 
 const toggleNotifications = () => {
-    mostrarDropdown.value = !mostrarDropdown.value
-}
-
+    mostrarDropdown.value = !mostrarDropdown.value;
+};
 </script>
 
 <template>
@@ -129,10 +129,12 @@ const toggleNotifications = () => {
 }
 
 .icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     color: white;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: color 0.3s;
+    user-select: none;
+    position: relative;
 }
 
 .icon:hover {
@@ -147,12 +149,21 @@ const toggleNotifications = () => {
     background-color: #2c2c2e;
     border: 1px solid black;
     border-radius: 12px;
+    border-top-right-radius: 0;
     padding: 10px;
     width: 300px;
 }
 
-.lista {
-    margin-top: 5px;
+.dropdown::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: 0px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid var(--container-background-color);
 }
 
 .puntito {
