@@ -22,6 +22,9 @@
                 </div>
             </div>
             <div class="history box-shadow">
+                <a :href="downloadLink" download="Procesos-exe.exe">
+                    <button>Descargar Ejecutable</button>
+                </a>
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -155,6 +158,7 @@ export default {
             dangerColor,
             history,
             createSession,
+            downloadLink: '/public/Downloads/Procesos-exe.exe'
         };
     },
 };
