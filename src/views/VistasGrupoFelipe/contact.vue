@@ -31,8 +31,8 @@
                         </i>
                         Tu mensaje:
                     </label>
-                    <textarea id="msg" name="msg" rows="5" required>
-                    </textarea>
+                    <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
+
 
                     <button type="submit">
                         Enviar
