@@ -1,46 +1,71 @@
 <template>
-  <div>
-    <h1>{{ isLoginPage ? 'Iniciar sesión' : 'Registro' }}</h1>
-    <FormularioLogin v-if="isLoginPage" @login="handleLogin" />
-    <FormularioRegistro v-else @register="handleRegister" />
-    <p>
-      {{ isLoginPage ? '¿No tienes una cuenta?' : '¿Ya tienes una cuenta?' }}
-      <a href="#" @click.prevent="togglePage">{{ isLoginPage ? 'Regístrate' : 'Inicia sesión' }}</a>
-    </p>
+  <div id="app">
+    <Navbar />
+    <div class="main-content">
+      <RouterView />
+    </div>
+    <Footer />
   </div>
 </template>
 
-<script>
-import { ref } from 'vue'
-import FormularioLogin from './components/FormularioLogin.vue'
-import FormularioRegistro from './components/FormularioRegistro.vue'
+<script setup>
+import { computed, watch, onMounted } from 'vue'
+import { useThemeStore } from '../back-end/src/store.js'
+import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
+import Footer from './components/ComponentesGrupoJoaquin/Footer.vue'
+import { RouterView } from 'vue-router'
+import { useRouter } from 'vue-router';
 
-export default {
-  components: {
-    FormularioLogin,
-    FormularioRegistro
-  },
-  setup() {
-    const isLoginPage = ref(true)
+const themeStore = useThemeStore();
+const themeClass = computed(() => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode'))
+const router = useRouter();
 
-    const handleLogin = (username, password) => {
-      console.log('Iniciando sesión con:', username, password)
-    }
+watch(themeClass, (newClass) => {
+  document.body.className = newClass
+})
 
-    const handleRegister = (username, email, password) => {
-      console.log('Registrando usuario con:', username, email, password)
-    }
+// Cambiar tema
+const toggleTheme = () => {
+  themeStore.toggleDarkMode();
+  localStorage.setItem('theme', themeStore.isDarkMode ? 'dark' : 'light');
+};
 
-    const togglePage = () => {
-      isLoginPage.value = !isLoginPage.value
-    }
-
-    return {
-      isLoginPage,
-      handleLogin,
-      handleRegister,
-      togglePage
-    }
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    themeStore.isDarkMode = savedTheme === 'dark'
   }
-}
+  document.body.className = themeClass.value
+})
+
+// Registro de URLs visitadas internas
+router.beforeEach((to, from, next) => {
+  const currentUrl = to.fullPath;
+  console.log('URL interna actual:', currentUrl);
+  next();
+});
+
+// Registro de URLs visitadas externas
+window.addEventListener('beforeunload', function (event) {
+  const currentUrl = window.location.href;
+  console.log('URL externa actual:', currentUrl);
+});
 </script>
+
+<style scoped>
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  min-height: 90vh;
+  justify-content: center;
+  align-items: center;
+}
+
+footer {
+  flex-shrink: 0;
+}
+</style>
