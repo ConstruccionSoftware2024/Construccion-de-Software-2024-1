@@ -92,7 +92,7 @@ export default {
     },
     name: 'ProfesorPage',
     methods: {
-        async fetchSessionData() {
+        /*async fetchSessionData() {
             try {
                 const response = await axios.get(`http://localhost:8080/sessions/${this.idRuta}`);
                 const sessionData = response.data;
@@ -104,7 +104,7 @@ export default {
             } catch (error) {
                 console.error('Error fetching session data:', error);
             }
-        },
+        },*/
         assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
