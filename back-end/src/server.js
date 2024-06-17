@@ -393,6 +393,29 @@ app.post('/edit_password', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+app.post('/añadirAlumno', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const Sesion = database.collection('sesion');
+    const alumnosIds = req.body.alumnos;
+    const filter = { _id: new ObjectId('665d1794a22b8d44afad0793') };
+    const update = { $push: { participantes: { $each: alumnosIds } } };
+    console.log(alumnosIds)
+    const result = await Sesion.findOneAndUpdate(filter, update, { returnOriginal: false });
+
+    console.log(result.value);
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ message: 'Alumnos añadidos con éxito' });
+    } else {
+      res.status(404).json({ message: 'No se encontró el documento para actualizar' });
+    }
+
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+
+})
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {

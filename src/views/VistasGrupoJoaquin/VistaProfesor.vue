@@ -6,6 +6,7 @@ decisión. /*
         <h1>Sesion id:1</h1>
         <div class="dashboard">
             <button @click="createSession">Crear Sesión</button>
+            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button @click="otherOptions">Otras Opciones</button>
         </div>
         <div class="mainContainer">
@@ -71,6 +72,27 @@ decisión. /*
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+    </div>
+    <a href="#" class="hero__cta">Join us!</a>
+    <div>
+        <section class="modal_añadir">
+            <div class="modal__container_añadir">
+                <img src="@/assets/logo.svg" class="modal__img_añadir">
+                <h2 class="modal__title_añadir">Añadir Alumno</h2>
+                <ul name="alumnos" id="alumnos" class="modal__select_añadir">
+                    <li v-for="alumno in alumnos" :key="alumno._id" class="listar_alumnos">
+                        <input type="checkbox" v-model="alumno.selected" class="input_alumnos">
+                        <span class="dato_alumno">{{ alumno.matricula }}</span>
+                        <span class="dato_alumno">{{ alumno.firstName }}</span>
+                        <span class="dato_alumno">{{ alumno.lastName }}</span>
+                    </li>
+                </ul>
+                <div class="botones_añadir">
+                    <a href="#" class="modal_close_añadir" @click="añadirAlumno">Añadir</a>
+                    <a href="#" class="modal__close_añadir">Cerrar</a>
+                </div>
+            </div>
+        </section>
     </div>
 </template>
 
@@ -270,11 +292,144 @@ export default {
         otherOptions() {
             alert('Otras opciones.');
         },
+        añadir() {
+            const openModal = document.querySelector('.hero__cta');
+            const modal = document.querySelector('.modal_añadir');
+            const closeModal = document.querySelector('.modal__close_añadir');
+            const closeModal2 = document.querySelector('.modal_close_añadir');
+            openModal.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.classList.add('modal_añadir--show');
+            });
+
+            closeModal.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.classList.remove('modal_añadir--show');
+            });
+            closeModal2.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.classList.remove('modal_añadir--show');
+                alert("alumnos agregados correctamente");
+            });
+        },
+        async añadirAlumno() {
+            try {
+                const selectedAlumnos = this.alumnos.filter(alumno => alumno.selected);
+                console.log(selectedAlumnos);
+                const response = await axios.post('http://localhost:8080/añadirAlumno', {
+                    alumnos: selectedAlumnos.map(alumno => alumno._id)
+                });
+                console.log(response.data);
+
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
     }
 };
+
 </script>
 
 <style scoped>
+.botones_añadir {
+    display: inline;
+}
+
+.dato_alumno {
+    margin: 0 7px;
+}
+
+.listar_alumnos {
+    margin-top: 1%;
+    list-style-type: none;
+    font-size: 1.2rem;
+    padding-right: 10px;
+}
+
+.hero__cta {
+    text-decoration: none;
+    color: #fff;
+    border: 1px solid;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color .3s;
+
+}
+
+.hero__cta:hover {
+    background-color: #fff;
+    color: #1e3c72;
+}
+
+.modal_añadir {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #111111bd;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .6s .9s;
+    --transform: translateY(-100vh);
+    --transition: transform .8s;
+}
+
+.modal_añadir--show {
+    opacity: 1;
+    pointer-events: unset;
+    transition: opacity .6s;
+    --transform: translateY(0);
+    --transition: transform .8s .8s;
+}
+
+.modal__container_añadir {
+    margin: auto;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90%;
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 3em 2.5em;
+    display: grid;
+    gap: 1em;
+    place-items: center;
+    grid-auto-columns: 100%;
+    transform: var(--transform);
+    transition: var(--transition);
+}
+
+.modal__title_añadir {
+    font-size: 2.5rem;
+}
+
+.modal__img_añadir {
+    width: 25%;
+    max-width: 300px;
+}
+
+.modal_close_añadir,
+.modal__close_añadir {
+    text-decoration: none;
+    color: #000;
+    background-color: #06bfbf;
+    padding: 1em 3em;
+    border: 1px solid;
+    border-radius: 6px;
+    display: inline-block;
+    font-weight: 600;
+    transition: background-color .3s;
+    margin: 0 5px;
+}
+
+.modal_close_añadir:hover,
+.modal__close_añadir:hover {
+    color: #000;
+    background-color: #1f9b9b;
+}
+
 .actionButton[disabled] {
     background-color: #cccccc;
     cursor: not-allowed;
