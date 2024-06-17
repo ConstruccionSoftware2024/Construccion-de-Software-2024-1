@@ -1,9 +1,6 @@
-*/HU6 Como profesor quiero ver el estado de cada alumno (Rojo-Amarillo-Verde) para determinar una
-decisión. /*
-
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:1</h1>
+        <h1>Sesion id:{{ sessionId }}</h1>
         <div class="dashboard">
             <button @click="createSession">Crear Sesión</button>
             <button @click="otherOptions">Otras Opciones</button>
@@ -46,9 +43,10 @@ decisión. /*
                             {{ alumno.status }}
                         </td>
                         <td>
-                            <button class="actionButton ban" @click="banStudent(alumno)"
+                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
-                            <button class="actionButton expel" @click="expelStudent(alumno)"
+                            <!-- Si "accion" es true se banea, si no, no -->
+                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
@@ -74,21 +72,23 @@ decisión. /*
     </div>
 </template>
 
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
 
 export default {
+
     data() {
+
         return {
             alumnos: [],
-            estados: [],
-            needsDescription: [],
+            session: {},
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
-            selectedStudent: null
+            selectedStudent: null,
+            sessionId: '665d1794a22b8d44afad0793'
         };
     },
     created() {
@@ -96,6 +96,19 @@ export default {
     },
     name: 'ProfesorPage',
     methods: {
+        /*async fetchSessionData() {
+            try {
+                const response = await axios.get(`http://localhost:8080/sessions/${this.idRuta}`);
+                const sessionData = response.data;
+                this.session = sessionData;
+                this.alumnos = this.assignAppsToStudents(sessionData.participantes);
+                this.totalDangerousApps = this.calculateTotalDangerousApps(this.alumnos);
+                this.lastActivity = new Date().toLocaleString();
+                this.createCharts();
+            } catch (error) {
+                console.error('Error fetching session data:', error);
+            }
+        },*/
         assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
@@ -135,8 +148,25 @@ export default {
         },
         async fetchUsers() {
             try {
+                //el gran problema que hubo para hacer filtro y usar los usuarios dentro de la bd fue que no habia usuarios y no existia un metodo para agregarlos
+                //por lo que se tuvo que hacer un metodo para agregar usuarios  directamente en el array de la bd de mongo
+                //pero al menos ya funcion el filtro y se pueden ver los usuarios en la tabla con su respectiva información
+
                 const response = await axios.get('http://localhost:8080/users');
-                const studentsWithApps = this.assignAppsToStudents(response.data);
+                const participantes = response.data;
+
+                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);// + this.sessionId);
+                const sessionUsers = sessionResponse.data;
+
+                console.log("ID de los Usuarios de la Sesion \n" + sessionUsers.participantes);
+
+                const participantesIds = sessionUsers.participantes;
+
+                const studentsWithApps = this.assignAppsToStudents(participantes).filter(user =>
+                    participantesIds.includes(user._id)
+                );
+
+                //const studentsWithApps = this.assignAppsToStudents(response.data);
                 this.alumnos = studentsWithApps;
                 this.totalDangerousApps = studentsWithApps.reduce((total, student) => {
                     return total + student.apps.filter(app => app.status === 'danger').length;
@@ -242,19 +272,21 @@ export default {
         closeModal() {
             this.showModal = false;
         },
-        banStudent(student) {
+        async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
-                alert(`Estudiante ${student.firstName} ${student.lastName} baneado.`);
+                try {
+                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
+
+                    if (!response.ok) {
+                        throw new Error('Error al actualizar la lista de participantes')
+                    }
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                }
+
             } else {
                 alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
-            }
-        },
-        expelStudent(student) {
-            if (student.status === 'Peligro' || student.status === 'Advertencia') {
-                this.alumnos = this.alumnos.filter(al => al !== student);
-                alert(`Estudiante ${student.firstName} ${student.lastName} expulsado.`);
-            } else {
-                alert(`La acción de expulsar solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
             }
         },
         notifyStudent(student) {
@@ -265,7 +297,7 @@ export default {
             this.showModal = true;
         },
         createSession() {
-            alert('Sesión creada.');
+            console.log(this.idRuta);
         },
         otherOptions() {
             alert('Otras opciones.');
@@ -288,12 +320,6 @@ export default {
     color: #333;
     width: 80%;
     max-width: 1200px;
-}
-
-.dashboard {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
 }
 
 .dashboard button {
@@ -544,5 +570,82 @@ th {
 
 .closeButton:hover {
     background-color: var(--button-hover-background-color);
+}
+
+@media (max-width: 1200px) {
+    .profesorPage {
+        width: 90%;
+    }
+
+    .mainContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chartContainer,
+    .chartDataContainer {
+        width: 100%;
+        height: auto;
+    }
+
+    .chartDataContainer .charts {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dashboard button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .bottomContainer {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .profesorPage {
+        padding: 1rem;
+    }
+
+    h1,
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard button {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        font-size: 0.7rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .closeButton {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
 }
 </style>
