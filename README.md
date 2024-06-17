@@ -28,6 +28,17 @@ npm run dev
 npm run build
 ```
 
+### Ejecutar server.mjs
+
+```sh
+node server.mjs
+```
+### Instalar complemento para server.mjs
+
+```sh
+npm install express cors
+```
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
