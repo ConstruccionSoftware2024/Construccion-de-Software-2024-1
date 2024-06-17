@@ -1,0 +1,387 @@
+//Apartado del Perfil con Apariencia
+<template>
+  <div class="settings-page">
+    <div class="container">
+      <h2>Perfil</h2>
+      <div class="card-container">
+        <div class="card-client">
+          <div class="user-picture">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+              <path
+                d="M224 256c70.7 0 128-57.31 128-128s-57.3-128-128-128C153.3 0 96 57.31 96 128S153.3 256 224 256zM274.7 304H173.3C77.61 304 0 381.6 0 477.3c0 19.14 15.52 34.67 34.66 34.67h378.7C432.5 512 448 496.5 448 477.3C448 381.6 370.4 304 274.7 304z">
+              </path>
+            </svg>
+          </div>
+          <div v-if="user">
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Nombre de Usuario:</strong> {{ user.username }}</p>
+            <p><strong>Nombre:</strong> {{ user.firstName }}</p>
+            <p><strong>Apellido:</strong> {{ user.lastName }}</p>
+            <p><strong>Segundo Apellido:</strong> {{ user.secondLastName }}</p>
+            <p><strong>Campus:</strong> {{ user.campus }}</p>
+            <p><strong>Carrera:</strong> {{ user.major }}</p>
+          </div>
+          <div v-else>
+            <p>No user data available.</p>
+          </div>
+          <div class="profile-setting">
+            <label for="username">Cambio de Usuario</label>
+            <input type="text" id="new_username" v-model="newusername">
+
+            <button class="Btn" @click.prevent="edit_username">Cambiar tu Username
+              <svg class="svg" viewBox="0 0 512 512">
+                <path
+                  d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
+                </path>
+              </svg>
+            </button>
+          </div>
+          <div class="profile-setting">
+            <label for="password">Cambio de contraseña</label>
+            <input type="password" id="new_password" v-model="newpassword">
+
+
+            <button class="Btn" @click.prevent="edit_password">Cambiar contraseña
+              <svg class="svg" viewBox="0 0 512 512">
+                <path
+                  d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
+                </path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+      <h2>Apariencia</h2>
+      <div class="theme-selector">
+        <div class="theme-option" :class="{ selected: !isDarkMode && selectedTheme === 'light' }"
+          @click="selectTheme('light')">
+          <img src="../../assets/images/light.jpg" alt="Light Theme">
+          <p>Claro</p>
+        </div>
+        <div class="theme-option" :class="{ selected: isDarkMode && selectedTheme === 'dark' }"
+          @click="selectTheme('dark')">
+          <img src="../../assets/images/dark.jpg" alt="Dark Theme">
+          <p>Oscuro</p>
+        </div>
+        <div class="theme-option" :class="{ selected: selectedTheme === 'auto' }" @click="selectTheme('auto')">
+          <img src="../../assets/images/auto.jpg" alt="Auto Theme">
+          <p>Automatico</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch, onMounted, computed } from 'vue'
+import { useThemeStore, useUserStore } from '../../../back-end/src/store.js'
+
+const themeStore = useThemeStore()
+const selectedTheme = ref('light')
+
+const isDarkMode = computed(() => themeStore.isDarkMode)
+
+const selectTheme = (theme) => {
+  selectedTheme.value = theme
+  if (theme === 'auto') {
+    setAutoTheme()
+  } else {
+    themeStore.setTheme(theme)
+    applyTheme(theme)
+  }
+}
+
+const setAutoTheme = () => {
+  const hour = new Date().getHours()
+  const theme = (hour >= 6 && hour < 18) ? 'light' : 'dark'
+  themeStore.setTheme(theme)
+  applyTheme(theme)
+}
+
+const applyTheme = (theme) => {
+  document.body.className = ''
+  if (theme === 'light') {
+    document.body.classList.add('light-mode')
+  } else if (theme === 'dark') {
+    document.body.classList.add('dark-mode')
+  }
+}
+
+watch(selectedTheme, (newTheme) => {
+  if (newTheme !== 'auto') {
+    themeStore.setTheme(newTheme)
+    applyTheme(newTheme)
+  }
+})
+
+onMounted(() => {
+  const initialTheme = themeStore.isDarkMode ? 'dark' : 'light'
+  applyTheme(initialTheme)
+  selectedTheme.value = initialTheme
+})
+
+</script>
+//-----------------------Script para botones de actualizacion----------------------
+<script>
+const userStore = useUserStore();
+const user = computed(() => userStore.user);
+import axios from 'axios';
+export default {
+  data() {
+    return {
+      email: '',
+      password: '',
+      confirmPassword: '',
+      username: '',
+      firstName: '',
+      lastName: '',
+      secondLastName: '',
+      campus: '',
+      major: '',
+      passwordVisible: false,
+
+    }
+  },
+  methods: {
+    async edit_username() {
+      try {
+        //var val_pass = prompt("Ingrese la contraseña actual para actualizar")
+        //const response = await axios.post('http://localhost:8080/verify_password', {
+        //email: user.value.email,
+        //val_password: val_pass
+        //});
+        //if (response.data.passwordCorrect) {
+        const response = await axios.post('http://localhost:8080/edit_username', {
+          email: user.value.email,
+          new_username: this.newusername
+        });
+
+        console.log(response.data);
+        //} else {
+        //  alert("Contraseña incorrecta")
+        //}
+
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    async edit_password() {
+      try {
+        const response = await axios.post('http://localhost:8080/edit_password', {
+          email: user.value.email,
+          new_password: this.newpassword,
+        });
+
+        console.log(response.data);
+
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.settings-page {
+  padding: 2rem;
+  margin: 60px auto;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  width: 80%;
+}
+
+.container {
+  background: var(--container-background-color);
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+}
+
+.profile-setting {
+  margin-bottom: 1rem;
+}
+
+.profile-setting label {
+  display: flex;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.profile-setting input {
+  width: 55%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  border-color: transparent;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  display: inline-block;
+  margin-left: 0;
+  flex-flow: row wrap;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--button-background-color);
+}
+
+.theme-selector {
+  display: flex;
+  gap: 1rem;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 1rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: border-color 0.3s;
+}
+
+.theme-option.selected {
+  border-color: var(--button-background-color);
+}
+
+.theme-option img {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.theme-option p {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  text-align: center;
+}
+</style>
+//------------------Para la tarjerta de perfil----------------------------------------
+<style>
+p {
+  text-align: left;
+  margin-left: 2%;
+  margin-top: 1%;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 2%;
+
+}
+
+.card-client {
+  background: #555;
+  width: 70%;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border: 4px solid #fff;
+  box-shadow: 0 6px 10px #212121;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.card-client:hover {
+  transform: translateY(-10px);
+}
+
+.user-picture {
+  overflow: hidden;
+  object-fit: cover;
+  width: 10rem;
+  height: 10rem;
+  border: 4px solid #fff;
+  border-radius: 999px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+}
+
+.user-picture svg {
+  width: 2.5rem;
+  fill: currentColor;
+}
+
+.name-client {
+  margin: 0;
+  margin-top: 20px;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.name-client span {
+  display: block;
+  font-weight: 200;
+  font-size: 18px;
+}
+
+.contenedor {
+  width: 100%;
+}
+
+
+.Btn {
+  position: relative;
+  margin-left: 2%;
+  justify-content: flex-start;
+  width: 21%;
+  height: 40px;
+  border: none;
+  padding: 0px 20px;
+  background-color: #212121;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 10px;
+  box-shadow: 5px 5px 0px #6d6b6b;
+  transition-duration: .3s;
+  right: 0%;
+}
+
+.svg {
+  width: 13px;
+  position: absolute;
+  right: 0;
+  margin-right: 20px;
+  fill: white;
+  transition-duration: .3s;
+}
+
+.Btn:hover {
+  color: transparent;
+}
+
+.Btn:hover svg {
+  right: 43%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  transition-duration: .3s;
+}
+
+.Btn:active {
+  transform: translate(3px, 3px);
+  transition-duration: .3s;
+  box-shadow: 2px 2px 0px rgb(237, 237, 237);
+}
+</style>
