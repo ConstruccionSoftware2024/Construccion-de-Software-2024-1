@@ -1,6 +1,3 @@
-*/HU6 Como profesor quiero ver el estado de cada alumno (Rojo-Amarillo-Verde) para determinar una
-decisión. /*
-
 <template>
     <div class="profesorPage">
         <h1>Sesion id:{{ sessionId }}</h1>
@@ -75,10 +72,10 @@ decisión. /*
     </div>
 </template>
 
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
 
 export default {
 
@@ -86,8 +83,7 @@ export default {
 
         return {
             alumnos: [],
-            estados: [],
-            needsDescription: [],
+            session: {},
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
@@ -100,6 +96,19 @@ export default {
     },
     name: 'ProfesorPage',
     methods: {
+        /*async fetchSessionData() {
+            try {
+                const response = await axios.get(`http://localhost:8080/sessions/${this.idRuta}`);
+                const sessionData = response.data;
+                this.session = sessionData;
+                this.alumnos = this.assignAppsToStudents(sessionData.participantes);
+                this.totalDangerousApps = this.calculateTotalDangerousApps(this.alumnos);
+                this.lastActivity = new Date().toLocaleString();
+                this.createCharts();
+            } catch (error) {
+                console.error('Error fetching session data:', error);
+            }
+        },*/
         assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
@@ -288,7 +297,7 @@ export default {
             this.showModal = true;
         },
         createSession() {
-            alert('Sesión creada.');
+            console.log(this.idRuta);
         },
         otherOptions() {
             alert('Otras opciones.');
@@ -311,12 +320,6 @@ export default {
     color: #333;
     width: 80%;
     max-width: 1200px;
-}
-
-.dashboard {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
 }
 
 .dashboard button {
@@ -567,5 +570,82 @@ th {
 
 .closeButton:hover {
     background-color: var(--button-hover-background-color);
+}
+
+@media (max-width: 1200px) {
+    .profesorPage {
+        width: 90%;
+    }
+
+    .mainContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chartContainer,
+    .chartDataContainer {
+        width: 100%;
+        height: auto;
+    }
+
+    .chartDataContainer .charts {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dashboard button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .bottomContainer {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .profesorPage {
+        padding: 1rem;
+    }
+
+    h1,
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard button {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        font-size: 0.7rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .closeButton {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
 }
 </style>
