@@ -153,6 +153,7 @@ export default {
       }
     }
   }
+
 }
 
 </script>
@@ -182,8 +183,9 @@ th {
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
-  background-color: #c58940;
-  color: white;
+  background-color: #08cccc;
+  color: black;
+  font-weight: bold;
 }
 
 body.dark-mode {
