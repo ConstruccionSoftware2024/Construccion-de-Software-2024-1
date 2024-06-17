@@ -1,13 +1,6 @@
-*/HU6 Como profesor quiero ver el estado de cada alumno (Rojo-Amarillo-Verde) para determinar una
-decisión. /*
-
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
-        <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button @click="otherOptions">Otras Opciones</button>
-        </div>
+        <h1>{{ session.nombre }}</h1>
         <div class="mainContainer">
             <div class="chartContainer">
                 <canvas id="studentsPieChart"></canvas>
@@ -74,17 +67,25 @@ decisión. /*
     </div>
 </template>
 
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
 
 export default {
+    setup() {
+        const route = useRoute();
+        const idRuta = route.params.id;
+
+        return {
+            idRuta
+        }
+    },
+
     data() {
         return {
             alumnos: [],
-            estados: [],
-            needsDescription: [],
+            session: {},
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
@@ -93,10 +94,23 @@ export default {
         };
     },
     created() {
-        this.fetchUsers();
+        this.fetchSessionData();
     },
     name: 'ProfesorPage',
     methods: {
+        async fetchSessionData() {
+            try {
+                const response = await axios.get(`http://localhost:8080/sessions/${this.idRuta}`);
+                const sessionData = response.data;
+                this.session = sessionData;
+                this.alumnos = this.assignAppsToStudents(sessionData.participantes);
+                this.totalDangerousApps = this.calculateTotalDangerousApps(this.alumnos);
+                this.lastActivity = new Date().toLocaleString();
+                this.createCharts();
+            } catch (error) {
+                console.error('Error fetching session data:', error);
+            }
+        },
         assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
@@ -134,36 +148,10 @@ export default {
             }
             return array;
         },
-        async fetchUsers() {
-            try {
-                //el gran problema que hubo para hacer filtro y usar los usuarios dentro de la bd fue que no habia usuarios y no existia un metodo para agregarlos
-                //por lo que se tuvo que hacer un metodo para agregar usuarios  directamente en el array de la bd de mongo
-                //pero al menos ya funcion el filtro y se pueden ver los usuarios en la tabla con su respectiva información
-
-                const response = await axios.get('http://localhost:8080/users');
-                const participantes = response.data;
-
-                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);// + this.sessionId);
-                const sessionUsers = sessionResponse.data;
-
-                console.log("ID de los Usuarios de la Sesion \n" + sessionUsers.participantes);
-
-                const participantesIds = sessionUsers.participantes;
-
-                const studentsWithApps = this.assignAppsToStudents(participantes).filter(user =>
-                    participantesIds.includes(user._id)
-                );
-
-                //const studentsWithApps = this.assignAppsToStudents(response.data);
-                this.alumnos = studentsWithApps;
-                this.totalDangerousApps = studentsWithApps.reduce((total, student) => {
-                    return total + student.apps.filter(app => app.status === 'danger').length;
-                }, 0);
-                this.lastActivity = new Date().toLocaleString();
-                this.createCharts();
-            } catch (error) {
-                console.error('Error fetching users:', error);
-            }
+        calculateTotalDangerousApps(students) {
+            return students.reduce((total, student) => {
+                return total + student.apps.filter(app => app.status === 'Peligro').length;
+            }, 0);
         },
         createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
@@ -283,7 +271,7 @@ export default {
             this.showModal = true;
         },
         createSession() {
-            alert('Sesión creada.');
+            console.log(this.idRuta);
         },
         otherOptions() {
             alert('Otras opciones.');
@@ -306,12 +294,6 @@ export default {
     color: #333;
     width: 80%;
     max-width: 1200px;
-}
-
-.dashboard {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
 }
 
 .dashboard button {
@@ -562,5 +544,82 @@ th {
 
 .closeButton:hover {
     background-color: var(--button-hover-background-color);
+}
+
+@media (max-width: 1200px) {
+    .profesorPage {
+        width: 90%;
+    }
+
+    .mainContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chartContainer,
+    .chartDataContainer {
+        width: 100%;
+        height: auto;
+    }
+
+    .chartDataContainer .charts {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dashboard button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .bottomContainer {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .profesorPage {
+        padding: 1rem;
+    }
+
+    h1,
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard button {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        font-size: 0.7rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .closeButton {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
 }
 </style>
