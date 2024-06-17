@@ -1,27 +1,46 @@
 <script setup>
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useUserStore } from '../../../back-end/src/store.js'
 
 let idUsuario = ref(null)
 let mensajes = ref([])
 let mostrarDropdown = ref(false)
 let puntito = ref(false)
 
+const userStore = useUserStore()
+const user = computed(() => userStore.user);
+
 onMounted(async () => {
     await getUsers()
-    await getMensajes()
 
 })
 
+let interval = setInterval(() => {
+    getUsers()
+}, 5000);
+
+
 const getUsers = async () => {
     try {
-        let respuesta = await fetch('http://localhost:8080/users');
-        let usuarios = await respuesta.json();
-        console.log('Usuarios:', usuarios);
+        //console.log('Obteniendo usuarios...');
+        if (!user.value) {
+            //console.log('No hay usuario', user);
+            return
+        }
+        clearInterval(interval)
+        idUsuario = user.value._id
+        await getMensajes()
+
+        //Lo que está a continuación es la forma anterior de traer el usuario, ahora se saca de la base de datos el usuario loggeado
+
+        //console.log('valor del usuario', user.value._id)
+        //let respuesta = await fetch('http://localhost:8080/users');
+        //let usuarios = await respuesta.json();
+        //console.log('Usuarios:', usuarios);
         // idUsuario = usuarios[3]._id;
         //este id de usuario deberia ser el del usuario loggeado
-        idUsuario = '666639f717785d6a01686d7c'
-        //console.log('id Usuario:', idUsuario);
+        //idUsuario = '666639f717785d6a01686d7c'
     }
     catch (error) {
         console.error('Error al obtener las usuarios:', error)
@@ -106,6 +125,8 @@ const marcarMensajeComoLeido = async (idMensaje) => {
         console.error("Error al obtener mensajes")
     }
 }
+
+
 
 </script>
 
