@@ -41,6 +41,7 @@ const server = http.createServer(app)
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
+
 app.get('/users', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -64,20 +65,24 @@ app.get('/asignaturas', async (req, res) => {
     res.status(500).send('Failed to fetch asignaturas from database');
   }
 });
+
+// Recuperar una asignatura segun id
 app.get('/asignatura/:id', async (req, res) => {
   try {
     const database = client.db('construccion');
     const collection = database.collection('asignaturas');
-    const asignatura = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const asignatura = await collection.findOne(consulta);
     if (asignatura) {
       res.send(asignatura);
     } else {
-      res.status(404).send('Asignatura not found');
+      res.status(404).send('Asignatura no encontrada');
     }
   } catch (error) {
     res.status(500).send(error.message);
   }
 });
+
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -168,6 +173,48 @@ app.get('/sesion', async (req, res) => {
   }
 })
 
+// Obtener una sesión específica por ID
+const getParticipantDetails = async (participantIds, usersCollection) => {
+  console.log('Original participant IDs:', participantIds);
+
+  // Convertimos los ids a ObjectId solo si no son ya ObjectId
+  const objectIds = participantIds.map(id => {
+    return typeof id === 'string' ? new ObjectId(id) : id;
+  });
+
+  console.log('Converted Object IDs:', objectIds);
+
+  // Realizamos la consulta y agregamos depuración
+  const participants = await usersCollection.find({ _id: { $in: objectIds } }).toArray();
+  console.log('Fetched participants:', participants);
+  return participants;
+}
+
+app.get('/sessions/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const sessionCollection = database.collection('sesion');
+    const usersCollection = database.collection('users');
+
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const session = await sessionCollection.findOne(consulta);
+
+    if (!session) {
+      return res.status(404).send('Sesión no encontrada');
+    }
+
+    // Obtener la información completa de los participantes
+    const participantes = await getParticipantDetails(session.participantes, usersCollection);
+
+    session.participantes = participantes;
+
+    res.json(session);
+  } catch (error) {
+    console.error('Error fetching session data:', error);
+    res.status(500).send(error.message);
+  }
+});
+
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
   try {
@@ -188,6 +235,7 @@ app.put('/sesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
 /* FUNCION DE LOGIN DE GRUPO JOAQUIN*/
 app.post('/login', async (req, res) => {
   try {
