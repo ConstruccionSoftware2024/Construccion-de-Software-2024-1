@@ -188,7 +188,7 @@ const marcarMensajeComoLeido = async (idMensaje) => {
 .dropdown {
     position: absolute;
     top: 2rem;
-    left: -150px;
+    right: -25px;
     color: white;
     background-color: #2c2c2e;
     /* border: 1px solid black; */
