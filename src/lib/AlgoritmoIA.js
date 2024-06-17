@@ -37,3 +37,6 @@ async function generateTextFile() {
 
 // Ejecutar la función cada 10 segundos
 setInterval(generateTextFile, 10000);
+
+
+//5 horas completas
