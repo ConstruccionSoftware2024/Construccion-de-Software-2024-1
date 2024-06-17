@@ -1,5 +1,4 @@
 <script setup>
-import { ref, onMounted } from 'vue';
 
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../../../back-end/src/store.js'
@@ -140,8 +139,8 @@ const marcarMensajeComoLeido = async (idMensaje) => {
         </div>
         <div class="puntito" v-if="puntito"></div>
         <div class="dropdown" v-show="mostrarDropdown">
-            <ul class="lista" v-for="mensaje in mensajes " :key="mensaje.id">
-                <!-- mensajes leidos -->
+            <ul class="lista1" v-for="mensaje in mensajes " :key="mensaje.id">
+
                 <li :class="{ 'notificacion': !mensaje.visto, 'notificacionvista': mensaje.visto }">
                     <p style="">
                         {{ mensaje.mensaje }}
@@ -150,14 +149,21 @@ const marcarMensajeComoLeido = async (idMensaje) => {
                         title="Marcar como visto">
                         <div class="puntito2"></div>
                     </div>
-                </li>
-                <!-- mensajes no leidos -->
-                <!-- <li class="notificacion" v-else> -->
-                <!-- <p style="">
-                        {{ mensaje.mensaje }}
-                    </p>
-                </li> -->
 
+                    <!-- Icono para mensajes ya leidos -->
+
+                    <!-- <div class="novisto">
+                        <svg class="tick" v-if="mensaje.visto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor" className="size-6">
+                            <path fillRule="evenodd"
+                                d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                clipRule="evenodd" />
+                        </svg>
+                    </div> -->
+
+
+
+                </li>
 
 
             </ul>
@@ -167,6 +173,17 @@ const marcarMensajeComoLeido = async (idMensaje) => {
 
 
 <style scoped>
+.tick {
+    color: #08cccc;
+    width: 20px;
+    height: 20px;
+}
+
+ul.lista1 {
+    padding-left: 0;
+    list-style: none;
+}
+
 .novisto {
     display: flex;
     justify-content: center;
@@ -210,10 +227,16 @@ const marcarMensajeComoLeido = async (idMensaje) => {
     color: #08cccc;
 }
 
+.lista1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .dropdown {
     position: absolute;
     top: 2rem;
-    right: -25px;
+    right: -5px;
     color: white;
     background-color: #2c2c2e;
     /* border: 1px solid black; */
@@ -222,19 +245,23 @@ const marcarMensajeComoLeido = async (idMensaje) => {
     padding: 10px;
     width: 400px;
     max-height: 500px;
-    overflow: hidden;
+    overflow: scroll;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, .4);
 }
 
 .dropdown::before {
     content: '';
     position: absolute;
-    top: -10px;
-    right: 0px;
+    top: 10px;
+    right: 5px;
+    z-index: 20;
     width: 0;
     height: 0;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
     border-bottom: 10px solid var(--container-background-color);
+    color: #08cccc;
 }
 
 .puntito {
@@ -257,36 +284,32 @@ const marcarMensajeComoLeido = async (idMensaje) => {
 
 .notificacion {
     list-style-type: none;
-    /* create a box shadow */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    margin-bottom: 5px;
     transition: all 0.3s;
     display: flex;
     transition: all .3s ease;
-    padding: .5rem;
     border-radius: 15px;
     gap: .5rem;
+    padding: 1rem;
 }
 
 .notificacion p {
-    padding: .5rem;
     border-radius: 15px;
 }
 
 .notificacion:hover {
     background-color: #323233;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .notificacionvista {
     list-style-type: none;
-    /* create a box shadow */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 5px;
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
     transition: all 0.3s;
     display: flex;
     transition: all .3s ease;
-    padding: .5rem;
+    padding: 1rem;
     border-radius: 15px;
     gap: .5rem;
     background-color: #2B2B2D;
