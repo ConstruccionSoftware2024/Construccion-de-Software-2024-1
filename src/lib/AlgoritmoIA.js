@@ -2,43 +2,38 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { exec } from 'child_process';
 import { writeFile } from 'fs/promises';
 
-
-
-// Access your API key as an environment variable
+// Accede a tu clave API como una variable de entorno
 const genAI = new GoogleGenerativeAI("AIzaSyBheR5f8PrwOnPRaY_CNlU8eZlccqSkre4");
 
-export default async function run() {
+async function generateTextFile() {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   exec('tasklist', async (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error executing tasklist: ${error}`);
+      console.error(`Error ejecutando tasklist: ${error}`);
       return;
     }
 
     if (stderr) {
-
-      console.error(`Error in stderr: ${stderr}`);
+      console.error(`Error en stderr: ${stderr}`);
       return;
     }
 
-    const prompt = `Dada las lista de procesos: ${stdout}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales.`;
+    const prompt = `Dada la lista de procesos: ${stdout}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales.`;
 
     try {
-      // If model.generateContent() expects a string:
       const result = await model.generateContent(prompt);
       const response = result.response;
-      // Or if model.generateContent() expects an array:
-      // const result = await model.generateContent([prompt]);
+      const text = response.text(); // Ajusta esto basado en la estructura de la respuesta
 
-      const text = response.text(); // Adjust this based on the response structure
-
-      await writeFile('response.md', text);
-      console.log('File has been created');
+      // Escribir el texto a un archivo
+      await writeFile('respuesta.txt', text);
+      console.log('El archivo de texto ha sido creado y actualizado');
     } catch (e) {
-      console.error(`Error generating content: ${e}`);
+      console.error(`Error generando contenido: ${e}`);
     }
   });
 }
-run();
 
+// Ejecutar la función cada 10 segundos
+setInterval(generateTextFile, 10000);
