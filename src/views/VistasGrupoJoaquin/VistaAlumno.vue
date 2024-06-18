@@ -47,6 +47,11 @@ import { ref, onMounted, computed } from 'vue';
 import Chart from 'chart.js/auto';
 
 export default {
+    mounted() {
+        if (this.$store.state.usuario.role == "profesor") {
+            this.$router.push('/listaAsignaturas')
+        }
+    },
     setup() {
         const sessionId = ref('');
         const totalApps = ref(0);
@@ -71,6 +76,8 @@ export default {
                     return '#FFFFFF';
             }
         });
+
+
 
         const createSession = () => {
             // Lógica para unirse a una sesión
