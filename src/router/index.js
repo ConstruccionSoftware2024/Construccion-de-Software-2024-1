@@ -166,6 +166,11 @@ const router = createRouter({
       name: 'contactoalumno',
       component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue')
     },
+    {
+      path: '/VerForo',
+      name: 'VerForo',
+      component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     return { top: 0 }
