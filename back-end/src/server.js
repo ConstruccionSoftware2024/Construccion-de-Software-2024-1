@@ -104,13 +104,13 @@ app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
     // Encuentra la asignatura por ID
     const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
     if (!asignatura) {
-        return res.status(404).json({ message: 'Asignatura no encontrada' });
+      return res.status(404).json({ message: 'Asignatura no encontrada' });
     }
 
     // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
     const result = await collection.updateOne(
-        { _id: new ObjectId(asignaturaId) },
-        { $push: { sesiones: new ObjectId(sessionId) } }
+      { _id: new ObjectId(asignaturaId) },
+      { $push: { sesiones: new ObjectId(sessionId) } }
     );
 
     res.sendStatus(200);
@@ -264,7 +264,7 @@ app.post('/login', async (req, res) => {
 
     // Mostrar historial de login
     const historial = await historialLogin.find().toArray()
-    console.log('Historial de login:', historial)
+    //console.log('Historial de login:', historial)
 
     res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
@@ -272,10 +272,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
-
-
-
-
 
 app.post('/register', async (req, res) => {
   const {
@@ -338,22 +334,83 @@ app.post('/register', async (req, res) => {
 app.post('/resetPassword', async (req, res) => {
   const { email } = req.body;
 
-  const database = client.db('construccion')
-  const User = database.collection('users')
-  const user = await User.findOne({ email })
+  const database = client.db('construccion');
+  const User = database.collection('users');
+  const user = await User.findOne({ email });
   if (!user) {
     return res.status(404).send('Usuario no encontrado.');
   }
 
+  const resetCode = Math.random().toString(36).substring(2, 15);
+
+  await User.updateOne({ email }, { $set: { resetCode: resetCode } });
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook', 
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: 'Código de reseteo de contraseña',
+    text: `Tu código de reseteo es: ${resetCode}`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).send('Error al enviar el correo.');
+    } else {
+      console.log('Email enviado: ' + info.response);
+      return res.send('Correo de reseteo enviado.');
+    }
+  });
 });
 
-app.get('/reset-password', async (req, res) => {
-  const { token } = req.query;
+app.post('/verifyResetCode', async (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ success: false, message: 'Email y código son requeridos.' });
+  }
   try {
-    jwt.verify(token, SECRET_KEY);
-    res.redirect('http://localhost:8080/pagina-de-restablecimiento?token=' + token);
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    if (user.resetCode === code) {
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
+      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+    } else {
+      res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
+    }
   } catch (error) {
-    res.status(400).send('El enlace de restablecimiento no es válido o ha expirado.');
+    console.error('Error al verificar el código de restablecimiento:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+  }
+});
+
+app.post('/loginInsta', async (req, res) => {
+  const correo = req.body.email;
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: correo });
+    if (user) {
+      const password = user.password;
+      const email2 = user.email;
+      res.json({ success: true, password, email2 });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -373,7 +430,7 @@ app.get('/verify', async (req, res) => {
   const { token } = req.query
   try {
     const decoded = jwt.verify(token, SECRET_KEY)
-    const rol = 'Estudiante'
+    const rol = 'alumno'
     const {
       email,
       username,
@@ -391,7 +448,7 @@ app.get('/verify', async (req, res) => {
 
     const emailDomain = email.split('@')[1];
     if (emailDomain === 'utalca.cl') {
-      rol = 'Profesor';
+      rol = 'profesor';
     }
 
     const database = client.db('construccion')
@@ -490,6 +547,28 @@ app.post('/edit_password', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+app.post('/anadir_Usuario', async (req, res) => {
+
+  try {
+    const database = client.db('construccion')
+    const Sesion = database.collection('sesion')
+    const nuevos_usuarios = req.body.users;
+    const sesion_id = req.body.sesion_id;
+
+    const result = await Sesion.updateOne({ _id: new ObjectId(sesion_id) }, { $push: { participantes: { $each: nuevos_usuarios } } });
+
+    if (result.matchedCount === 0) {
+      res.status(404).send('No se encontró la sesión con el id proporcionado');
+    } else if (result.modifiedCount === 0) {
+      res.status(400).send('No se pudo actualizar la sesión');
+    } else {
+      res.status(200).send('Usuarios añadidos exitosamente');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
+  }
+});
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
@@ -625,38 +704,64 @@ app.post('/sesion', async (req, res) => {
   }
 })
 
-// Banear a un alumno de una sesión
-/* Dadas las dudas presentes en el momento, esta función estará presente como un comentario
-app.post('/sesion/:id/ban', async (req, res) => {
+// Banear o expulsar a un alumno de una sesión
+
+app.post('/banearExpulsar/:id', async (req, res) => {
   try {
     const database = client.db('construccion');
     const collection = database.collection('sesion');
     const sessionId = req.params.id;
     const bannedEmail = req.body.email;
+    const userId = req.body.userId;
+    const banear = req.body.banear;
+    console.log(sessionId, bannedEmail, userId, banear);
 
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+
     if (!session) {
       return res.status(404).json({ message: 'Sesión no encontrada' });
     }
 
-    // Actualiza la lista de correos baneados de la sesión
-    const result = await collection.updateOne(
+    let resultMessage = '';
+
+    if (banear) {
+      // Actualiza la lista de correos baneados de la sesión
+      const result = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $addToSet: { banlist: bannedEmail } }
+      );
+
+      if (result.matchedCount == 1) {
+        resultMessage = 'Alumno baneado de la sesión';
+      }
+    }
+
+    const removeResult = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
-      { $addToSet: { bannedEmails: bannedEmail } }
+      { $pull: { participantes: userId } }
     );
 
-    if (result.modifiedCount === 1) {
-      res.json({ success: true, message: 'Alumno baneado de la sesión' });
+    if (removeResult.modifiedCount > 0) {
+      if (resultMessage) {
+        resultMessage += ' y expulsado de la lista de participantes.';
+      } else {
+        resultMessage = 'Alumno expulsado de la lista de participantes.';
+      }
     } else {
-      res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+      if (!resultMessage) {
+        return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+      }
     }
+
+    res.json({ success: true, message: resultMessage });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-*/
+
+
 
 app.post('/agregarParticipante', async (req, res) => {
   try {
@@ -709,5 +814,163 @@ app.get('/sesion/:idSesion/blacklist', async (req, res) => {
     }
   } catch (error) {
     res.status(500).send(error.message);
+  }
+});
+
+////////Funciones asociadas a los mensajes
+
+// Crear un nuevo mensaje
+app.post('/message', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    const newMessage = {
+      destinatario: req.body.destinatario,
+      mensaje: req.body.mensaje,
+      remitente: req.body.remitente,
+      visto: false,
+      alerta: ''
+    }
+    const result = await collection.insertOne(newMessage)
+    res.sendStatus(200)
+  } catch (error) {
+    console.error('Error inserting document:', error)
+    res.status(500).send('Error inserting document')
+  }
+})
+
+//traer todos los mensajes (No muy util)
+app.get('/message/', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    res.status(200).send(result)
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// traer los mensajes recibidos por un alumno especifico
+app.get('/message/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    let mensajesEspecificos = []
+    // revisamos todos los mensajes y guardamos aquellos que tengan remitente igual al id
+
+    if (!result) {
+      res.status(404).send('user not found')
+    }
+
+    result.forEach(element => {
+      if (element.destinatario == req.params.id) {
+        mensajesEspecificos.push(element)
+      }
+    });
+
+    res.status(200).send(mensajesEspecificos)
+
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Actualizar estado de visto de un mensaje
+app.put('/message/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, {
+      $set: { visto: true }
+    })
+
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Mensaje no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Enviar email (página contacto)
+app.post('/send-email', async (req, res) => {
+  let { fullName, email, mobile, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: 'pruebas.construccion2024@outlook.com',
+    subject: `Mensaje de ${fullName}`,
+    text: `Nombre: ${fullName}\nEmail: ${email}\nTeléfono: ${mobile}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
+/* revisiar esta funcion de grupo joaquin*/
+app.post('/guardar-procesos', async (req, res) => {
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/historial');
+    const aplicaciones = response.data;
+
+    if (aplicaciones.length > 0) {
+      await collection.insertOne(aplicaciones);
+      res.status(200).send('Historial guardado en la base de datos');
+    } else {
+      res.status(204).send('No hay aplicaciones para guardar');
+    }
+  } catch (error) {
+    console.error('Error al guardar el historial:', error);
+    res.status(500).send('Error al guardar el historial');
   }
 });

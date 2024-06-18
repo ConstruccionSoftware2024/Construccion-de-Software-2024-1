@@ -4,7 +4,7 @@
         <div class="ffbox">
             <div class="ffbox1">
                 <h1 class="gfg">Contactanos</h1>
-                <form>
+                <form @submit.prevent="sendEmail">
                     <label for="fullName">
                         <i class="fa fa-solid fa-user" style="margin: 2px;">
                         </i> Nombre completo:
@@ -31,8 +31,8 @@
                         </i>
                         Tu mensaje:
                     </label>
-                    <textarea id="msg" name="msg" rows="5" required>
-                    </textarea>
+                    <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
+
 
                     <button type="submit">
                         Enviar
@@ -50,7 +50,27 @@
     </body>
 </template>
 
+<script>
+import axios from 'axios';
+export default {
+    methods: {
+        async sendEmail(event) {
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            console.log(data); // Imprime los datos que se enviarán
+            try {
+                await axios.post('http://localhost:8080/send-email', data);
+                alert('Correo electrónico enviado correctamente');
+            } catch (error) {
+                console.error(error);
+                alert('Hubo un error al enviar el correo electrónico');
+            }
+        }
+    }
+};
 
+
+</script>
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
