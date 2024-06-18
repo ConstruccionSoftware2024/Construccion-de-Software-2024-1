@@ -3,28 +3,19 @@
     <body>
         <div class="ffbox">
             <div class="ffbox1">
-                <h1 class="gfg">Contactanos</h1>
+                <h1 class="gfg">Contacto Alumno</h1>
                 <form @submit.prevent="sendEmail">
-                    <label for="fullName">
+
+                    <label for="student">
                         <i class="fa fa-solid fa-user" style="margin: 2px;">
-                        </i> Nombre completo:
-                    </label>
-                    <input type="text" id="fullName" name="fullName" required>
-
-                    <label for="email">
-                        <i class="fa fa-solid fa-envelope" style="margin: 2px;">
                         </i>
-                        Correo electrónico:
-
+                        Alumno:
                     </label>
-                    <input type="email" id="email" name="email" required>
-
-                    <label for="mobile">
-                        <i class=" fa fa-solid fa-phone" style="margin: 2px;">
-                        </i>
-                        Número de teléfono:
-                    </label>
-                    <input type="tel" id="mobile" name="mobile" required>
+                    <select id="student" v-model="selectedStudent" @change="updateEmail">
+                        <option v-for="student in students" :value="student.email">
+                            {{ student.username }}
+                        </option>
+                    </select>
 
                     <label for="msg">
                         <i class=" fa fa-solid fa-comment" style="margin: 2px;">
@@ -33,18 +24,10 @@
                     </label>
                     <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
 
-
                     <button type="submit">
                         Enviar
                     </button>
                 </form>
-            </div>
-            <div class="map-div">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3268.167287242063!2d-71.2319813242423!3d-35.002517272813975!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x966456519058edeb%3A0x47f5033883ff4b74!2sUniversidad%20de%20Talca%20Campus%20Curic%C3%B3!5e0!3m2!1ses-419!2scl!4v1718059102020!5m2!1ses-419!2scl"
-                    width="370" height="95%" allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
             </div>
         </div>
     </body>
@@ -53,10 +36,27 @@
 <script>
 import axios from 'axios';
 export default {
+    data() {
+        return {
+            students: [],
+            selectedStudent: '',
+            email: ''
+        };
+    },
+    async created() {
+        try {
+            const response = await axios.get('http://localhost:8080/users');
+            this.students = response.data.filter(user => user.role === 'alumno');
+        } catch (error) {
+            console.error(error);
+        }
+    },
     methods: {
+        updateEmail() {
+            this.email = this.selectedStudent;
+        },
         async sendEmail(event) {
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData.entries());
+            const data = { email: this.email, msg: event.target.msg.value };
             console.log(data); // Imprime los datos que se enviarán
             try {
                 await axios.post('http://localhost:8080/send-email', data);
@@ -68,9 +68,8 @@ export default {
         }
     }
 };
-
-
 </script>
+
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
