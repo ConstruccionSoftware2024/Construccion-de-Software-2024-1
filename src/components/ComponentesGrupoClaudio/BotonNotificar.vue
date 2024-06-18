@@ -8,7 +8,7 @@
                     <input type="checkbox" id="cboxalerta" v-model="showAlerta">
                     <label for="cboxalerta"> Incluir Alerta</label>
                 </div>
-                <span class="text" v-if="showAlerta">Se mostrará al estudiante su estado: {{ alumno.estado }}</span>
+                <span class="text" v-if="showAlerta">Se mostrará al estudiante su estado: {{ alumno.status }}</span>
                 <div class="container-cbox">
                     <input type="checkbox" id="cboxmensaje" v-model="showMensaje">
                     <label for="cboxmensaje"> Incluir Mensaje</label>
@@ -17,7 +17,8 @@
                     v-model="mensaje"></textarea>
             </div>
             <div class="container-botones">
-                <button class="btn" @click="notificar(showAlerta, showMensaje, mensaje, alumno._id)">Enviar</button>
+                <button class="btn"
+                    @click="notificar(showAlerta, showMensaje, mensaje, alumno._id, alumno.status)">Enviar</button>
                 <button class="btn" @click="toggleModal()">Cancelar</button>
             </div>
         </div>
@@ -49,12 +50,12 @@ export default {
         }
 
 
-        const notificar = async (includeAlerta, includeMensaje, mensaje, destinatario) => {
+        const notificar = async (includeAlerta, includeMensaje, mensaje, destinatario, estado) => {
             if (includeAlerta && includeMensaje) {
-                await enviarTodo(mensaje, destinatario)
+                await enviarTodo(mensaje, destinatario, estado)
             }
             else if (includeAlerta) {
-                await enviarAlerta(destinatario)
+                await enviarAlerta(destinatario, estado)
             }
             else if (includeMensaje) {
                 await enviarMensaje(mensaje, destinatario)
@@ -62,7 +63,7 @@ export default {
             toggleModal()
         }
 
-        const enviarTodo = async (mensaje, alumnoId) => {
+        const enviarTodo = async (mensaje, alumnoId, estado) => {
             try {
                 let respuesta = await fetch('http://localhost:8080/message', {
                     method: 'POST',
@@ -74,7 +75,7 @@ export default {
                         mensaje: mensaje,
                         remitente: remitenteId,
                         visto: false,
-                        alerta: alumno.estado
+                        alerta: estado
                     }),
                 })
                 if (!respuesta.ok) {
@@ -85,7 +86,7 @@ export default {
             }
         }
 
-        const enviarAlerta = async (alumnoId) => {
+        const enviarAlerta = async (alumnoId, estado) => {
             try {
                 let respuesta = await fetch('http://localhost:8080/message', {
                     method: 'POST',
@@ -97,7 +98,7 @@ export default {
                         mensaje: '',
                         remitente: remitenteId,
                         visto: false,
-                        alerta: alumno.estado
+                        alerta: estado
                     }),
                 })
                 if (!respuesta.ok) {
