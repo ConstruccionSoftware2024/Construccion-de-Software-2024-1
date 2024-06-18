@@ -498,8 +498,15 @@ app.post('/añadirUsuario', async (req, res) => {
     const Sesion = database.collection('sesion')
 
     const users = ids.map(id => ({ _id: id }));
-    await Sesion.updateMany({}, { $push: { participantes: { $each: users } } });
-    res.status(200).send('Usuarios añadidos exitosamente');
+    const result = await Sesion.updateOne({ _id: ObjectId('665d1794a22b8d44afad0793') }, { $push: { participantes: { $each: users } } });
+
+    if (result.matchedCount === 0) {
+      res.status(404).send('No se encontró la sesión con el id proporcionado');
+    } else if (result.modifiedCount === 0) {
+      res.status(400).send('No se pudo actualizar la sesión');
+    } else {
+      res.status(200).send('Usuarios añadidos exitosamente');
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send('Hubo un error al añadir los usuarios');

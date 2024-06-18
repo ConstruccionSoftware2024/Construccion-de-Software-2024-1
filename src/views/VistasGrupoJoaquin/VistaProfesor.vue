@@ -93,7 +93,7 @@
                     </div>
                 </div>
                 <div class="botones_añadir">
-                    <a href="#" class="modal_close_añadir" @click.prevent="añadirAlumno">Añadir</a>
+                    <a href="#" @click.prevent="añadirAlumno" class="modal_close_añadir">Añadir</a>
                     <a href="#" class="modal__close_añadir">Cerrar</a>
                 </div>
             </div>
