@@ -25,6 +25,7 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
+                <button @click="guardarHistorial">Guardar procesos</button>
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -84,6 +85,16 @@ export default {
             } catch (error) {
                 console.error('Error fetching history:', error);
             }
+        };
+
+        const guardarHistorial = () => {
+            axios.post('http://localhost:8080/guardar-procesos')
+                .then(response => {
+                    console.log('Historial guardado correctamente:', response.data);
+                })
+                .catch(error => {
+                    console.error('Error al guardar el historial:', error);
+                });
         };
 
         onMounted(() => {
@@ -158,7 +169,8 @@ export default {
             dangerColor,
             history,
             createSession,
-            downloadLink: '/public/Downloads/Procesos-exe.exe'
+            downloadLink: '/public/Downloads/Procesos-exe.exe',
+            guardarHistorial,
         };
     },
 };
