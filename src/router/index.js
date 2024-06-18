@@ -136,6 +136,11 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
     },
     {
+      path: '/HistorialSesiones',
+      name: 'HistorialSesiones',
+      component: () => import('../components/ComponentesGrupoFelipe/HistorialSesiones.vue')
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('../views/VistasGrupoFelipe/about.vue')
