@@ -60,11 +60,9 @@ window.addEventListener('beforeunload', function (event) {
 }
 
 .main-content {
-    flex: 1;
-    min-height: 90vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  min-height: 90vh;
+  justify-content: center;
+  align-items: center;
 }
 
 footer {

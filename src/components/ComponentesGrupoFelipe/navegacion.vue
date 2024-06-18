@@ -6,9 +6,9 @@
                 AboutView
             </button>
         </RouterLink>
-        <RouterLink to="/newsession" class="navLink">
+        <RouterLink to="/asignatura" class="navLink">
             <button>
-                CrearSesion
+                Asignatura
             </button>
         </RouterLink>
         <RouterLink to="/faltaAlumnos" class="navLink">
