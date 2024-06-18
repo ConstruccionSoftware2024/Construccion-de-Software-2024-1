@@ -71,7 +71,6 @@
             </div>
         </div>
     </div>
-    <a href="#" class="hero__cta">Join us!</a>
     <div>
         <section class="modal_añadir">
             <div class="modal__container_añadir">
@@ -376,7 +375,7 @@ export default {
         async anadirUsuario() {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
-                console.log("aaa\n" + selectedUsers);
+                console.log("seleccionados\n" + selectedUsers.map(user => user._id));
                 const response = await axios.post('http://localhost:8080/anadirUsuario', {
                     users: selectedUsers.map(user => user._id)
                 });
