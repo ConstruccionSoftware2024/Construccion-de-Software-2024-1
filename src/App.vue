@@ -15,7 +15,6 @@ import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
 import Footer from './components/ComponentesGrupoJoaquin/Footer.vue'
 import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router';
-import run from './lib/AlgoritmoIA.js'
 const themeStore = useThemeStore();
 const themeClass = computed(() => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode'))
 const router = useRouter();
@@ -24,7 +23,6 @@ watch(themeClass, (newClass) => {
   document.body.className = newClass
 })
  
-run;
 
 // Cambiar tema
 const toggleTheme = () => {
