@@ -553,8 +553,9 @@ app.post('/anadir_Usuario', async (req, res) => {
     const database = client.db('construccion')
     const Sesion = database.collection('sesion')
     const nuevos_usuarios = req.body.users;
+    const sesion_id = req.body.sesion_id;
 
-    const result = await Sesion.updateOne({ _id: new ObjectId('665d1794a22b8d44afad0793') }, { $push: { participantes: { $each: nuevos_usuarios } } });
+    const result = await Sesion.updateOne({ _id: new ObjectId(sesion_id) }, { $push: { participantes: { $each: nuevos_usuarios } } });
 
     if (result.matchedCount === 0) {
       res.status(404).send('No se encontró la sesión con el id proporcionado');

@@ -125,6 +125,7 @@ export default {
             showModal: false,
             selectedStudent: '',
             sessionId: this.idRuta,
+            users: [],
         };
     },
 
@@ -395,7 +396,8 @@ export default {
                 console.log(selectedUsers.map(user => user._id));
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
-                    users: selectedUsers.map(user => user._id)
+                    users: selectedUsers.map(user => user._id),
+                    sesion_id : this.sessionId
                 });
                 console.log(response.data);
 
