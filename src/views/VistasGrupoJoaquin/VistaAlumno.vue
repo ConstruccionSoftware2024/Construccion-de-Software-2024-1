@@ -81,10 +81,19 @@ export default {
         const fetchHistory = async () => {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/historial');
-                history.value = response.data;
+                history.value = response.data.sort((a, b) => {
+                    return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
+                });
             } catch (error) {
                 console.error('Error fetching history:', error);
             }
+        };
+        const startPolling = () => {
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
+
+            setInterval(async () => {
+                await fetchHistory(); // Actualiza el historial cada intervalo
+            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
         };
 
         const guardarHistorial = () => {
@@ -98,6 +107,7 @@ export default {
         };
 
         onMounted(() => {
+            startPolling();
             fetchHistory();
 
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
