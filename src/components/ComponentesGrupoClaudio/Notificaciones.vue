@@ -66,7 +66,7 @@ const getUsers = async () => {
 
 const getMensajes = async () => {
     try {
-        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario}`);
+        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario.value}`);
         let data = await respuesta.json()
         mensajesPendientes(data)
         data = ordenarMensajes(data)

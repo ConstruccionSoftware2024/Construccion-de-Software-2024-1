@@ -35,7 +35,7 @@
             </div>
           </div>
           <button class="loginButton" @click="submitResetPassword">Enviar</button>
-        </form> 
+        </form>
         <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
@@ -183,20 +183,20 @@ export default {
       return regex.test(this.email);
     },
     validaRut(rutCompleto) {
-      rutCompleto = rutCompleto.replace("‐","-");
+      rutCompleto = rutCompleto.replace("‐", "-");
       if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
-          return false;
+        return false;
       let tmp = rutCompleto.split('-');
       let digv = tmp[1];
       let rut = tmp[0];
-      if (digv == 'K') digv = 'k' ;
+      if (digv == 'K') digv = 'k';
 
-      return (this.dv(rut) == digv );
+      return (this.dv(rut) == digv);
     },
     dv(T) {
       let M = 0, S = 1;
       for (; T; T = Math.floor(T / 10))
-          S = (S + T % 10 * (9 - M++ % 6)) % 11;
+        S = (S + T % 10 * (9 - M++ % 6)) % 11;
       return S ? S - 1 : 'k';
     },
     async login() {
@@ -207,6 +207,7 @@ export default {
         });
 
         if (response.data.success) {
+          this.$store.state.usuario = response.data.user
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);
@@ -307,7 +308,7 @@ export default {
   box-sizing: border-box;
 }
 
-.recovery{
+.recovery {
   width: 400px;
 }
 

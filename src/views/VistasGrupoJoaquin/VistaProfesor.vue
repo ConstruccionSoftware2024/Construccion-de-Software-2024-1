@@ -106,9 +106,7 @@ import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
-
 export default {
-
     data() {
 
         return {
@@ -122,6 +120,13 @@ export default {
             users: []
         };
     },
+
+    /*  mounted() {
+         if (this.$store.state.usuario.role == "alumno") {
+             this.$router.push('/')
+         }
+     }, */
+
     created() {
         this.fetchUsers();
         this.mounted();
