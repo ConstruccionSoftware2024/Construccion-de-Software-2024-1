@@ -48,7 +48,8 @@
                             <!-- Si "accion" es true se banea, si no, no -->
                             <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
-                            <button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>
+                            <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
+                            <BotonNotificar :participante="alumno" />
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
@@ -76,6 +77,7 @@
 import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 
 export default {
 
@@ -95,6 +97,9 @@ export default {
         this.fetchUsers();
     },
     name: 'ProfesorPage',
+    components: {
+        BotonNotificar,
+    },
     methods: {
         /*async fetchSessionData() {
             try {
