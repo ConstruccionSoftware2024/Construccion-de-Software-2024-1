@@ -104,13 +104,13 @@ app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
     // Encuentra la asignatura por ID
     const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
     if (!asignatura) {
-        return res.status(404).json({ message: 'Asignatura no encontrada' });
+      return res.status(404).json({ message: 'Asignatura no encontrada' });
     }
 
     // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
     const result = await collection.updateOne(
-        { _id: new ObjectId(asignaturaId) },
-        { $push: { sesiones: new ObjectId(sessionId) } }
+      { _id: new ObjectId(asignaturaId) },
+      { $push: { sesiones: new ObjectId(sessionId) } }
     );
 
     res.sendStatus(200);
@@ -484,12 +484,34 @@ app.post('/edit_password', async (req, res) => {
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
       const poster = await User.updateOne(filter, { $set: update1 })
+      console.log(poster)
     }
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+app.post('/anadir_Usuario', async (req, res) => {
+
+  try {
+    const database = client.db('construccion')
+    const Sesion = database.collection('sesion')
+    const nuevos_usuarios = req.body.users;
+
+    const result = await Sesion.updateOne({ _id: new ObjectId('665d1794a22b8d44afad0793') }, { $push: { participantes: { $each: nuevos_usuarios } } });
+
+    if (result.matchedCount === 0) {
+      res.status(404).send('No se encontró la sesión con el id proporcionado');
+    } else if (result.modifiedCount === 0) {
+      res.status(400).send('No se pudo actualizar la sesión');
+    } else {
+      res.status(200).send('Usuarios añadidos exitosamente');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
+  }
+});
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
