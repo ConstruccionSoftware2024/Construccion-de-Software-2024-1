@@ -41,6 +41,7 @@ const server = http.createServer(app)
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
 // ########## Metodos ##########
+
 app.get('/users', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -53,6 +54,35 @@ app.get('/users', async (req, res) => {
   }
 })
 
+app.get('/asignaturas', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find().toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
+// Recuperar una asignatura segun id
+app.get('/asignatura/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const asignatura = await collection.findOne(consulta);
+    if (asignatura) {
+      res.send(asignatura);
+    } else {
+      res.status(404).send('Asignatura no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')
@@ -63,6 +93,32 @@ app.get('/faltas', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturaId = req.params.asignaturaId;
+    const sessionId = req.body.sessionId;
+
+    // Encuentra la asignatura por ID
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
+    if (!asignatura) {
+        return res.status(404).json({ message: 'Asignatura no encontrada' });
+    }
+
+    // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
+    const result = await collection.updateOne(
+        { _id: new ObjectId(asignaturaId) },
+        { $push: { sesiones: new ObjectId(sessionId) } }
+    );
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error updating document:', error);
+    res.status(500).send('Error updating document');
+  }
+});
 
 app.post('/faltas-post', async (req, res) => {
   try {
@@ -117,6 +173,48 @@ app.get('/sesion', async (req, res) => {
   }
 })
 
+// Obtener una sesión específica por ID
+const getParticipantDetails = async (participantIds, usersCollection) => {
+  console.log('Original participant IDs:', participantIds);
+
+  // Convertimos los ids a ObjectId solo si no son ya ObjectId
+  const objectIds = participantIds.map(id => {
+    return typeof id === 'string' ? new ObjectId(id) : id;
+  });
+
+  console.log('Converted Object IDs:', objectIds);
+
+  // Realizamos la consulta y agregamos depuración
+  const participants = await usersCollection.find({ _id: { $in: objectIds } }).toArray();
+  console.log('Fetched participants:', participants);
+  return participants;
+}
+
+app.get('/sessions/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const sessionCollection = database.collection('sesion');
+    const usersCollection = database.collection('users');
+
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const session = await sessionCollection.findOne(consulta);
+
+    if (!session) {
+      return res.status(404).send('Sesión no encontrada');
+    }
+
+    // Obtener la información completa de los participantes
+    const participantes = await getParticipantDetails(session.participantes, usersCollection);
+
+    session.participantes = participantes;
+
+    res.json(session);
+  } catch (error) {
+    console.error('Error fetching session data:', error);
+    res.status(500).send(error.message);
+  }
+});
+
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
   try {
@@ -137,6 +235,7 @@ app.put('/sesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
 /* FUNCION DE LOGIN DE GRUPO JOAQUIN*/
 app.post('/login', async (req, res) => {
   try {
@@ -245,7 +344,7 @@ app.post('/resetPassword', async (req, res) => {
   if (!user) {
     return res.status(404).send('Usuario no encontrado.');
   }
-  
+
 });
 
 app.get('/reset-password', async (req, res) => {
@@ -371,7 +470,6 @@ app.post('/edit_username', async (req, res) => {
     const update = { username: req.body.new_username }
     if (update != '') {
       const poster = await User.updateOne(filter, { $set: update })
-      console.log(poster)
     }
   } catch (error) {
     console.error(error)
@@ -386,7 +484,6 @@ app.post('/edit_password', async (req, res) => {
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
       const poster = await User.updateOne(filter, { $set: update1 })
-      console.log(poster)
     }
   } catch (error) {
     console.error(error)
@@ -411,8 +508,6 @@ app.get('/sesion/:id', async (req, res) => {
 app.get('/user/:id', async (req, res) => {
   try {
 
-    //console.log("here")
-
     const database = client.db('construccion')
     const collection = database.collection('users')
     const consulta = { _id: new ObjectId(req.params.id) }
@@ -426,6 +521,24 @@ app.get('/user/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+// Actualizar datos usuario especifico
+app.post('/user/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, { $set: req.body })
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Ususaio no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario
@@ -497,7 +610,7 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
-
+      asignatura: req.body.asignatura,
       creador: req.body.creador,
       participantes: [],
       banlist: [],
@@ -505,7 +618,7 @@ app.post('/sesion', async (req, res) => {
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
-    res.sendStatus(200)
+    res.status(200).json({ _id: result.insertedId });
   } catch (error) {
     console.error('Error inserting document:', error)
     res.status(500).send('Error inserting document')
@@ -596,5 +709,24 @@ app.get('/sesion/:idSesion/blacklist', async (req, res) => {
     }
   } catch (error) {
     res.status(500).send(error.message);
+  }
+});
+
+app.post('/guardar-procesos', async (req, res) => {
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/historial');
+    const aplicaciones = response.data;
+
+    if (aplicaciones.length > 0) {
+      await collection.insertOne(aplicaciones);
+      res.status(200).send('Historial guardado en la base de datos');
+    } else {
+      res.status(204).send('No hay aplicaciones para guardar');
+    }
+  } catch (error) {
+    console.error('Error al guardar el historial:', error);
+    res.status(500).send('Error al guardar el historial');
   }
 });

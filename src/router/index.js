@@ -13,9 +13,14 @@ import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
+import VisualizarUrl from '@/views/VistasGrupoJoaquin/VisualizarUrl.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
 import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
+import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
+import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
+import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import { useThemeStore, useUserStore } from '/back-end/src/store.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,9 +32,14 @@ const router = createRouter({
     },
 
     {
-      path: '/vistaProfesor',
-      name: 'VistaProfesor',
-      component: VistaProfesor
+      path: '/listaAsignaturas',
+      name: 'asignaturas',
+      component: asignaturas
+    },
+    {
+      path: '/visualizarUrl',
+      name: 'VisualizarUrl',
+      component: VisualizarUrl
     },
     {
       path: '/modulos',
@@ -82,30 +92,30 @@ const router = createRouter({
       component: InvitarAlumnos
     },
     {
-      path: '/newsession',
-      name: 'create',
-      component: () => import('../views/VistasGrupoClaudio/CrearSesion.vue')
-    },
-    {
       path: '/session',
       name: 'sesion',
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
-      path: '/session/:id',
-      name: 'sesionid',
-      component: () => import('../views/VistasGrupoClaudio/Sesion.vue'),
-      props: true
+      path: '/vistaProfesor/:id',
+      name: 'VistaProfesor',
+      component: VistaProfesor
+    },
+    {
+      path: '/vistaAlumno/:id',
+      name: 'VistaAlumno',
+      component: VistaAlumno
     },
     {
       path: '/faltaAlumnos',
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
-    { 
-      path: '/lista-alumnos', 
-      name: 'lista-alumnos', 
-      component: ListaAlumnos },
+    {
+      path: '/lista-alumnos',
+      name: 'lista-alumnos',
+      component: ListaAlumnos
+    },
     {
       path: '/historial',
       name: 'historial',
@@ -140,8 +150,41 @@ const router = createRouter({
       path: '/contact',
       name: 'contact',
       component: () => import('../views/VistasGrupoFelipe/contact.vue')
+    },
+    {
+      path: '/asignaturaProfesor/:id',
+      name: 'asignatura',
+      component: () => import('../views/VistasGrupoClaudio/AsignaturaProfesor.vue')
+    },
+    {
+      path: '/asignaturaAlumno/:id',
+      name: 'asignaturaAlumno',
+      component: AsignaturaAlumno,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/:catchAll(.*)/',
+      name: 'not-found',
+      component: notFound
     }
-  ]
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    return { top: 0 }
+  }
 })
+
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+
+  const userStore = useUserStore()
+
+  if (requiresAuth && !userStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+
+
 
 export default router;
