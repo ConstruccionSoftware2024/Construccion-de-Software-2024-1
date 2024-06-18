@@ -104,13 +104,13 @@ app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
     // Encuentra la asignatura por ID
     const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
     if (!asignatura) {
-        return res.status(404).json({ message: 'Asignatura no encontrada' });
+      return res.status(404).json({ message: 'Asignatura no encontrada' });
     }
 
     // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
     const result = await collection.updateOne(
-        { _id: new ObjectId(asignaturaId) },
-        { $push: { sesiones: new ObjectId(sessionId) } }
+      { _id: new ObjectId(asignaturaId) },
+      { $push: { sesiones: new ObjectId(sessionId) } }
     );
 
     res.sendStatus(200);
@@ -484,35 +484,27 @@ app.post('/edit_password', async (req, res) => {
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
       const poster = await User.updateOne(filter, { $set: update1 })
+      console.log(poster)
     }
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
-app.post('/añadirAlumno', async (req, res) => {
+app.post('/añadirUsuario', async (req, res) => {
+  const ids = req.body.users;
   try {
     const database = client.db('construccion')
-    const Sesion = database.collection('sesion');
-    const alumnosIds = req.body.alumnos;
-    const filter = { _id: new ObjectId('665d1794a22b8d44afad0793') };
-    const update = { $push: { participantes: { $each: alumnosIds } } };
-    console.log(alumnosIds)
-    const result = await Sesion.findOneAndUpdate(filter, update, { returnOriginal: false });
+    const Sesion = database.collection('sesion')
 
-    console.log(result.value);
-    if (result.modifiedCount > 0) {
-      res.status(200).json({ message: 'Alumnos añadidos con éxito' });
-    } else {
-      res.status(404).json({ message: 'No se encontró el documento para actualizar' });
-    }
-
+    const users = ids.map(id => ({ _id: id }));
+    await Sesion.updateMany({}, { $push: { participantes: { $each: users } } });
+    res.status(200).send('Usuarios añadidos exitosamente');
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Error del servidor' })
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
   }
-
-})
+});
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {

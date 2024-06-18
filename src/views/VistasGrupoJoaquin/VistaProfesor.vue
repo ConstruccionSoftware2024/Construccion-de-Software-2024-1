@@ -77,16 +77,23 @@
             <div class="modal__container_añadir">
                 <img src="@/assets/logo.svg" class="modal__img_añadir">
                 <h2 class="modal__title_añadir">Añadir Alumno</h2>
-                <ul name="alumnos" id="alumnos" class="modal__select_añadir">
-                    <li v-for="alumno in alumnos" :key="alumno._id" class="listar_alumnos">
-                        <input type="checkbox" v-model="alumno.selected" class="input_alumnos">
-                        <span class="dato_alumno">{{ alumno.matricula }}</span>
-                        <span class="dato_alumno">{{ alumno.firstName }}</span>
-                        <span class="dato_alumno">{{ alumno.lastName }}</span>
-                    </li>
-                </ul>
+                <div class="wrap-check-58">
+                    <div class="round">
+                        <ul name="user" id="user" class="modal__select_añadir">
+                            <li v-for="user in users" :key="user._id" class="listar_alumnos">
+
+                                <input type="checkbox" v-model="user.selected" class="input_alumnos">
+
+                                <span class="dato_alumno">{{ user.matricula }}</span>
+                                <span class="dato_alumno">{{ user.firstName }}</span>
+                                <span class="dato_alumno">{{ user.lastName }}</span>
+
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="botones_añadir">
-                    <a href="#" class="modal_close_añadir" @click="añadirAlumno">Añadir</a>
+                    <a href="#" class="modal_close_añadir" @click.prevent="añadirAlumno">Añadir</a>
                     <a href="#" class="modal__close_añadir">Cerrar</a>
                 </div>
             </div>
@@ -110,11 +117,13 @@ export default {
             lastActivity: '',
             showModal: false,
             selectedStudent: null,
-            sessionId: '665d1794a22b8d44afad0793'
+            sessionId: '665d1794a22b8d44afad0793',
+            users: []
         };
     },
     created() {
         this.fetchUsers();
+        this.mounted();
     },
     name: 'ProfesorPage',
     methods: {
@@ -324,6 +333,26 @@ export default {
         otherOptions() {
             alert('Otras opciones.');
         },
+        async mounted() {
+            const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+            const sessionUsers = sessionResponse.data;
+
+            const participantesIds = sessionUsers.participantes;
+
+            const response = await axios.get('http://localhost:8080/users');
+            const allUsers = response.data;
+
+            //console.log("participantes\n" + participantesIds)
+            axios.get('http://localhost:8080/users')
+                .then(response => {
+                    console.log("ID\n" + response.data.map(user => user._id));
+                    this.users = allUsers.filter(user => !participantesIds.includes(user._id));
+                    //console.log("a\n" + this.users.map(user => user._id));
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
         añadir() {
             const openModal = document.querySelector('.hero__cta');
             const modal = document.querySelector('.modal_añadir');
@@ -341,15 +370,15 @@ export default {
             closeModal2.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.remove('modal_añadir--show');
-                alert("alumnos agregados correctamente");
+                //alert("alumnos agregados correctamente");
             });
         },
-        async añadirAlumno() {
+        async añadirUsuario() {
             try {
-                const selectedAlumnos = this.alumnos.filter(alumno => alumno.selected);
-                console.log(selectedAlumnos);
-                const response = await axios.post('http://localhost:8080/añadirAlumno', {
-                    alumnos: selectedAlumnos.map(alumno => alumno._id)
+                const selectedUsers = this.users.filter(user => user.selected);
+                console.log("aaa\n" + selectedUsers);
+                const response = await axios.post('http://localhost:8080/añadirUsuario', {
+                    users: selectedUsers.map(user => user._id)
                 });
                 console.log(response.data);
 
@@ -364,6 +393,62 @@ export default {
 </script>
 
 <style scoped>
+.container_check {
+    display: flex;
+
+    align-items: center;
+}
+
+.container_check {
+    display: flex;
+    --input-focus: #2d8cf0;
+    --input-out-of-focus: #ccc;
+    --bg-color: #fff;
+    --bg-color-alt: #666;
+    --main-color: #323232;
+    position: relative;
+    cursor: pointer;
+}
+
+.container_check input {
+    position: absolute;
+    opacity: 0;
+    display: flex;
+}
+
+.checkmark_check {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    top: 0;
+    left: -500;
+    border: 2px solid var(--main-color);
+    border-radius: 5px;
+    box-shadow: 4px 4px var(--main-color);
+    background-color: var(--input-out-of-focus);
+    transition: all 0.3s;
+}
+
+.container_check input:checked~.checkmark_check {
+    background-color: var(--input-focus);
+}
+
+.checkmark_check:after {
+    content: "";
+    width: 7px;
+    height: 15px;
+    position: absolute;
+    top: 2px;
+    left: 8px;
+    border: solid var(--bg-color);
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+}
+
+.container_check input:checked~.checkmark_check:after {
+    display: none;
+}
+
 .botones_añadir {
     display: inline;
 }
@@ -376,7 +461,8 @@ export default {
     margin-top: 1%;
     list-style-type: none;
     font-size: 1.2rem;
-    padding-right: 10px;
+    text-align: left;
+
 }
 
 .hero__cta {
