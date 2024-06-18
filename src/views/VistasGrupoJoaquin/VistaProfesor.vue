@@ -116,8 +116,7 @@ export default {
             lastActivity: '',
             showModal: false,
             selectedStudent: null,
-            sessionId: '665d1794a22b8d44afad0793',
-            users: []
+            sessionId: this.$store.state.sesionId
         };
     },
 
