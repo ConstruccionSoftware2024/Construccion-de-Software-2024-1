@@ -13,6 +13,7 @@ import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
+import VisualizarUrl from '@/views/VistasGrupoJoaquin/VisualizarUrl.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
 import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
@@ -31,6 +32,18 @@ const router = createRouter({
       name: 'VistaProfesor',
       component: VistaProfesor
     },
+    {
+      path: '/visualizarUrl',
+      name: 'VisualizarUrl',
+      component: VisualizarUrl
+    },
+
+    {
+      path: '/about',
+      name: 'AboutView',
+      component: AboutView
+    },
+
     {
       path: '/modulos',
       name: 'modulos',
@@ -102,10 +115,11 @@ const router = createRouter({
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
-    { 
-      path: '/lista-alumnos', 
-      name: 'lista-alumnos', 
-      component: ListaAlumnos },
+    {
+      path: '/lista-alumnos',
+      name: 'lista-alumnos',
+      component: ListaAlumnos
+    },
     {
       path: '/historial',
       name: 'historial',
