@@ -225,6 +225,11 @@ export default {
                 console.error('Error fetching users:', error);
             }
         },
+        calculateTotalDangerousApps(students) {
+            return students.reduce((total, student) => {
+                return total + student.apps.filter(app => app.status === 'Peligro').length;
+            }, 0);
+        },
         createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');

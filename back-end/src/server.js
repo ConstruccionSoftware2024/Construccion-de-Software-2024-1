@@ -955,3 +955,22 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
+/* revisiar esta funcion de grupo joaquin*/
+app.post('/guardar-procesos', async (req, res) => {
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/historial');
+    const aplicaciones = response.data;
+
+    if (aplicaciones.length > 0) {
+      await collection.insertOne(aplicaciones);
+      res.status(200).send('Historial guardado en la base de datos');
+    } else {
+      res.status(204).send('No hay aplicaciones para guardar');
+    }
+  } catch (error) {
+    console.error('Error al guardar el historial:', error);
+    res.status(500).send('Error al guardar el historial');
+  }
+});
