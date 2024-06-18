@@ -25,17 +25,21 @@
           </div>
           <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
-        <form v-else-if="isResetPassword" class="" key="">
-          <div class="">
-            <div class="inputGroup">
-              <div class="inputWrapper">
-                <i class="fas fa-at"></i>
-                <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
-              </div>
+        <form v-else-if="isResetPassword">
+          <div class="inputGroup">
+            <div class="inputWrapper">
+              <i class="fas fa-at"></i>
+              <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
             </div>
           </div>
-          <button class="loginButton" @click="submitResetPassword">Enviar</button>
-        </form> 
+          <div class="inputGroup" v-if="showCodeInput">
+            <div class="inputWrapper">
+              <i class="fas fa-key"></i>
+              <input type="text" id="resetCode" v-model="resetCode" placeholder="Ingresa tu código" required />
+            </div>
+          </div>
+          <button class="loginButton" @click.prevent="submitResetPassword">Enviar</button>
+        </form>
         <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
@@ -158,9 +162,11 @@ export default {
       rut: '',
       matricula: '',
       role: '',
+      resetCode: '',
       passwordVisible: false,
       isLogin: true,
       isResetPassword: false,
+      showCodeInput: false,
       showPopup: false,
       errorMessage: ''
     }
@@ -183,23 +189,25 @@ export default {
       return regex.test(this.email);
     },
     validaRut(rutCompleto) {
-      rutCompleto = rutCompleto.replace("‐","-");
+      rutCompleto = rutCompleto.replace("‐", "-");
       if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
-          return false;
+        return false;
       let tmp = rutCompleto.split('-');
       let digv = tmp[1];
       let rut = tmp[0];
-      if (digv == 'K') digv = 'k' ;
+      if (digv == 'K') digv = 'k';
 
-      return (this.dv(rut) == digv );
+      return (this.dv(rut) == digv);
     },
     dv(T) {
       let M = 0, S = 1;
       for (; T; T = Math.floor(T / 10))
-          S = (S + T % 10 * (9 - M++ % 6)) % 11;
+        S = (S + T % 10 * (9 - M++ % 6)) % 11;
       return S ? S - 1 : 'k';
     },
     async login() {
+      console.log('email:', this.email);
+      console.log('password:', this.password);
       try {
         const response = await axios.post('http://localhost:8080/login', {
           email: this.email,
@@ -207,10 +215,11 @@ export default {
         });
 
         if (response.data.success) {
+          this.$store.state.usuario = response.data.user
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);
-          this.$router.push('/sesionesAlum'); // Cambiar '/modulosAlum' por la ruta de la página a la que se redirigirá al iniciar sesión
+          this.$router.push('/'); // Cambiar '/modulosAlum' por la ruta de la página a la que se redirigirá al iniciar sesión
         } else {
           this.showError('Correo electrónico o contraseña incorrectos');
         }
@@ -223,18 +232,43 @@ export default {
       this.isLogin = false;
     },
     async submitResetPassword() {
-      if (this.email) {
-        try {
-          const response = await axios.post('http://localhost:8080/resetPassword', { email: this.email });
-          if (response.data.success) {
-            alert('Revisa tu correo electrónico para las instrucciones de restablecimiento de contraseña.');
-            this.showResetForm = false; // Opcional: Volver al inicio de sesión después de enviar el correo
-          } else {
-            this.showError('No se pudo enviar el correo de restablecimiento de contraseña.');
+      if (!this.showCodeInput) {
+        if (this.email) {
+          try {
+            const response = await axios.post('http://localhost:8080/resetPassword', { email: this.email });
+            if (response) {
+              this.showError('Revisa tu correo electrónico para las instrucciones de restablecimiento de contraseña.');
+              this.showCodeInput = true;
+            } else {
+              this.showError('No se pudo enviar el correo de restablecimiento de contraseña.');
+            }
+          } catch (error) {
+            console.error(error);
+            this.showError('Error al intentar restablecer la contraseña.');
           }
-        } catch (error) {
-          console.error(error);
-          this.showError('Error al intentar restablecer la contraseña.');
+        }
+      }else {
+        if (this.resetCode) {
+          try {
+            const response1 = await axios.post('http://localhost:8080/verifyResetCode', {
+              email: this.email,
+              code: this.resetCode,
+            });
+            if (response1.data.success) {
+              this.showError('Código verificado correctamente. Por favor, establece tu nueva contraseña.');
+              const response = await axios.post('http://localhost:8080/loginInsta', {
+                email: response1.data.email
+              });
+              this.email = response.data.email2;
+              this.password = response.data.password;
+              this.login();
+            } else {
+              this.showError('Código incorrecto. Por favor, inténtalo de nuevo.');
+            }
+          } catch (error) {
+            console.error('Error al verificar el código:', error);
+            this.showError('Ocurrió un error al verificar el código. Por favor, inténtalo de nuevo más tarde.');
+          }
         }
       }
     },
@@ -266,7 +300,7 @@ export default {
           secondLastName: this.secondLastName,
           rut: this.rut,
           matricula: this.matricula,
-          role: 'Estudiante',
+          role: 'alumno',
           campus: this.campus,
           major: this.major,
         });
@@ -307,7 +341,7 @@ export default {
   box-sizing: border-box;
 }
 
-.recovery{
+.recovery {
   width: 400px;
 }
 
