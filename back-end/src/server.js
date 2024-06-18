@@ -104,13 +104,13 @@ app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
     // Encuentra la asignatura por ID
     const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
     if (!asignatura) {
-        return res.status(404).json({ message: 'Asignatura no encontrada' });
+      return res.status(404).json({ message: 'Asignatura no encontrada' });
     }
 
     // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
     const result = await collection.updateOne(
-        { _id: new ObjectId(asignaturaId) },
-        { $push: { sesiones: new ObjectId(sessionId) } }
+      { _id: new ObjectId(asignaturaId) },
+      { $push: { sesiones: new ObjectId(sessionId) } }
     );
 
     res.sendStatus(200);
@@ -768,3 +768,33 @@ app.get('/sesion/:idSesion/blacklist', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+
+// Enviar email (página contacto)
+app.post('/send-email', async (req, res) => {
+  let { fullName, email, mobile, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: 'pruebas.construccion2024@outlook.com',
+    subject: `Mensaje de ${fullName}`,
+    text: `Nombre: ${fullName}\nEmail: ${email}\nTeléfono: ${mobile}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
