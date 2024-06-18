@@ -77,7 +77,6 @@ import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 export default {
-
     data() {
 
         return {
@@ -90,11 +89,13 @@ export default {
             sessionId: this.$store.state.sesionId
         };
     },
-    mounted() {
-        if (this.$store.state.usuario.role == "alumno") {
-            this.$router.push('/')
-        }
-    },
+
+    /*  mounted() {
+         if (this.$store.state.usuario.role == "alumno") {
+             this.$router.push('/')
+         }
+     }, */
+
     created() {
         this.fetchUsers();
     },

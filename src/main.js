@@ -15,11 +15,11 @@ const store = createStore({
     state() {
         return {
             sesionId: '',
-            usuario: null
+            usuario: '',
         }
     },
-
 })
+
 library.add(fas, far)
 
 const app = createApp(App)

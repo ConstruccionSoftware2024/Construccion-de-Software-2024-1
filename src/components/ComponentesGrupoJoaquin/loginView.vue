@@ -208,7 +208,6 @@ export default {
 
         if (response.data.success) {
           this.$store.state.usuario = response.data.user
-          console.log(this.$store.state.usuario)
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);

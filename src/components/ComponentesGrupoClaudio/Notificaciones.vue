@@ -21,7 +21,7 @@ const getUsers = async () => {
         console.log('Usuarios:', usuarios);
         // idUsuario = usuarios[3]._id;
         //este id de usuario deberia ser el del usuario loggeado
-        idUsuario = '665e3a8c6e8ed7a9e8c359f3'
+        idUsuario.value = '665e3a8c6e8ed7a9e8c359f3'
         //console.log('id Usuario:', idUsuario);
     }
     catch (error) {
@@ -47,7 +47,7 @@ const getUsers = async () => {
 
 const getMensajes = async () => {
     try {
-        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario}`);
+        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario.value}`);
         let data = await respuesta.json()
         mensajesPendientes(data)
         data = ordenarMensajes(data)

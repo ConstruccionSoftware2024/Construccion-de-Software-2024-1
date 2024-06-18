@@ -4,24 +4,9 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
 <template>
   <div class="container">
     <div class="search-bar">
-      <input
-        class="search-input"
-        type="text"
-        v-model="searchName"
-        placeholder="Buscar por nombre"
-      />
-      <input
-        class="search-input"
-        type="text"
-        v-model="searchLastName"
-        placeholder="Buscar por apellido"
-      />
-      <input
-        class="search-input"
-        type="text"
-        v-model="searchEmail"
-        placeholder="Buscar por email"
-      />
+      <input class="search-input" type="text" v-model="searchName" placeholder="Buscar por nombre" />
+      <input class="search-input" type="text" v-model="searchLastName" placeholder="Buscar por apellido" />
+      <input class="search-input" type="text" v-model="searchEmail" placeholder="Buscar por email" />
       <input class="search-input" type="text" v-model="searchRut" placeholder="Buscar por RUT" />
     </div>
 
@@ -42,17 +27,14 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
           <tr v-for="(student, index) in filteredStudents" :key="index">
             <td>{{ student.name }}</td>
             <td>{{ student.lastName }}</td>
-            <td>{{ student.email }}</td>  
+            <td>{{ student.email }}</td>
             <td>{{ student.rut }}</td>
-            <td >
+            <td>
               {{ student.faltas }}
             </td>
 
             <td class="detalle-container">
-              <button
-                class="button-detalle"
-                @click="student.showDetalleFaltas = !student.showDetalleFaltas"
-              >
+              <button class="button-detalle" @click="student.showDetalleFaltas = !student.showDetalleFaltas">
                 {{ student.showDetalleFaltas ? 'Ocultar' : 'Mostrar' }}
               </button>
 
@@ -74,11 +56,7 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
               </div>
             </td>
             <td>
-              <select
-                v-model="student.estado"
-                class="selector-peligro"
-                @change="updateStudentStatus(student)"
-              >
+              <select v-model="student.estado" class="selector-peligro" @change="updateStudentStatus(student)">
                 <option class="opcion-peligro">No peligroso</option>
                 <option class="opcion-peligro">Peligroso</option>
               </select>

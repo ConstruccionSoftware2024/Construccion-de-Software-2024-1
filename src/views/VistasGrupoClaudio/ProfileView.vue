@@ -58,7 +58,7 @@
                     </p>
                     <p><span class="atributo-username">Teléfono</span><span class="dospuntos">:</span> {{
                         alumno.telefono
-                        }}</p>
+                    }}</p>
                     <p><span class="atributo-username">Dirección</span><span class="dospuntos">:</span> {{
                         alumno.direccion }}</p>
                 </template>
