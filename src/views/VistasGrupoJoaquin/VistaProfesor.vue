@@ -93,7 +93,7 @@
                     </div>
                 </div>
                 <div class="botones_añadir">
-                    <a href="#" @click.prevent="añadirAlumno" class="modal_close_añadir">Añadir</a>
+                    <a href="#" @click.prevent="anadirUsuario" class="modal_close_añadir">Añadir</a>
                     <a href="#" class="modal__close_añadir">Cerrar</a>
                 </div>
             </div>
@@ -373,11 +373,11 @@ export default {
                 //alert("alumnos agregados correctamente");
             });
         },
-        async añadirUsuario() {
+        async anadirUsuario() {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 console.log("aaa\n" + selectedUsers);
-                const response = await axios.post('http://localhost:8080/añadirUsuario', {
+                const response = await axios.post('http://localhost:8080/anadirUsuario', {
                     users: selectedUsers.map(user => user._id)
                 });
                 console.log(response.data);
