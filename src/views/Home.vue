@@ -12,7 +12,8 @@
 .home-container {
   height: 92vh;
   width: 92vw;
-  background-image: url('@/assets/Ingenieria.jpg'); /* Asegúrate de que la ruta sea correcta */
+  background-image: url('@/assets/Ingenieria.jpg');
+  /* Asegúrate de que la ruta sea correcta */
   background-size: cover;
   background-position: center;
   display: flex;
@@ -32,5 +33,4 @@ a {
   text-decoration: none;
   font-size: 18px;
 }
-
 </style>

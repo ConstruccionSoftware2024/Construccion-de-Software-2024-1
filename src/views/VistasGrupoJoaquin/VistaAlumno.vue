@@ -22,6 +22,11 @@
                 </div>
             </div>
             <div class="history box-shadow">
+                <a :href="downloadLink" download="Procesos-exe.exe">
+                    <button>Descargar Ejecutable</button>
+                </a>
+                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR--> 
+                
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -48,6 +53,11 @@ import axios from 'axios';
 import Chart from 'chart.js/auto';
 
 export default {
+    mounted() {
+        if (this.$store.state.usuario.role == "profesor") {
+            this.$router.push('/listaAsignaturas')
+        }
+    },
     setup() {
         const sessionId = ref('');
         const totalApps = ref(0);
@@ -70,6 +80,8 @@ export default {
             }
         });
 
+
+
         const createSession = () => {
             // Lógica para unirse a una sesión
         };
@@ -90,6 +102,16 @@ export default {
             setInterval(async () => {
                 await fetchHistory(); // Actualiza el historial cada intervalo
             }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
+        };
+
+        const guardarHistorial = () => {
+            axios.post('http://localhost:8080/guardar-procesos')
+                .then(response => {
+                    console.log('Historial guardado correctamente:', response.data);
+                })
+                .catch(error => {
+                    console.error('Error al guardar el historial:', error);
+                });
         };
 
         onMounted(() => {
@@ -165,6 +187,8 @@ export default {
             dangerColor,
             history,
             createSession,
+            downloadLink: '/public/Downloads/Procesos-exe.exe',
+            guardarHistorial,
         };
     },
 };
