@@ -46,6 +46,8 @@
               </div>
             </div>
           </template>
+
+          
           <template v-else>
             <button class="loginButton" @click="goLogin">
               <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
