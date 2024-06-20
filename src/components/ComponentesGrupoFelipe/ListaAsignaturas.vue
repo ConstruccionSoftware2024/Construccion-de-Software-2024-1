@@ -35,14 +35,13 @@
 
 <script>
 import axios from 'axios';
-import { useUserStore } from '../../../back-end/src/store.js';
-
+import { computed } from 'vue';
+import { useUserStore } from '../../../back-end/src/store.js'
+const isAuthenticated = computed(() => userStore.isAuthenticated)
 export default {
     setup() {
         const userStore = useUserStore();
-        return {
-            userStore
-        }
+        return { userStore }
     },
     data() {
         return {
@@ -72,6 +71,7 @@ export default {
         }
     },
     methods: {
+
         async fetchProjects() {
             try {
                 const response = await axios.get('http://localhost:8080/asignaturas');
@@ -82,7 +82,13 @@ export default {
             }
         },
         goToProject(id) {
-            this.$router.push(`/asignatura/${id}`);
+            console.log(this.userStore.user.role)
+            if (this.userStore.user.role == 'alumno') {
+                this.$router.push(`/asignaturaAlumno/${id}`);
+            }
+            else if (this.userStore.user.role == 'profesor') {
+                this.$router.push(`/asignaturaProfesor/${id}`);
+            }
         }
     },
     created() {

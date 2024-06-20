@@ -15,7 +15,7 @@
 
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
             <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
-            <RouterLink to="#" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
+            <RouterLink to="/faltaAlumnos" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
 
           <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
@@ -46,6 +46,8 @@
               </div>
             </div>
           </template>
+
+          
           <template v-else>
             <button class="loginButton" @click="goLogin">
               <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>

@@ -6,9 +6,9 @@
                 AboutView
             </button>
         </RouterLink>
-        <RouterLink to="/newsession" class="navLink">
+        <RouterLink to="/asignatura" class="navLink">
             <button>
-                CrearSesion
+                Asignatura
             </button>
         </RouterLink>
         <RouterLink to="/faltaAlumnos" class="navLink">
@@ -64,19 +64,25 @@
                 Vista Alumno
             </button>
         </RouterLink>
+        <RouterLink to="/visualizarUrl" class="navLink">
+            <button>
+                Vista Url abiertas
+            </button>
+        </RouterLink>
+
     </div>
 
-        
+
 </template>
 
 <script>
-    export default {
+export default {
     name: 'App',
-    };
+};
 </script>
 
 <style scoped>
-.container{
+.container {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -84,26 +90,26 @@
 }
 
 button {
-  width: fit-content;
-  min-width: 100px;
-  height: 45px;
-  padding: 8px;
-  border-radius: 5px;
-  border: 2.5px solid #E0E1E4;
-  box-shadow: 0px 0px 20px -20px;
-  cursor: pointer;
-  background-color: white;
-  transition: all 0.2s ease-in-out 0ms;
-  user-select: none;
-  font-family: 'Poppins', sans-serif;
+    width: fit-content;
+    min-width: 100px;
+    height: 45px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 2.5px solid #E0E1E4;
+    box-shadow: 0px 0px 20px -20px;
+    cursor: pointer;
+    background-color: white;
+    transition: all 0.2s ease-in-out 0ms;
+    user-select: none;
+    font-family: 'Poppins', sans-serif;
 }
 
 button:hover {
-  background-color: #F2F2F2;
-  box-shadow: 0px 0px 20px -18px;
+    background-color: #F2F2F2;
+    box-shadow: 0px 0px 20px -18px;
 }
 
 button:active {
-  transform: scale(0.95);
+    transform: scale(0.95);
 }
 </style>
