@@ -1,5 +1,4 @@
 <script setup>
-
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../../../back-end/src/store.js'
 
@@ -66,8 +65,9 @@ const getUsers = async () => {
 
 const getMensajes = async () => {
     try {
-        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario.value}`);
+        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario}`);
         let data = await respuesta.json()
+        console.log("valor data : ", data)
         mensajesPendientes(data)
         data = ordenarMensajes(data)
         console.log("valor mensajes : ", data)

@@ -56,9 +56,8 @@
                         alumno.fechaNacimiento }}</p>
                     <p><span class="atributo-username">email</span><span class="dospuntos">:</span> {{ alumno.email }}
                     </p>
-                    <p><span class="atributo-username">Teléfono</span><span class="dospuntos">:</span> {{
-                        alumno.telefono
-                    }}</p>
+                    <p><span class="atributo-username">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono
+                        }}</p>
                     <p><span class="atributo-username">Dirección</span><span class="dospuntos">:</span> {{
                         alumno.direccion }}</p>
                 </template>
@@ -175,7 +174,7 @@ const cancelarEdicion = () => {
         });
     } else
 
-        mostrarFormulario.value = false;
+    mostrarFormulario.value = false;
 };
 
 cargarDatosUsuario();

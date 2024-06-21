@@ -31,7 +31,7 @@
             </template>
           </template>
 
-          <template v-if="isAuthenticated && this.$store.state.usuario != null">
+          <template v-if="isAuthenticated">
             <div class="dropwdown-container">
               <button class="loginButtonLogged" @click="toggleDropwDown">
                 <div class="sign"><i class="fa-solid fa-user" id="icon"></i></div>
@@ -46,6 +46,8 @@
               </div>
             </div>
           </template>
+
+          
           <template v-else>
             <button class="loginButton" @click="goLogin">
               <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>

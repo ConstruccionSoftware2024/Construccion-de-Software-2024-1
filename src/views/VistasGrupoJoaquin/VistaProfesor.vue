@@ -107,6 +107,14 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 export default {
+    setup() {
+        const route = useRoute();
+        const idRuta = route.params.id;
+        return {
+            idRuta
+        }
+    },
+
     data() {
 
         return {
@@ -115,8 +123,9 @@ export default {
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
-            selectedStudent: null,
-            sessionId: this.$store.state.sesionId
+            selectedStudent: '',
+            sessionId: this.idRuta,
+            users: [],
         };
     },
 
@@ -215,6 +224,11 @@ export default {
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
+        },
+        calculateTotalDangerousApps(students) {
+            return students.reduce((total, student) => {
+                return total + student.apps.filter(app => app.status === 'Peligro').length;
+            }, 0);
         },
         createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
@@ -387,7 +401,8 @@ export default {
                 console.log(selectedUsers.map(user => user._id));
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
-                    users: selectedUsers.map(user => user._id)
+                    users: selectedUsers.map(user => user._id),
+                    sesion_id : this.sessionId
                 });
                 console.log(response.data);
 
