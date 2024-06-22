@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../../../back-end/src/store.js'
+import { useRouter } from 'vue-router';
 
 let alertas = ref([]);
 let idUsuario = ref(null)
@@ -71,7 +72,7 @@ const getMensajes = async () => {
         mensajesPendientes(data)
         data = ordenarMensajes(data)
         console.log("valor mensajes : ", data)
-        mensajes.value = data
+        mensajes.value = data.filter(element => element.visto == false)
 
     } catch {
         console.error("Error al obtener mensajes")
@@ -127,6 +128,11 @@ const marcarMensajeComoLeido = async (idMensaje) => {
     }
 }
 
+const gotoMensajes = () => {
+    const router = useRouter()
+    router.push('/mensajes')
+}
+
 
 
 </script>
@@ -140,8 +146,8 @@ const marcarMensajeComoLeido = async (idMensaje) => {
         <div class="puntito" v-if="puntito"></div>
         <div class="dropdown" v-show="mostrarDropdown">
             <ul class="lista1" v-for="mensaje in mensajes " :key="mensaje.id">
-
-                <li :class="{ 'notificacion': !mensaje.visto, 'notificacionvista': mensaje.visto }">
+                <!-- solo mostramos los mensajes que no han sido visto -->
+                <li class="notificacion" v-if="!mensaje.visto">
                     <p style="">
                         {{ mensaje.mensaje }}
                     </p>
@@ -166,13 +172,44 @@ const marcarMensajeComoLeido = async (idMensaje) => {
                 </li>
 
 
+
+
             </ul>
+            <button class="vermas">
+                <a href="/mensajes">
+                    Ver todas las notificaciones
+
+                </a>
+
+            </button>
         </div>
     </div>
 </template>
 
 
 <style scoped>
+a {
+    text-decoration: none;
+    color: white;
+}
+
+.vermas {
+    background-color: #2c2c2e;
+    outline: none;
+    border: none;
+    border-top: 2px solid gray;
+    color: white;
+    width: 100%;
+    padding: 1rem;
+    transition: .3s all ease;
+    cursor: pointer;
+    border-radius: 15px;
+}
+
+.vermas:hover {
+    background-color: #444446;
+}
+
 .tick {
     color: #08cccc;
     width: 20px;
@@ -244,13 +281,16 @@ ul.lista1 {
     border-top-right-radius: 0;
     padding: 10px;
     width: 400px;
-    max-height: 500px;
     overflow: scroll;
     z-index: 10;
     box-shadow: 0 4px 8px rgba(0, 0, 0, .4);
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.dropdown::before {
+/* .dropdown::before {
     content: '';
     position: absolute;
     top: 10px;
@@ -262,7 +302,7 @@ ul.lista1 {
     border-right: 10px solid transparent;
     border-bottom: 10px solid var(--container-background-color);
     color: #08cccc;
-}
+} */
 
 .puntito {
     position: absolute;
@@ -292,6 +332,7 @@ ul.lista1 {
     border-radius: 15px;
     gap: .5rem;
     padding: 1rem;
+    width: 100%;
 }
 
 .notificacion p {
@@ -301,17 +342,5 @@ ul.lista1 {
 .notificacion:hover {
     background-color: #323233;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.notificacionvista {
-    list-style-type: none;
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
-    transition: all 0.3s;
-    display: flex;
-    transition: all .3s ease;
-    padding: 1rem;
-    border-radius: 15px;
-    gap: .5rem;
-    background-color: #2B2B2D;
 }
 </style>
