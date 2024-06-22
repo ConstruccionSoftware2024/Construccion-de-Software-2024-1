@@ -5,7 +5,7 @@
             <div class="left-column">
                 <div class="section">
                     <h2><i class="fa-solid fa-list-ul"></i> Listado de Sesiones</h2>
-                    <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/session/' + sesion._id"
+                    <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/vistaProfesor/' + sesion._id"
                         class="session-item">
                         <div class="session-content">
                             <p class="session-name"> {{ sesion.nombre }}</p>
@@ -27,8 +27,10 @@
 
                 <div class="section">
                     <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
-                    <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
-                    <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
+                    <div class="input-group">
+                        <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
+                        <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
+                    </div>
                 </div>
             </div>
 
@@ -48,44 +50,15 @@
                 </div>
             </div>
         </div>
-
-        <div class="modal" v-if="mostrarPopup">
+        <div v-if="mostrarPopupRecurso" class="modal">
             <div class="modal-content">
-                <span class="close" @click="mostrarPopup = false">&times;</span>
-                <div class="add-falta">
-                    <h2>Crear nueva sesión</h2>
-                    <div class="input-group">
-                        <div class="input-middle" style="display: flex; justify-content: space-between;">
-                            <div style="flex: 1; margin-right: 10px;">
-                                <p class="text-form">Nombre de la sesión</p>
-                                <input required placeholder="Nombre de la sesión" type="text" id="nombre"
-                                    v-model="nuevaSesion.nombre">
-                            </div>
-                            <div style="flex: 1; margin-left: 10px;">
-                                <p class="text-form">Descripción</p>
-                                <input required placeholder="Descripción" type="text" id="descripcion"
-                                    v-model="nuevaSesion.descripcion">
-                            </div>
-                        </div>
-                        <div v-if="showError" class="error-message">
-                            Por favor complete todos los campos.
-                        </div>
-                    </div>
-                    <button @click.prevent="enviarFormulario" class="saveButton"
-                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
-                </div>
+                <span class="close" @click="mostrarPopupRecurso = false">&times;</span>
+                <h3>Añadir nuevo recurso</h3>
+                <input required placeholder="Título del recurso" type="text" v-model="nuevoRecurso.titulo">
+                <textarea required placeholder="Descripción del recurso" v-model="nuevoRecurso.descripcion"></textarea>
+                <input required type="file" @change="onFileChange">
+                <button @click="enviarRecurso" class="btn">Añadir Recurso</button>
             </div>
-        </div>
-
-        <!-- Popup for adding resource -->
-        <div v-if="mostrarPopupRecurso" class="popup">
-
-            <h3>Añadir nuevo recurso</h3>
-            <input required placeholder="Nombre del recurso" type="text" v-model="nuevoRecurso.nombre">
-            <input required placeholder="Enlace del recurso" type="text" v-model="nuevoRecurso.enlace">
-            <input type="submit" class="btn" value="Añadir Recurso">
-            <button @click="mostrarPopupRecurso = false" class="btn-cerrar">Cerrar</button>
-
         </div>
     </div>
 </template>
@@ -101,53 +74,55 @@ export default {
         return {
             sesiones: [],
             mostrarPopup: false,
+            mostrarPopupRecurso: false,
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
                 asignatura: ''
             },
+            nuevoRecurso: {
+                titulo: '',
+                descripcion: '',
+                archivo: null
+            }
         }
     },
     setup() {
         const sesiones = ref([]);
         const router = useRouter();
-        const route = useRoute()
-        const asignaturaId = route.params.id
-        const asignatura = ref('Nombre Ejemplo')
-        const mostrarPopup = ref(false)
-        const mostrarPopupRecurso = ref(false)
-        const nuevaPregunta = ref('')
+        const route = useRoute();
+        const asignaturaId = route.params.id;
+        const asignatura = ref('Nombre Ejemplo');
+        const mostrarPopup = ref(false);
+        const mostrarPopupRecurso = ref(false);
+        const nuevaPregunta = ref('');
         const nuevoRecurso = reactive({
-            nombre: '',
-            enlace: ''
-        })
-        const nuevaTarea = reactive({
-            nombre: '',
-            descripcion: ''
-        })
-        const info = ref([])
-        const recursos = ref([])
-
-        const formulario = reactive({
-            nombre: '',
+            titulo: '',
             descripcion: '',
-            creador: 'default'
-        })
+            archivo: null
+        });
+        const info = ref([]);
+        const recursos = ref([]);
 
-        const cargarRecursos = async () => {
-        }
+        const cargarRecursos = async () => { };
         const goToFaltas = () => {
             router.push('/faltaAlumnos');
         };
 
         const publicarPregunta = () => {
-            console.log('Pregunta publicada:', nuevaPregunta.value)
+            console.log('Pregunta publicada:', nuevaPregunta.value);
+        };
 
-        }
+        const onFileChange = (e) => {
+            nuevoRecurso.archivo = e.target.files[0];
+        };
 
         const enviarRecurso = async () => {
-            console.log('Enviando recurso:')
-        }
+            console.log('Enviando recurso:', nuevoRecurso);
+            // lógica para enviar el recurso al servidor
+            mostrarPopupRecurso.value = false;
+        };
+
         const cargarSesiones = async () => {
             try {
                 const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
@@ -167,10 +142,11 @@ export default {
                 console.error(error);
             }
         };
+
         onMounted(() => {
             cargarRecursos();
             cargarSesiones();
-        })
+        });
 
         return {
             asignatura,
@@ -180,108 +156,23 @@ export default {
             nuevoRecurso,
             info,
             recursos,
-            formulario,
-            enviarRecurso,
             sesiones,
             publicarPregunta,
             goToFaltas,
-        }
-    },
-    methods: {
-        recuperarSesiones() {
-            axios.get(`http://localhost:8080/sesion`)
-                .then(response => {
-                    this.sesiones = response.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
-        publicarPregunta() {
-            alert('Pregunta Publicada');
-        },
-        async fetchProjects() {
-            try {
-                const response = await axios.get('http://localhost:8080/asignaturas');
-                this.projects = response.data;
-            } catch (error) {
-                console.error('Error fetching projects:', error);
-            }
-        },
-        goToProject(id) {
-            this.$router.push(`/asignatura/${id}`);
-        },
-        async enviarFormulario() {
-            if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
-                this.showError = true;
-                return;
-            }
-            try {
-                // Obtiene la id de la asignatura de la URL
-                const asignaturaId = this.$route.params.id;
-
-                if (!asignaturaId) {
-                    console.error('No se encontró la id de la asignatura');
-                    return;
-                }
-
-                // Agrega la id de la asignatura al objeto nuevaSesion
-                this.nuevaSesion.asignatura = asignaturaId;
-                console.log('Datos a enviar:', this.nuevaSesion);
-
-                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
-
-                if (respuesta.status === 200) {
-                    this.nuevaSesion.nombre = '';
-                    this.nuevaSesion.descripcion = '';
-                    // Obtiene la id de la sesión creada
-                    const sessionId = respuesta.data._id;
-
-                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
-
-                    console.log('Sesión creada con ID:', sessionId);
-
-                    this.fetchProjects();
-                    this.mostrarPopup = false;
-                } else {
-                    console.error('Error al enviar los datos:', respuesta.statusText)
-                }
-            } catch (error) {
-                console.error('Error en la petición fetch:', error)
-            }
-        },
-    },
-    created() {
-        this.fetchProjects();
+            onFileChange,
+            enviarRecurso
+        };
     }
-}
+};
 </script>
 
-
 <style scoped>
-input[type="text"] {
-    font-size: 16px;
-    border-radius: 5px;
-    border: none;
-    padding: 0.5rem;
-    width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-    margin-bottom: 1rem;
-    background-color: var(--input-background-color);
-    color: var(--text-color);
-}
-
-input[type="text"]:focus {
-    box-shadow: 0 0 0 2px var(--button-background-color);
-    outline: none;
-}
-
 .container {
     display: flex;
     flex-direction: column;
     padding: 1rem;
-    width: 70%;
+    width: 100%;
+    max-width: 1200px;
     margin: auto;
     justify-content: space-between;
     margin-bottom: 3rem;
@@ -302,19 +193,13 @@ h2 {
     display: flex;
     gap: 2rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
-.left-column {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-}
-
+.left-column,
 .right-column {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    min-width: 300px;
 }
 
 .section {
@@ -322,13 +207,8 @@ h2 {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
-}
-
-.section:not(:last-child) {
     margin-bottom: 1.5rem;
 }
-
 
 .session-item {
     cursor: pointer;
@@ -386,37 +266,15 @@ button.btn {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 button.btn:hover {
     background-color: var(--button-hover-background-color);
     color: black;
 }
-
-button.btn-cerrar {
-    background-color: #ff4d4d;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button.btn-cerrar:hover {
-    background-color: #ff1a1a;
-}
-
-h2 {
-    font-weight: bold;
-    margin-bottom: 2rem;
-}
-
-.button-container {
-    display: flex;
-    justify-content: space-between;
-}
-
 
 .modal {
     display: flex;
@@ -429,73 +287,108 @@ h2 {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-
 }
 
 .modal-content {
-    background-color: #e9e9e9;
     background-color: var(--container-background-color);
     padding: 2rem;
-    width: 65%;
-    min-height: 35%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    width: 80%;
+    max-width: 500px;
     position: relative;
 }
 
-.modal-content h2 {
-    text-align: center;
+.modal-content h3 {
     margin-bottom: 1rem;
-
 }
 
-.modal-content input[type="text"],
-.modal-content input[type="date"],
+.modal-content input,
 .modal-content textarea {
-    font-size: 16px;
-    border-radius: 5px;
-    border: none;
-    padding: 0.5rem;
     width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-    margin-bottom: 1rem;
+    padding: 0.5rem;
     background-color: var(--input-background-color);
-    color: var(--text-color);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
 }
 
 .modal-content textarea {
-    max-height: 550px;
-    min-height: 50px;
-    max-width: 385px;
-    min-width: 200px;
-    width: 385px;
-    height: 118px;
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
 }
 
-.modal-content input[type="text"]:focus,
-.modal-content input[type="date"]:focus,
-.modal-content textarea:focus {
-    box-shadow: 0 0 0 2px var(--button-background-color);
+:focus {
     outline: none;
+    box-shadow: 0 0 0 1px var(--button-background-color);
 }
 
-.saveButton {
+.modal-content .btn {
+    margin-right: 0.5rem;
+}
+
+.close {
     position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    background-color: #08cccc;
-    color: white;
-    border: none;
-    height: 2.5rem;
-    width: 9rem;
-    font-weight: bold;
-    border-radius: 5px;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
     cursor: pointer;
 }
 
-.saveButton:hover {
-    background-color: var(--button-hover-background-color);
-    border: var(--border-color);
-    color: black;
+.input-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.input-group input {
+    flex: 1;
+    min-width: 200px;
+}
+
+@media (max-width: 768px) {
+    .content {
+        flex-direction: column;
+    }
+}
+
+.button-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.button-container button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.new-section-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .input-group {
+        flex-direction: column;
+    }
+
+    .input-group input,
+    .input-group button {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
 }
 </style>

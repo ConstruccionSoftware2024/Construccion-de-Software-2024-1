@@ -64,6 +64,12 @@
                 Vista Alumno
             </button>
         </RouterLink>
+        <RouterLink to="/visualizarUrl" class="navLink">
+            <button>
+                Vista Url abiertas
+            </button>
+        </RouterLink>
+
     </div>
 
 

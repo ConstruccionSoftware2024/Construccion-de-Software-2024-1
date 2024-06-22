@@ -97,14 +97,21 @@
               <label for="campus">Campus</label>
               <div class="inputWrapper">
                 <i class="fas fa-university"></i>
-                <input type="text" id="campus" v-model="campus" placeholder="Ingresa tu campus" required />
+                <select id="campus" v-model="campus" @change="fetchCarreras" required>
+                  <option value="" disabled selected>Seleccionar campus</option>
+                  <option v-for="campus in campusOptions" :key="campus._id" :value="campus.campus">{{ campus.campus }}
+                  </option>
+                </select>
               </div>
             </div>
             <div class="inputGroup">
               <label for="major">Carrera</label>
               <div class="inputWrapper">
                 <i class="fas fa-graduation-cap"></i>
-                <input type="text" id="major" v-model="major" placeholder="Ingresa tu carrera" required />
+                <select id="major" v-model="major" :disabled="!isCampusSelected" required>
+                  <option value="" disabled selected>Seleccionar carrera</option>
+                  <option v-for="carrera in carreraOptions" :key="carrera" :value="carrera">{{ carrera }}</option>
+                </select>
               </div>
             </div>
             <div class="inputGroup">
@@ -164,6 +171,8 @@ export default {
       role: '',
       resetCode: '',
       passwordVisible: false,
+      campusOptions: [],
+      carreraOptions: [],
       isLogin: true,
       isResetPassword: false,
       showCodeInput: false,
@@ -171,7 +180,13 @@ export default {
       errorMessage: ''
     }
   },
+  created() {
+    this.fetchCampus();
+  },
   computed: {
+    isCampusSelected() {
+      return this.campus !== '';
+    },
     passwordFieldType() {
       return this.passwordVisible ? 'text' : 'password'
     },
@@ -180,6 +195,26 @@ export default {
     }
   },
   methods: {
+    async fetchCampus() {
+      try {
+        const response = await axios.get('http://localhost:8080/campus');
+        this.campusOptions = response.data;
+      } catch (error) {
+        console.error('Error al obtener campus:', error);
+      }
+    },
+    async fetchCarreras() {
+      if (this.campus) {
+        try {
+          const response = await axios.get(`http://localhost:8080/carreras/${this.campus}`);
+          this.carreraOptions = response.data;
+        } catch (error) {
+          console.error('Error al obtener carreras:', error);
+        }
+      } else {
+        this.carreraOptions = []; // Resetear opciones de carrera si no hay campus seleccionado
+      }
+    },
     showError(message) {
       this.errorMessage = message;
       this.showPopup = true;
@@ -189,20 +224,20 @@ export default {
       return regex.test(this.email);
     },
     validaRut(rutCompleto) {
-      rutCompleto = rutCompleto.replace("‐","-");
+      rutCompleto = rutCompleto.replace("‐", "-");
       if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
-          return false;
+        return false;
       let tmp = rutCompleto.split('-');
       let digv = tmp[1];
       let rut = tmp[0];
-      if (digv == 'K') digv = 'k' ;
+      if (digv == 'K') digv = 'k';
 
-      return (this.dv(rut) == digv );
+      return (this.dv(rut) == digv);
     },
     dv(T) {
       let M = 0, S = 1;
       for (; T; T = Math.floor(T / 10))
-          S = (S + T % 10 * (9 - M++ % 6)) % 11;
+        S = (S + T % 10 * (9 - M++ % 6)) % 11;
       return S ? S - 1 : 'k';
     },
     async login() {
@@ -215,6 +250,7 @@ export default {
         });
 
         if (response.data.success) {
+          this.$store.state.usuario = response.data.user
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);
@@ -246,7 +282,7 @@ export default {
             this.showError('Error al intentar restablecer la contraseña.');
           }
         }
-      }else {
+      } else {
         if (this.resetCode) {
           try {
             const response1 = await axios.post('http://localhost:8080/verifyResetCode', {
@@ -273,7 +309,6 @@ export default {
     },
     async register() {
       try {
-
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
@@ -340,7 +375,24 @@ export default {
   box-sizing: border-box;
 }
 
-.recovery{
+select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--button-background-color);
+}
+
+.recovery {
   width: 400px;
 }
 
