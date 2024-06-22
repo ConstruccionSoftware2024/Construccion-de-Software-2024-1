@@ -1,10 +1,13 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
+        <div class="containerTitle">
+            <h1>{{ nombreSesion }}</h1>
+            <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
+        </div>
         <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
+            <!--  <button @click="createSession">Crear Sesión</button> -->
             <button class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button @click="otherOptions">Otras Opciones</button>
+            <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -106,14 +109,34 @@ import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
+import { onMounted, ref } from 'vue';
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
+        let nombreSesion = ref('');
+
+        const obtenerDatosSesion = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/sessions/' + idRuta);
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    nombreSesion.value = datos.nombre;
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error);
+            }
+        };
+        onMounted(obtenerDatosSesion)
         return {
-            idRuta
+            idRuta,
+            nombreSesion,
         }
     },
+
+
 
     data() {
 
@@ -129,16 +152,11 @@ export default {
         };
     },
 
-    /*  mounted() {
-         if (this.$store.state.usuario.role == "alumno") {
-             this.$router.push('/')
-         }
-     }, */
-
     created() {
         this.fetchUsers();
         this.mounted();
     },
+
     name: 'ProfesorPage',
     components: {
         BotonNotificar,
@@ -402,7 +420,7 @@ export default {
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
-                    sesion_id : this.sessionId
+                    sesion_id: this.sessionId
                 });
                 console.log(response.data);
 
@@ -585,6 +603,12 @@ export default {
     color: #333;
     width: 80%;
     max-width: 1200px;
+}
+
+.dashboard {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
 }
 
 .dashboard button {
@@ -912,5 +936,18 @@ th {
         padding: 8px 16px;
         font-size: 0.9rem;
     }
+
+}
+
+.containerTitle {
+    display: flex;
+    color: white;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.claseNumeroSesion {
+    font-size: medium;
+    color: gray;
 }
 </style>

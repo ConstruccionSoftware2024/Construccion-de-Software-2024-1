@@ -346,7 +346,7 @@ app.post('/resetPassword', async (req, res) => {
   await User.updateOne({ email }, { $set: { resetCode: resetCode } });
 
   let transporter = nodemailer.createTransport({
-    service: 'outlook', 
+    service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
       pass: 'RkUFFzM1LUTk'
@@ -386,8 +386,8 @@ app.post('/verifyResetCode', async (req, res) => {
     }
 
     if (user.resetCode === code) {
-      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
-      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
     } else {
       res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
     }
