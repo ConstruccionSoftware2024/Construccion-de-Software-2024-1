@@ -15,7 +15,6 @@ import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
 import Footer from './components/ComponentesGrupoJoaquin/Footer.vue'
 import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router';
-
 const themeStore = useThemeStore();
 const themeClass = computed(() => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode'))
 const router = useRouter();
@@ -23,6 +22,7 @@ const router = useRouter();
 watch(themeClass, (newClass) => {
     document.body.className = newClass
 })
+ 
 
 // Cambiar tema
 const toggleTheme = () => {
@@ -60,11 +60,9 @@ window.addEventListener('beforeunload', function (event) {
 }
 
 .main-content {
-    flex: 1;
-    min-height: 90vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  min-height: 90vh;
+  justify-content: center;
+  align-items: center;
 }
 
 footer {
