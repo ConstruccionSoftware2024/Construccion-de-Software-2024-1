@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../../../back-end/src/store.js'
-import { useRouter } from 'vue-router';
 
 let alertas = ref([]);
 let idUsuario = ref(null)
@@ -128,12 +127,6 @@ const marcarMensajeComoLeido = async (idMensaje) => {
     }
 }
 
-const gotoMensajes = () => {
-    const router = useRouter()
-    router.push('/mensajes')
-}
-
-
 
 </script>
 
@@ -148,9 +141,14 @@ const gotoMensajes = () => {
             <ul class="lista1" v-for="mensaje in mensajes " :key="mensaje.id">
                 <!-- solo mostramos los mensajes que no han sido visto -->
                 <li class="notificacion" v-if="!mensaje.visto">
-                    <p style="">
-                        {{ mensaje.mensaje }}
-                    </p>
+                    <div class="info">
+                        <p style="">
+                            {{ mensaje.mensaje }}
+                        </p>
+                        <p class="sesion">
+                            {{ mensaje.sesion }}
+                        </p>
+                    </div>
                     <div @click="marcarMensajeComoLeido(mensaje._id)" class="novisto" v-if="!mensaje.visto"
                         title="Marcar como visto">
                         <div class="puntito2"></div>
@@ -196,6 +194,11 @@ a {
     padding: 1rem 3.3rem;
 }
 
+.sesion {
+    color: #08cccc;
+    font-size: .9rem;
+}
+
 .vermas {
     background-color: #2c2c2e;
     outline: none;
@@ -222,6 +225,7 @@ a {
 ul.lista1 {
     padding-left: 0;
     list-style: none;
+    width: 100%;
 }
 
 .novisto {
@@ -329,8 +333,8 @@ ul.lista1 {
     list-style-type: none;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    transition: all 0.3s;
     display: flex;
+    justify-content: space-between;
     transition: all .3s ease;
     border-radius: 15px;
     gap: .5rem;
@@ -343,7 +347,7 @@ ul.lista1 {
 }
 
 .notificacion:hover {
-    background-color: #323233;
+    /* background-color: #323233; */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 </style>

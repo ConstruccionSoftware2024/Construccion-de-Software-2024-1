@@ -346,7 +346,7 @@ app.post('/resetPassword', async (req, res) => {
   await User.updateOne({ email }, { $set: { resetCode: resetCode } });
 
   let transporter = nodemailer.createTransport({
-    service: 'outlook', 
+    service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
       pass: 'RkUFFzM1LUTk'
@@ -386,8 +386,8 @@ app.post('/verifyResetCode', async (req, res) => {
     }
 
     if (user.resetCode === code) {
-      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
-      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
     } else {
       res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
     }
@@ -824,12 +824,24 @@ app.post('/message', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('mensajes')
+
+    let sesionaGuardar = req.body.session
+
+    const collSesiones = database.collection('sesion')
+    const sesiones = await collSesiones.find({}).toArray()
+
+    //traemos la información de la sesion correspondiente
+    let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
+    console.log(sesionCorrecta)
+
     const newMessage = {
       destinatario: req.body.destinatario,
       mensaje: req.body.mensaje,
       remitente: req.body.remitente,
       visto: false,
-      alerta: ''
+      alerta: '',
+      //guardamos el nombre de la sesion
+      sesion: sesionCorrecta[0].nombre
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)

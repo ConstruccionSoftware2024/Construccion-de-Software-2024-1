@@ -48,12 +48,18 @@ const cargarMensajes = async () => {
     <h2>{{ usuario }} </h2>
     <div class="container">
 
+        <div class="mensaje" v-if="info.length === 0">
+            No tienes notificaciones
+        </div>
         <div class="mensaje" v-for="mensaje in info">
             <h3>
                 {{ mensaje.mensaje }}
             </h3>
-            <h4 v-if="mensaje.visto">visto</h4>
-            <h4 v-else>pendiente</h4>
+            <h4>
+                {{ mensaje.sesion }}
+            </h4>
+            <p v-if="mensaje.visto">visto</p>
+            <p v-else>pendiente</p>
 
         </div>
 
@@ -73,6 +79,7 @@ h2 {
 
 h3 {
     font-size: 1rem;
+    font-weight: bold;
 }
 
 h4 {
