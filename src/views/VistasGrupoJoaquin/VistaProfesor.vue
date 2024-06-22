@@ -50,7 +50,7 @@
                             <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
-                            <BotonNotificar :participante="alumno" />
+                            <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
@@ -62,7 +62,7 @@
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-                    selectedStudent.secondLastName }}</h2>
+            selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -402,7 +402,7 @@ export default {
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
-                    sesion_id : this.sessionId
+                    sesion_id: this.sessionId
                 });
                 console.log(response.data);
 
