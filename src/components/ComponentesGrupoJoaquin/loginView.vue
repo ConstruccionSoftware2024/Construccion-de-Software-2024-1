@@ -25,17 +25,21 @@
           </div>
           <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
         </form>
-        <form v-else-if="isResetPassword" class="" key="">
-          <div class="">
-            <div class="inputGroup">
-              <div class="inputWrapper">
-                <i class="fas fa-at"></i>
-                <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
-              </div>
+        <form v-else-if="isResetPassword">
+          <div class="inputGroup">
+            <div class="inputWrapper">
+              <i class="fas fa-at"></i>
+              <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
             </div>
           </div>
-          <button class="loginButton" @click="submitResetPassword">Enviar</button>
-        </form> 
+          <div class="inputGroup" v-if="showCodeInput">
+            <div class="inputWrapper">
+              <i class="fas fa-key"></i>
+              <input type="text" id="resetCode" v-model="resetCode" placeholder="Ingresa tu código" required />
+            </div>
+          </div>
+          <button class="loginButton" @click.prevent="submitResetPassword">Enviar</button>
+        </form>
         <form v-else key="register">
           <div class="formGrid">
             <div class="inputGroup">
@@ -93,14 +97,21 @@
               <label for="campus">Campus</label>
               <div class="inputWrapper">
                 <i class="fas fa-university"></i>
-                <input type="text" id="campus" v-model="campus" placeholder="Ingresa tu campus" required />
+                <select id="campus" v-model="campus" @change="fetchCarreras" required>
+                  <option value="" disabled selected>Seleccionar campus</option>
+                  <option v-for="campus in campusOptions" :key="campus._id" :value="campus.campus">{{ campus.campus }}
+                  </option>
+                </select>
               </div>
             </div>
             <div class="inputGroup">
               <label for="major">Carrera</label>
               <div class="inputWrapper">
                 <i class="fas fa-graduation-cap"></i>
-                <input type="text" id="major" v-model="major" placeholder="Ingresa tu carrera" required />
+                <select id="major" v-model="major" :disabled="!isCampusSelected" required>
+                  <option value="" disabled selected>Seleccionar carrera</option>
+                  <option v-for="carrera in carreraOptions" :key="carrera" :value="carrera">{{ carrera }}</option>
+                </select>
               </div>
             </div>
             <div class="inputGroup">
@@ -158,14 +169,24 @@ export default {
       rut: '',
       matricula: '',
       role: '',
+      resetCode: '',
       passwordVisible: false,
+      campusOptions: [],
+      carreraOptions: [],
       isLogin: true,
       isResetPassword: false,
+      showCodeInput: false,
       showPopup: false,
       errorMessage: ''
     }
   },
+  created() {
+    this.fetchCampus();
+  },
   computed: {
+    isCampusSelected() {
+      return this.campus !== '';
+    },
     passwordFieldType() {
       return this.passwordVisible ? 'text' : 'password'
     },
@@ -174,6 +195,26 @@ export default {
     }
   },
   methods: {
+    async fetchCampus() {
+      try {
+        const response = await axios.get('http://localhost:8080/campus');
+        this.campusOptions = response.data;
+      } catch (error) {
+        console.error('Error al obtener campus:', error);
+      }
+    },
+    async fetchCarreras() {
+      if (this.campus) {
+        try {
+          const response = await axios.get(`http://localhost:8080/carreras/${this.campus}`);
+          this.carreraOptions = response.data;
+        } catch (error) {
+          console.error('Error al obtener carreras:', error);
+        }
+      } else {
+        this.carreraOptions = []; // Resetear opciones de carrera si no hay campus seleccionado
+      }
+    },
     showError(message) {
       this.errorMessage = message;
       this.showPopup = true;
@@ -183,23 +224,25 @@ export default {
       return regex.test(this.email);
     },
     validaRut(rutCompleto) {
-      rutCompleto = rutCompleto.replace("‐","-");
+      rutCompleto = rutCompleto.replace("‐", "-");
       if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
-          return false;
+        return false;
       let tmp = rutCompleto.split('-');
       let digv = tmp[1];
       let rut = tmp[0];
-      if (digv == 'K') digv = 'k' ;
+      if (digv == 'K') digv = 'k';
 
-      return (this.dv(rut) == digv );
+      return (this.dv(rut) == digv);
     },
     dv(T) {
       let M = 0, S = 1;
       for (; T; T = Math.floor(T / 10))
-          S = (S + T % 10 * (9 - M++ % 6)) % 11;
+        S = (S + T % 10 * (9 - M++ % 6)) % 11;
       return S ? S - 1 : 'k';
     },
     async login() {
+      console.log('email:', this.email);
+      console.log('password:', this.password);
       try {
         const response = await axios.post('http://localhost:8080/login', {
           email: this.email,
@@ -207,6 +250,7 @@ export default {
         });
 
         if (response.data.success) {
+          this.$store.state.usuario = response.data.user
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);
@@ -223,24 +267,48 @@ export default {
       this.isLogin = false;
     },
     async submitResetPassword() {
-      if (this.email) {
-        try {
-          const response = await axios.post('http://localhost:8080/resetPassword', { email: this.email });
-          if (response.data.success) {
-            alert('Revisa tu correo electrónico para las instrucciones de restablecimiento de contraseña.');
-            this.showResetForm = false; // Opcional: Volver al inicio de sesión después de enviar el correo
-          } else {
-            this.showError('No se pudo enviar el correo de restablecimiento de contraseña.');
+      if (!this.showCodeInput) {
+        if (this.email) {
+          try {
+            const response = await axios.post('http://localhost:8080/resetPassword', { email: this.email });
+            if (response) {
+              this.showError('Revisa tu correo electrónico para las instrucciones de restablecimiento de contraseña.');
+              this.showCodeInput = true;
+            } else {
+              this.showError('No se pudo enviar el correo de restablecimiento de contraseña.');
+            }
+          } catch (error) {
+            console.error(error);
+            this.showError('Error al intentar restablecer la contraseña.');
           }
-        } catch (error) {
-          console.error(error);
-          this.showError('Error al intentar restablecer la contraseña.');
+        }
+      } else {
+        if (this.resetCode) {
+          try {
+            const response1 = await axios.post('http://localhost:8080/verifyResetCode', {
+              email: this.email,
+              code: this.resetCode,
+            });
+            if (response1.data.success) {
+              this.showError('Código verificado correctamente. Por favor, establece tu nueva contraseña.');
+              const response = await axios.post('http://localhost:8080/loginInsta', {
+                email: response1.data.email
+              });
+              this.email = response.data.email2;
+              this.password = response.data.password;
+              this.login();
+            } else {
+              this.showError('Código incorrecto. Por favor, inténtalo de nuevo.');
+            }
+          } catch (error) {
+            console.error('Error al verificar el código:', error);
+            this.showError('Ocurrió un error al verificar el código. Por favor, inténtalo de nuevo más tarde.');
+          }
         }
       }
     },
     async register() {
       try {
-
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
@@ -266,7 +334,7 @@ export default {
           secondLastName: this.secondLastName,
           rut: this.rut,
           matricula: this.matricula,
-          role: 'Estudiante',
+          role: 'alumno',
           campus: this.campus,
           major: this.major,
         });
@@ -307,7 +375,24 @@ export default {
   box-sizing: border-box;
 }
 
-.recovery{
+select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--button-background-color);
+}
+
+.recovery {
   width: 400px;
 }
 

@@ -2,8 +2,9 @@
 
     <body>
         <section id="home">
-            <div class="home-left">
-                <img src="./imagenes/logo.png" alt="">
+            <div class="home-left" style="text-align: center;">
+                <img src="@/assets/logo.svg" alt="">
+                <h2 class="text">Cheat Detector</h2>
             </div>
             <div class="home-right">
                 <h2 class="home-heading"> Evita las copias en las evaluaciones</h2>
@@ -34,31 +35,30 @@
             <h2>Nuestro equipo</h2>
             <div class="teamContainer">
                 <div class="team-item">
-                    <img src="./imagenes/joaquin.jpg" alt="">
+                    <img src="./imagenes/joaquin.jpg" alt="" title="Discord: ascencio">
                     <h5 class="member-name">Joaquín Ascencio</h5>
                     <span class="role">SCRUM MASTER</span>
                 </div>
                 <div class="team-item">
-                    <img src="./imagenes/felipe.png" alt="">
+                    <img src="./imagenes/felipe.png" alt="" title="Discord: pipefck">
                     <h5 class="member-name">Felipe Castillo</h5>
                     <span class="role">SCRUM MASTER</span>
                 </div>
                 <div class="team-item">
-                    <img src="./imagenes/claudio.png" alt="">
+                    <img src="./imagenes/claudio.png" alt="" title="Discord: claudioha_1901">
                     <h5 class="member-name">Claudio Hernández</h5>
                     <span class="role">SCRUM MASTER</span>
                 </div>
                 <div class="team-item">
-                    <img src="./imagenes/rodrigo.png" alt="">
+                    <img src="./imagenes/rodrigo.png" alt="" title="Discord: lavolamagik">
                     <h5 class="member-name">Rodrigo Domínguez</h5>
                     <span class="role">GIT MASTER</span>
                 </div>
                 <div class="team-item">
-                    <img src="./imagenes/agustin.jpg" alt="">
+                    <img src="./imagenes/agustin.jpg" alt="" title="Discord: tintinn">
                     <h5 class="member-name">Agustín Meza</h5>
                     <span class="role">GIT MASTER</span>
                 </div>
-
             </div>
         </section>
         <footer>
@@ -79,6 +79,16 @@
     padding: 0;
     box-sizing: border-box;
     font-family: sans-serif;
+}
+
+a {
+    text-decoration: none;
+}
+
+.text {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-top: -50px;
 }
 
 .navbar {
@@ -135,6 +145,7 @@
 
 .home-left {
     height: 300px;
+    margin-left: 100px;
     position: relative;
 }
 
@@ -305,6 +316,19 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+}
+
+.teamContainer img {
+    width: 100%;
+    cursor: pointer;
+    border-radius: 10px;
+    filter: drop-shadow(3px 4px 5px black);
+    transition: all 0.2s linear;
+}
+
+.teamContainer img:hover {
+    transform: translateY(-5px);
+    filter: drop-shadow(5px 6px 7px black);
 }
 
 .team-item {

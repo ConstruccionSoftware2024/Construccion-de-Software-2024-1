@@ -2,7 +2,8 @@
     <div class="container">
         <h2>Copiar link de invitación</h2>
         <p>Comparte este link con tus alumnos para invitarlos a la sesión</p>
-        <p class="link" v-if="linkGenerated">{{ link }} <font-awesome-icon class="icono-clipboard" :icon="['far', 'copy']" @click="copiarAlPortapapeles"/> </p>
+        <p class="link" v-if="linkGenerated">{{ link }} <font-awesome-icon class="icono-clipboard"
+                :icon="['far', 'copy']" @click="copiarAlPortapapeles" /> </p>
     </div>
 </template>
 
@@ -25,10 +26,10 @@ const recuperarLinks = async () => {
 const copiarAlPortapapeles = () => {
     navigator.clipboard.writeText(link.value);
     Swal.fire({
-            title: '¡Link copiado al portapapeles!',
-            confirmButtonText: 'Cerrar',
-            timer: 800,
-        });
+        title: '¡Link copiado al portapapeles!',
+        confirmButtonText: 'Cerrar',
+        timer: 800,
+    });
 }
 
 onMounted(recuperarLinks);
@@ -36,7 +37,7 @@ onMounted(recuperarLinks);
 </script>
 
 <style scoped>
-.container{
+.container {
     margin-top: 0.9rem;
     display: flex;
     flex-direction: column;
@@ -45,7 +46,7 @@ onMounted(recuperarLinks);
     border-radius: 1rem;
 }
 
-.link{
+.link {
     margin: 15px 5px;
     border: 1px solid #9a9a9a;
     padding: 10px;
@@ -55,13 +56,13 @@ onMounted(recuperarLinks);
     align-items: center;
 }
 
-h2{
+h2 {
     margin-top: 0.8rem;
 }
 
 
 
-.icono-clipboard{
+.icono-clipboard {
     margin-left: 10px;
     cursor: pointer;
     font-size: 20px;
@@ -69,5 +70,4 @@ h2{
     background-color: #08cccc;
     border-radius: 5px;
 }
-
 </style>

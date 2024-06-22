@@ -13,6 +13,7 @@ import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
 import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
+import VisualizarUrl from '@/views/VistasGrupoJoaquin/VisualizarUrl.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
 import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
 import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
@@ -34,6 +35,11 @@ const router = createRouter({
       path: '/listaAsignaturas',
       name: 'asignaturas',
       component: asignaturas
+    },
+    {
+      path: '/visualizarUrl',
+      name: 'VisualizarUrl',
+      component: VisualizarUrl
     },
     {
       path: '/modulos',
@@ -91,13 +97,18 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
+      path: '/crear-evaluacion/:id',
+      name: 'CrearEvaluacion',
+      component: CrearEvaluacion
+    },
+    {
       path: '/vistaProfesor/:id',
       name: 'VistaProfesor',
       component: VistaProfesor
     },
     {
       path: '/vistaAlumno/:id',
-      name: 'vistaAlumno',
+      name: 'VistaAlumno',
       component: VistaAlumno
     },
     {
@@ -136,6 +147,11 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
     },
     {
+      path: '/HistorialSesiones',
+      name: 'HistorialSesiones',
+      component: () => import('../components/ComponentesGrupoFelipe/HistorialSesiones.vue')
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('../views/VistasGrupoFelipe/about.vue')
@@ -160,7 +176,17 @@ const router = createRouter({
       path: '/:catchAll(.*)/',
       name: 'not-found',
       component: notFound
-    }
+    },
+    {
+      path: '/ContactoAlumno',
+      name: 'contactoalumno',
+      component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue')
+    },
+    {
+      path: '/VerForo',
+      name: 'VerForo',
+      component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     return { top: 0 }
