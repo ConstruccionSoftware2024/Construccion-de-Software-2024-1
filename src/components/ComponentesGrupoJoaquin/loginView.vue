@@ -309,7 +309,6 @@ export default {
     },
     async register() {
       try {
-
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
