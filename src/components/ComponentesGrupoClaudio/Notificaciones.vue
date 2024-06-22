@@ -191,6 +191,9 @@ const gotoMensajes = () => {
 a {
     text-decoration: none;
     color: white;
+    height: 100%;
+    width: 100%;
+    padding: 1rem 3.3rem;
 }
 
 .vermas {
