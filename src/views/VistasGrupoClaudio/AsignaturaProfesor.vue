@@ -5,7 +5,7 @@
             <div class="left-column">
                 <div class="section">
                     <h2><i class="fa-solid fa-list-ul"></i> Listado de Sesiones</h2>
-                    <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/session/' + sesion._id"
+                    <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/vistaProfesor/' + sesion._id"
                         class="session-item">
                         <div class="session-content">
                             <p class="session-name"> {{ sesion.nombre }}</p>
@@ -49,15 +49,32 @@
             </div>
         </div>
 
-        <!-- Popup for creating session -->
-        <div v-if="mostrarPopup" class="popup">
-            <form @submit.prevent="enviarFormulario">
-                <h3>Crear nueva sesión</h3>
-                <input required placeholder="Nombre de la sesión" type="text" id="nombre" v-model="formulario.nombre">
-                <input required placeholder="Descripción" type="text" id="descripcion" v-model="formulario.descripcion">
-                <input type="submit" class="btn" value="Crear sesión">
-                <button @click="mostrarPopup = false" class="btn-cerrar">Cerrar</button>
-            </form>
+        <div class="modal" v-if="mostrarPopup">
+            <div class="modal-content">
+                <span class="close" @click="mostrarPopup = false">&times;</span>
+                <div class="add-falta">
+                    <h2>Crear nueva sesión</h2>
+                    <div class="input-group">
+                        <div class="input-middle" style="display: flex; justify-content: space-between;">
+                            <div style="flex: 1; margin-right: 10px;">
+                                <p class="text-form">Nombre de la sesión</p>
+                                <input required placeholder="Nombre de la sesión" type="text" id="nombre"
+                                    v-model="nuevaSesion.nombre">
+                            </div>
+                            <div style="flex: 1; margin-left: 10px;">
+                                <p class="text-form">Descripción</p>
+                                <input required placeholder="Descripción" type="text" id="descripcion"
+                                    v-model="nuevaSesion.descripcion">
+                            </div>
+                        </div>
+                        <div v-if="showError" class="error-message">
+                            Por favor complete todos los campos.
+                        </div>
+                    </div>
+                    <button @click.prevent="enviarFormulario" class="saveButton"
+                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                </div>
+            </div>
         </div>
 
         <!-- Popup for adding resource -->
@@ -80,6 +97,17 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 export default {
+    data() {
+        return {
+            sesiones: [],
+            mostrarPopup: false,
+            nuevaSesion: {
+                nombre: '',
+                descripcion: '',
+                asignatura: ''
+            },
+        }
+    },
     setup() {
         const sesiones = ref([]);
         const router = useRouter();
@@ -115,10 +143,6 @@ export default {
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
 
-        }
-
-        const enviarFormulario = async () => {
-            console.log('Enviando formulario:', formulario)
         }
 
         const enviarRecurso = async () => {
@@ -157,12 +181,78 @@ export default {
             info,
             recursos,
             formulario,
-            enviarFormulario,
             enviarRecurso,
             sesiones,
             publicarPregunta,
             goToFaltas,
         }
+    },
+    methods: {
+        recuperarSesiones() {
+            axios.get(`http://localhost:8080/sesion`)
+                .then(response => {
+                    this.sesiones = response.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        publicarPregunta() {
+            alert('Pregunta Publicada');
+        },
+        async fetchProjects() {
+            try {
+                const response = await axios.get('http://localhost:8080/asignaturas');
+                this.projects = response.data;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        },
+        goToProject(id) {
+            this.$router.push(`/asignatura/${id}`);
+        },
+        async enviarFormulario() {
+            if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                this.showError = true;
+                return;
+            }
+            try {
+                // Obtiene la id de la asignatura de la URL
+                const asignaturaId = this.$route.params.id;
+
+                if (!asignaturaId) {
+                    console.error('No se encontró la id de la asignatura');
+                    return;
+                }
+
+                // Agrega la id de la asignatura al objeto nuevaSesion
+                this.nuevaSesion.asignatura = asignaturaId;
+                console.log('Datos a enviar:', this.nuevaSesion);
+
+                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
+
+                if (respuesta.status === 200) {
+                    this.nuevaSesion.nombre = '';
+                    this.nuevaSesion.descripcion = '';
+                    // Obtiene la id de la sesión creada
+                    const sessionId = respuesta.data._id;
+
+                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
+
+                    console.log('Sesión creada con ID:', sessionId);
+
+                    this.fetchProjects();
+                    this.mostrarPopup = false;
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+    },
+    created() {
+        this.fetchProjects();
     }
 }
 </script>
@@ -317,20 +407,95 @@ button.btn-cerrar:hover {
     background-color: #ff1a1a;
 }
 
+h2 {
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
 .button-container {
     display: flex;
     justify-content: space-between;
 }
 
-.popup {
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 2rem;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+
+}
+
+.modal-content {
+    background-color: #e9e9e9;
+    background-color: var(--container-background-color);
+    padding: 2rem;
+    width: 65%;
+    min-height: 35%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content textarea {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+.modal-content textarea {
+    max-height: 550px;
+    min-height: 50px;
+    max-width: 385px;
+    min-width: 200px;
+    width: 385px;
+    height: 118px;
+}
+
+.modal-content input[type="text"]:focus,
+.modal-content input[type="date"]:focus,
+.modal-content textarea:focus {
+    box-shadow: 0 0 0 2px var(--button-background-color);
+    outline: none;
+}
+
+.saveButton {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: #08cccc;
+    color: white;
+    border: none;
+    height: 2.5rem;
+    width: 9rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.saveButton:hover {
+    background-color: var(--button-hover-background-color);
+    border: var(--border-color);
+    color: black;
 }
 </style>
