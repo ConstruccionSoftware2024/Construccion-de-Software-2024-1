@@ -160,6 +160,30 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
+//Obtener campus
+app.get('/carreras/:campus', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campus = req.params.campus;
+    const carrerasData = await collection.findOne({ campus: campus });
+    res.send(carrerasData ? carrerasData.carreras : []);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+//Obtener Carreras
+app.get('/campus', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campusData = await collection.find({}).project({ campus: 1 }).toArray();
+    res.send(campusData);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -346,7 +370,7 @@ app.post('/resetPassword', async (req, res) => {
   await User.updateOne({ email }, { $set: { resetCode: resetCode } });
 
   let transporter = nodemailer.createTransport({
-    service: 'outlook', 
+    service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
       pass: 'RkUFFzM1LUTk'
@@ -386,8 +410,8 @@ app.post('/verifyResetCode', async (req, res) => {
     }
 
     if (user.resetCode === code) {
-      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
-      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
     } else {
       res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
     }
