@@ -49,7 +49,8 @@
                             <!-- Si "accion" es true se banea, si no, no -->
                             <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
-                            <button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>
+                            <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
+                            <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
@@ -61,7 +62,7 @@
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-                    selectedStudent.secondLastName }}</h2>
+            selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -104,8 +105,15 @@
 import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
-
+import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 export default {
+    setup() {
+        const route = useRoute();
+        const idRuta = route.params.id;
+        return {
+            idRuta
+        }
+    },
 
     data() {
 
@@ -115,16 +123,26 @@ export default {
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
-            selectedStudent: null,
-            sessionId: '665d1794a22b8d44afad0793',
-            users: []
+            selectedStudent: '',
+            sessionId: this.idRuta,
+            users: [],
         };
     },
+
+    /*  mounted() {
+         if (this.$store.state.usuario.role == "alumno") {
+             this.$router.push('/')
+         }
+     }, */
+
     created() {
         this.fetchUsers();
         this.mounted();
     },
     name: 'ProfesorPage',
+    components: {
+        BotonNotificar,
+    },
     methods: {
         /*async fetchSessionData() {
             try {
@@ -206,6 +224,11 @@ export default {
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
+        },
+        calculateTotalDangerousApps(students) {
+            return students.reduce((total, student) => {
+                return total + student.apps.filter(app => app.status === 'Peligro').length;
+            }, 0);
         },
         createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
@@ -378,7 +401,8 @@ export default {
                 console.log(selectedUsers.map(user => user._id));
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
-                    users: selectedUsers.map(user => user._id)
+                    users: selectedUsers.map(user => user._id),
+                    sesion_id: this.sessionId
                 });
                 console.log(response.data);
 

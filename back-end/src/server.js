@@ -264,7 +264,7 @@ app.post('/login', async (req, res) => {
 
     // Mostrar historial de login
     const historial = await historialLogin.find().toArray()
-    console.log('Historial de login:', historial)
+    //console.log('Historial de login:', historial)
 
     res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
@@ -272,10 +272,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
-
-
-
-
 
 app.post('/register', async (req, res) => {
   const {
@@ -338,22 +334,83 @@ app.post('/register', async (req, res) => {
 app.post('/resetPassword', async (req, res) => {
   const { email } = req.body;
 
-  const database = client.db('construccion')
-  const User = database.collection('users')
-  const user = await User.findOne({ email })
+  const database = client.db('construccion');
+  const User = database.collection('users');
+  const user = await User.findOne({ email });
   if (!user) {
     return res.status(404).send('Usuario no encontrado.');
   }
 
+  const resetCode = Math.random().toString(36).substring(2, 15);
+
+  await User.updateOne({ email }, { $set: { resetCode: resetCode } });
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: 'Código de reseteo de contraseña',
+    text: `Tu código de reseteo es: ${resetCode}`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).send('Error al enviar el correo.');
+    } else {
+      console.log('Email enviado: ' + info.response);
+      return res.send('Correo de reseteo enviado.');
+    }
+  });
 });
 
-app.get('/reset-password', async (req, res) => {
-  const { token } = req.query;
+app.post('/verifyResetCode', async (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ success: false, message: 'Email y código son requeridos.' });
+  }
   try {
-    jwt.verify(token, SECRET_KEY);
-    res.redirect('http://localhost:8080/pagina-de-restablecimiento?token=' + token);
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    if (user.resetCode === code) {
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
+    } else {
+      res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
+    }
   } catch (error) {
-    res.status(400).send('El enlace de restablecimiento no es válido o ha expirado.');
+    console.error('Error al verificar el código de restablecimiento:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+  }
+});
+
+app.post('/loginInsta', async (req, res) => {
+  const correo = req.body.email;
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: correo });
+    if (user) {
+      const password = user.password;
+      const email2 = user.email;
+      res.json({ success: true, password, email2 });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -373,7 +430,7 @@ app.get('/verify', async (req, res) => {
   const { token } = req.query
   try {
     const decoded = jwt.verify(token, SECRET_KEY)
-    const rol = 'Estudiante'
+    const rol = 'alumno'
     const {
       email,
       username,
@@ -391,7 +448,7 @@ app.get('/verify', async (req, res) => {
 
     const emailDomain = email.split('@')[1];
     if (emailDomain === 'utalca.cl') {
-      rol = 'Profesor';
+      rol = 'profesor';
     }
 
     const database = client.db('construccion')
@@ -484,7 +541,6 @@ app.post('/edit_password', async (req, res) => {
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
       const poster = await User.updateOne(filter, { $set: update1 })
-      console.log(poster)
     }
   } catch (error) {
     console.error(error)
@@ -497,8 +553,9 @@ app.post('/anadir_Usuario', async (req, res) => {
     const database = client.db('construccion')
     const Sesion = database.collection('sesion')
     const nuevos_usuarios = req.body.users;
+    const sesion_id = req.body.sesion_id;
 
-    const result = await Sesion.updateOne({ _id: new ObjectId('665d1794a22b8d44afad0793') }, { $push: { participantes: { $each: nuevos_usuarios } } });
+    const result = await Sesion.updateOne({ _id: new ObjectId(sesion_id) }, { $push: { participantes: { $each: nuevos_usuarios } } });
 
     if (result.matchedCount === 0) {
       res.status(404).send('No se encontró la sesión con el id proporcionado');
@@ -767,12 +824,24 @@ app.post('/message', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('mensajes')
+
+    let sesionaGuardar = req.body.session
+
+    const collSesiones = database.collection('sesion')
+    const sesiones = await collSesiones.find({}).toArray()
+
+    //traemos la información de la sesion correspondiente
+    let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
+    console.log(sesionCorrecta)
+
     const newMessage = {
       destinatario: req.body.destinatario,
       mensaje: req.body.mensaje,
       remitente: req.body.remitente,
       visto: false,
-      alerta: ''
+      alerta: '',
+      //guardamos el nombre de la sesion
+      sesion: sesionCorrecta[0].nombre
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
@@ -868,3 +937,52 @@ app.put('/message/:id', async (req, res) => {
 
 
 
+
+
+// Enviar email (página contacto)
+app.post('/send-email', async (req, res) => {
+  let { fullName, email, mobile, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: 'pruebas.construccion2024@outlook.com',
+    subject: `Mensaje de ${fullName}`,
+    text: `Nombre: ${fullName}\nEmail: ${email}\nTeléfono: ${mobile}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
+/* revisiar esta funcion de grupo joaquin*/
+app.post('/guardar-procesos', async (req, res) => {
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/historial');
+    const aplicaciones = response.data;
+
+    if (aplicaciones.length > 0) {
+      await collection.insertOne(aplicaciones);
+      res.status(200).send('Historial guardado en la base de datos');
+    } else {
+      res.status(204).send('No hay aplicaciones para guardar');
+    }
+  } catch (error) {
+    console.error('Error al guardar el historial:', error);
+    res.status(500).send('Error al guardar el historial');
+  }
+});
