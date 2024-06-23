@@ -20,6 +20,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.5.2",
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@google/generative-ai": "^0.12.0",
     "@kouts/vue-modal": "^2.1.12",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
@@ -32,12 +33,14 @@
     "mongodb": "^6.7.0",
     "nodemailer": "^6.9.13",
     "npm": "^10.8.1",
+    "pdf-lib": "^1.17.1",
     "pinia": "^2.1.7",
     "pip": "^0.0.1",
     "sweetalert2": "^11.11.1",
     "uuid": "^9.0.1",
     "vue": "^3.4.21",
-    "vue-router": "^4.1.6",
+    "vue-router": "^4.3.0",
+    "vuex": "^4.0.2",
     "xpress": "^2.4.6"
   },
   "devDependencies": {

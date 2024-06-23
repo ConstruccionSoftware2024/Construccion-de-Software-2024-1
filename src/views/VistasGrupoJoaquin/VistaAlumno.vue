@@ -25,7 +25,8 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-                <button @click="guardarHistorial">Guardar procesos</button>
+                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR--> 
+                
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -52,6 +53,11 @@ import axios from 'axios';
 import Chart from 'chart.js/auto';
 
 export default {
+    mounted() {
+        if (this.$store.state.usuario.role == "profesor") {
+            this.$router.push('/listaAsignaturas')
+        }
+    },
     setup() {
         const sessionId = ref('');
         const totalApps = ref(0);
@@ -73,6 +79,8 @@ export default {
                     return '#FFFFFF';
             }
         });
+
+
 
         const createSession = () => {
             // Lógica para unirse a una sesión

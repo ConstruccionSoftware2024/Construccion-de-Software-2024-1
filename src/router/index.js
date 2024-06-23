@@ -142,6 +142,11 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
     },
     {
+      path: '/HistorialSesiones',
+      name: 'HistorialSesiones',
+      component: () => import('../components/ComponentesGrupoFelipe/HistorialSesiones.vue')
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('../views/VistasGrupoFelipe/about.vue')
@@ -166,7 +171,17 @@ const router = createRouter({
       path: '/:catchAll(.*)/',
       name: 'not-found',
       component: notFound
-    }
+    },
+    {
+      path: '/ContactoAlumno',
+      name: 'contactoalumno',
+      component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue')
+    },
+    {
+      path: '/VerForo',
+      name: 'VerForo',
+      component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     return { top: 0 }
