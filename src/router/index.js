@@ -62,11 +62,6 @@ const router = createRouter({
       component: HistorialEvaluaciones
     },
     {
-      path: '/crearevaluacion',
-      name: 'crearevaluacion',
-      component: CrearEvaluacion
-    },
-    {
       path: '/home',
       name: 'home',
       component: HomeView
@@ -97,7 +92,7 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
-      path: '/crear-evaluacion/:id',
+      path: '/crear-evaluacion/:sesionId',
       name: 'CrearEvaluacion',
       component: CrearEvaluacion
     },
