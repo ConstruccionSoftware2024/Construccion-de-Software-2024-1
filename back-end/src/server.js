@@ -83,6 +83,19 @@ app.get('/asignatura/:id', async (req, res) => {
   }
 });
 
+app.get('/asignaturas/:alumnoId', async (req, res) => {
+  try {
+    const alumnoId = new ObjectId(req.params.alumnoId);
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find({ members: { $in: [alumnoId] } }).toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
 app.get('/faltas', async (req, res) => {
   try {
     const database = client.db('construccion')
