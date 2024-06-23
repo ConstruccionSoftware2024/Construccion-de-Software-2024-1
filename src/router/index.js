@@ -97,6 +97,11 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
+      path: '/crear-evaluacion/:id',
+      name: 'CrearEvaluacion',
+      component: CrearEvaluacion
+    },
+    {
       path: '/vistaProfesor/:id',
       name: 'VistaProfesor',
       component: VistaProfesor

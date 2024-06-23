@@ -5,10 +5,9 @@ avisos.*/
   <div class="general-div">
     <h1>Faltas {{ asignatura.title }}</h1>
 
-    <table class="lista-alumnos">
+    <table v-if="faltasFiltradas.length" class="lista-alumnos">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Matricula</th>
           <th>Nombre</th>
           <th>Apellido Paterno</th>
@@ -21,12 +20,11 @@ avisos.*/
       <tbody>
         <template v-for="(falta, index) in faltasFiltradas" :key="falta._id">
           <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
-            <td>{{ falta._id }}</td>
             <td>{{ falta.matricula }}</td>
-            <td>{{ falta.name }}</td>
-            <td>{{ falta.lastName }}</td>
-            <td>{{ falta.secondLastName }}</td>
-            <td>{{ falta.email }}</td>
+            <td>{{ falta.nombre }}</td>
+            <td>{{ falta.apellidoPat }}</td>
+            <td>{{ falta.apellidoMat }}</td>
+            <td>{{ falta.correo }}</td>
             <td>{{ falta.campus }}</td>
             <td>{{ falta.detalleFaltas.length }}</td>
           </tr>
@@ -43,6 +41,9 @@ avisos.*/
         </template>
       </tbody>
     </table>
+    <div v-else>
+      <span>No hay faltas.</span>
+    </div>
     <button @click="showAddFalta = true" class="addButton">Agregar Falta</button>
 
 
@@ -58,14 +59,6 @@ avisos.*/
                 <select v-model="selectedAlumno" placeholder="Seleccionar alumno">
                   <option v-for="alumno in alumnos" :key="alumno._id" :value="alumno._id">
                     {{ alumno.firstName }} {{ alumno.lastName }} {{ alumno.secondLastName }}
-                  </option>
-                </select>
-              </div>
-              <p class="text-form">Seleccionar profesor</p>
-              <div class="custom-select">
-                <select v-model="selectedProfesor">
-                  <option v-for="profesor in profesores" :key="profesor.id" :value="profesor">
-                    {{ profesor }}
                   </option>
                 </select>
               </div>
@@ -95,6 +88,8 @@ avisos.*/
 
 <script>
 import axios from 'axios'
+
+import { useUserStore } from '../../../back-end/src/store.js'
 export default {
   data() {
     return {
@@ -106,15 +101,16 @@ export default {
       motivo: '',
       fecha: '',
       showAddFalta: false,
-      profesores: ['Daniel Moreno', 'Ricardo Perez', 'Luis Silvestre', 'Rodrigo Paredes', 'Matthew Bardeen'],
-      selectedProfesor: '',
       showError: false,
       asignaturaId: null,
       faltasFiltradas: [],
       asignatura: {}
     }
   },
-
+  setup() {
+    const userStore = useUserStore();
+    return { userStore }
+  },
   async created() {
     this.asignaturaId = this.$route.params.id;
 
@@ -124,31 +120,16 @@ export default {
     } catch (error) {
       console.error(error);
     }
-    try {
-      const response = await axios.get('http://localhost:8080/faltas')
-      this.faltas = response.data
-      this.faltasFiltradas = this.faltas.map(falta => {
-        if (falta && falta.detalleFaltas) {
-          return {
-            ...falta,
-            detalleFaltas: falta.detalleFaltas.filter(detalle => detalle.asignatura === this.asignaturaId)
-          };
-        } else {
-          return falta;
-        }
-      }).filter(falta => falta.detalleFaltas.length > 0);
-    } catch (error) {
-      console.error(error)
-    }
 
-
+    this.fetchFaltas()
     this.fetchUsers()
   },
   methods: {
     async fetchUsers() {
       try {
         const response = await axios.get('http://localhost:8080/users')
-        this.alumnos = response.data
+        const users = response.data
+        this.alumnos = users.filter(user => user.role === 'alumno' && this.asignatura.members.includes(user._id));
       } catch (error) {
         console.error('Failed to fetch users', error)
       }
@@ -167,14 +148,14 @@ export default {
           } else {
             return falta;
           }
-        }).filter(falta => falta.detalleFaltas.length > 0);
+        }).filter(falta => falta.detalleFaltas && falta.detalleFaltas.length > 0);
       } catch (error) {
-        console.error('Failed to fetch faltas', error)
+        console.error(error)
       }
     },
     async guardarFalta() {
       const selectedAlumnoData = this.alumnos.find((alumno) => alumno._id === this.selectedAlumno)
-      if (!selectedAlumnoData || !this.selectedProfesor || !this.falta || !this.motivo || !this.fecha) {
+      if (!selectedAlumnoData || !this.falta || !this.motivo || !this.fecha) {
         this.showError = true;
         return;
       }
@@ -182,35 +163,23 @@ export default {
         falta: this.falta,
         fecha: this.fecha,
         motivo: this.motivo,
-        profesor: this.selectedProfesor,
+        profesor: this.userStore.user.firstName + ' ' + this.userStore.user.lastName + ' ' + this.userStore.user.secondLastName,
         asignatura: this.asignaturaId
       }
-      console.log()
-      const newAlumno = {
-        _id: selectedAlumnoData._id,
-        matricula: selectedAlumnoData.matricula,
-        name: selectedAlumnoData.firstName,
-        lastName: selectedAlumnoData.lastName,
-        secondLastName: selectedAlumnoData.secondLastName,
-        email: selectedAlumnoData.email,
-        campus: selectedAlumnoData.campus,
-        rut: selectedAlumnoData.rut,
-        faltas: 1,
-        estado: 'Ninguno',
-        detalleFaltas: [newFalta]
-      }
+
       try {
-        await axios.post('http://localhost:8080/faltas-post', newAlumno)
+        await axios.post(`http://localhost:8080/addFaltas/${this.selectedAlumno}`, newFalta)
+        this.showAddFalta = false;
+        this.fetchFaltas()
       } catch (error) {
-        console.error('Failed to post new alumno', error)
+        console.error('Failed to save falta', error)
       }
 
       this.selectedAlumno = ''
       this.falta = ''
       this.motivo = ''
       this.fecha = ''
-      this.showAddFalta = false
-      this.fetchFaltas()
+      this.fetchUsers()
     },
     cerrarModal() {
       this.showError = false;
@@ -249,7 +218,7 @@ export default {
 .general-div {
   text-align: center;
   justify-content: center;
-
+  align-items: center;
 }
 
 .detail-falta {
@@ -268,7 +237,9 @@ export default {
 
 .lista-alumnos {
   border-collapse: collapse;
-  width: 100%;
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 
@@ -421,10 +392,10 @@ th {
 }
 
 h1 {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   font-size: 2.5rem;
   font-weight: bold;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 
 h2 {
