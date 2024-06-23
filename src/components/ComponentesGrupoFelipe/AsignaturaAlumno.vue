@@ -254,7 +254,7 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998; /* Asegúrate de que este valor sea menor que el del pop-up pero suficiente para cubrir el resto */
+  z-index: 998;
 }
 
 .popup {
@@ -262,7 +262,7 @@ onMounted(async () => {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: white;
+    background-color: var(--container-background-color);
     padding: 2rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
