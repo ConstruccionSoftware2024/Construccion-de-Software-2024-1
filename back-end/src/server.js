@@ -239,6 +239,36 @@ app.get('/sessions/:id', async (req, res) => {
   }
 });
 
+app.post('/guardarEvaluacion', async (req, res) => {
+  const { evaluacion, sesionId } = req.body;
+
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('evaluaciones');
+
+    // Verifica que el sesionId es un ObjectId válido
+    let objectId;
+    try {
+      objectId = new ObjectId(sesionId);
+    } catch (error) {
+      return res.status(400).json({ success: false, message: 'Invalid session ID format', error: error.message });
+    }
+
+    // Inserta la evaluación en la colección de evaluaciones
+    const result = await collection.insertOne({
+      ...evaluacion,
+      sesionId: objectId
+    });
+
+    res.status(200).json({ success: true, result });
+  } catch (error) {
+    console.error('Error al guardar la evaluación:', error);
+    res.status(500).json({ success: false, message: 'Error al guardar la evaluación', error: error.message });
+  }
+});
+
+
+
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
   try {
