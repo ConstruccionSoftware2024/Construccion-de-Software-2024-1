@@ -25,8 +25,8 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR--> 
-                
+                <button @click="guardarHistorial">Guardar procesos</button>
+
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -105,7 +105,9 @@ export default {
         };
 
         const guardarHistorial = () => {
-            axios.post('http://localhost:8080/guardar-procesos')
+            const procesos = history.value.map(proceso => proceso.name);
+            const procesosString = procesos.join(',');
+            axios.post('http://localhost:8080/guardar-procesos', { procesos: procesosString })
                 .then(response => {
                     console.log('Historial guardado correctamente:', response.data);
                 })

@@ -346,7 +346,7 @@ app.post('/resetPassword', async (req, res) => {
   await User.updateOne({ email }, { $set: { resetCode: resetCode } });
 
   let transporter = nodemailer.createTransport({
-    service: 'outlook', 
+    service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
       pass: 'RkUFFzM1LUTk'
@@ -386,8 +386,8 @@ app.post('/verifyResetCode', async (req, res) => {
     }
 
     if (user.resetCode === code) {
-      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
-      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
     } else {
       res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
     }
@@ -960,15 +960,16 @@ app.post('/guardar-procesos', async (req, res) => {
   const database = client.db('construccion');
   const collection = database.collection('procesos');
   try {
-    const response = await axios.get('http://127.0.0.1:5000/historial');
-    const aplicaciones = response.data;
-
-    if (aplicaciones.length > 0) {
-      await collection.insertOne(aplicaciones);
-      res.status(200).send('Historial guardado en la base de datos');
-    } else {
-      res.status(204).send('No hay aplicaciones para guardar');
-    }
+    const procesos = req.body.procesos;
+    await collection.insertOne({ procesos: procesos })
+      .then(result => {
+        console.log('Datos guardados en MongoDB:', result.ops);
+        res.send('Datos recibidos y guardados en MongoDB');
+      })
+      .catch(err => {
+        console.error('Error al guardar datos en MongoDB:', err);
+        res.status(500).send('Error interno del servidor al guardar datos en MongoDB');
+      });
   } catch (error) {
     console.error('Error al guardar el historial:', error);
     res.status(500).send('Error al guardar el historial');
