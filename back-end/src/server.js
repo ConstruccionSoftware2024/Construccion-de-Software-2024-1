@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { MongoClient, ObjectId } from 'mongodb'
+import { Collection, MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
 import dotenv from 'dotenv'
 import { log } from 'console'
@@ -737,18 +737,61 @@ app.post('/banearExpulsar/:id', async (req, res) => {
       }
     }
 
-    const removeResult = await collection.updateOne(
+    else {
+      const removeResult = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $pull: { participantes: userId } }
+      );
+      if (removeResult.modifiedCount > 0) {
+        if (resultMessage) {
+          resultMessage += ' y expulsado de la lista de participantes.';
+        } else {
+          resultMessage = 'Alumno expulsado de la lista de participantes.';
+        }
+      }
+      else {
+        if (!resultMessage) {
+          return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+        }
+      }
+    }
+
+    res.json({ success: true, message: resultMessage });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/desbanear/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const unbannedEmail = req.body.email;
+    console.log(sessionId, unbannedEmail);
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    let resultMessage = '';
+    const addResult = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
-      { $pull: { participantes: userId } }
+      { $pull: { banlist: unbannedEmail } }
     );
 
-    if (removeResult.modifiedCount > 0) {
+    if (addResult.modifiedCount > 0) {
       if (resultMessage) {
-        resultMessage += ' y expulsado de la lista de participantes.';
+        resultMessage += ' y agregado a la lista de participantes.';
       } else {
-        resultMessage = 'Alumno expulsado de la lista de participantes.';
+        resultMessage = 'Alumno expulsado de la lista de baneados.';
       }
-    } else {
+    }
+    else {
       if (!resultMessage) {
         return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
       }
@@ -761,7 +804,28 @@ app.post('/banearExpulsar/:id', async (req, res) => {
   }
 });
 
+app.get('/bannedusers/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const sessionCollection = database.collection('sesion');
+    const sessionId = { _id: new ObjectId(req.params.id) };
+    const session = await sessionCollection.findOne(sessionId);
 
+    if (!session) {
+      return res.status(404).send('Sesión no encontrada');
+    }
+    const banlist = session.banlist || [];
+    // Obtener la información completa de los participantes
+    //const participantes = await getParticipantDetails(session.participantes, usersCollection);
+
+    //session.participantes = participantes;
+
+    res.json(banlist);
+  } catch (error) {
+    console.error('Error fetching session data:', error);
+    res.status(500).send(error.message);
+  }
+});
 
 app.post('/agregarParticipante', async (req, res) => {
   try {

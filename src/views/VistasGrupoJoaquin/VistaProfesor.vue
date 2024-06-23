@@ -35,15 +35,21 @@
                 </thead>
                 <tbody>
                     <tr v-for="alumno in alumnos" :key="alumno._id">
-                        <td>{{ alumno.matricula }}</td>
-                        <td>{{ alumno.firstName }}</td>
-                        <td>{{ alumno.lastName }}</td>
-                        <td>{{ alumno.secondLastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.matricula }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.firstName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.lastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.secondLastName }}
+                        </td>
                         <td
-                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
                             {{ alumno.status }}
                         </td>
-                        <td>
+                        <td v-if="!alumnosBaneados.includes(alumno.email)"
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
                             <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
@@ -54,6 +60,11 @@
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
+                        <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
+                            style="font-size: 20px;">
+                            <b>Baneado</b>
+                            <button class="actionButton desban" @click="unbanStudent(alumno)">Desbanear</button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -62,7 +73,7 @@
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-            selectedStudent.secondLastName }}</h2>
+                    selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -114,11 +125,11 @@ export default {
             idRuta
         }
     },
-
     data() {
 
         return {
             alumnos: [],
+            alumnosBaneados: [],
             session: {},
             totalDangerousApps: 0,
             lastActivity: '',
@@ -136,6 +147,7 @@ export default {
      }, */
 
     created() {
+        this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
     },
@@ -328,7 +340,9 @@ export default {
         async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
-                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    if (!accion) {
+                        this.alumnos = this.alumnos.filter(al => al !== student)
+                    }
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
                     if (!response.ok) {
@@ -410,8 +424,27 @@ export default {
                 console.error(error);
             }
         },
+        async alumnosbaneados() {
+            try {
+                const response = await axios.get('http://localhost:8080/bannedusers/' + this.sessionId);
 
-    }
+                this.alumnosBaneados = response.data
+                console.log(this.alumnosBaneados)
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        async unbanStudent(student) {
+            try {
+                const response = await axios.post('http://localhost:8080/desbanear/' + this.sessionId, { email: student.email });
+                console.log(response.data)
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+    },
 };
 
 </script>
@@ -835,6 +868,19 @@ th {
 
 .closeButton:hover {
     background-color: var(--button-hover-background-color);
+}
+
+.row-red {
+    background-color: #E52B50;
+}
+
+.ban-text {
+    color: white;
+}
+
+.desban {
+    margin-left: 7vw;
+    background-color: #008000;
 }
 
 @media (max-width: 1200px) {
