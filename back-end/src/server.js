@@ -714,7 +714,6 @@ app.post('/banearExpulsar/:id', async (req, res) => {
     const bannedEmail = req.body.email;
     const userId = req.body.userId;
     const banear = req.body.banear;
-    console.log(sessionId, bannedEmail, userId, banear);
 
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
@@ -769,7 +768,6 @@ app.post('/desbanear/:id', async (req, res) => {
     const collection = database.collection('sesion');
     const sessionId = req.params.id;
     const unbannedEmail = req.body.email;
-    console.log(sessionId, unbannedEmail);
 
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
