@@ -25,7 +25,6 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-                <button @click="guardarHistorial">Guardar procesos</button>
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
@@ -97,23 +96,31 @@ export default {
             }
         };
         const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
-
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling             
+            guardarHistorial(); // Guarda el historial inmediatamente al iniciar              
             setInterval(async () => {
-                await fetchHistory(); // Actualiza el historial cada intervalo
-            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
+                await fetchHistory(); // Actualiza el historial cada intervalo                 
+                await guardarHistorial(); // Guarda el historial cada intervalo             
+            }, 30000); // Intervalo de 30 segundos
         };
 
         const guardarHistorial = () => {
             const procesos = history.value.map(proceso => proceso.name);
             const procesosString = procesos.join(',');
-            axios.post('http://localhost:8080/guardar-procesos', { procesos: procesosString })
+            axios.post('http://localhost:8080/checkTabs', { procesos: procesosString }) // Endpoint para verificar en el servidor
                 .then(response => {
-                    console.log('Historial guardado correctamente:', response.data);
+                    if (response.data.exists) {
+                        console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
+                        return; // Si los datos ya existen, no se hace nada más
+                    }
+                    axios.post('http://localhost:8080/guardar-procesos', { procesos: procesosString })
+                        .then(response => {
+                            console.log('Historial guardado correctamente:', response.data);
+                        })
+                        .catch(error => {
+                            console.error('Error al guardar el historial:', error);
+                        });
                 })
-                .catch(error => {
-                    console.error('Error al guardar el historial:', error);
-                });
         };
 
         onMounted(() => {

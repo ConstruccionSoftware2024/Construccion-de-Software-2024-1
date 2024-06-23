@@ -975,3 +975,27 @@ app.post('/guardar-procesos', async (req, res) => {
     res.status(500).send('Error al guardar el historial');
   }
 });
+
+app.post('/checkTabs', (req, res) => {
+  const procesos = req.body.procesos;
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+
+  // Buscar si ya existe algún documento con las mismas URLs en la colección
+  collection.findOne({ procesos: procesos })
+    .then(doc => {
+      if (doc) {
+        // Si se encuentra un documento, significa que las URLs ya existen
+        console.log('Las URLs ya existen en la base de datos:', doc);
+        res.json({ exists: true }); // Responder que los datos ya existen
+      } else {
+        // Si no se encuentra ningún documento, las URLs no existen aún
+        console.log('Las URLs no existen en la base de datos, se pueden procesar.');
+        res.json({ exists: false }); // Responder que los datos no existen y pueden ser procesados
+      }
+    })
+    .catch(err => {
+      console.error('Error al buscar en la base de datos:', err);
+      res.status(500).send('Error interno del servidor al buscar en la base de datos');
+    });
+});
