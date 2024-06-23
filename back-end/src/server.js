@@ -83,6 +83,22 @@ app.get('/asignatura/:id', async (req, res) => {
   }
 });
 
+app.get('/evaluacion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('evaluaciones');
+    const consulta = { sesionId: new ObjectId(req.params.id) };
+    const evaluaciones = await collection.find(consulta).toArray();
+    if (evaluaciones) {
+      res.send(evaluaciones);
+    } else {
+      res.status(404).send('Evaluacion no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 app.get('/faltas/', async (req, res) => {
   try {
     const db = client.db('construccion');

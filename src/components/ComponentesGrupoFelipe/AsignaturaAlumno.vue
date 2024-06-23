@@ -105,6 +105,7 @@ const asignatura = ref({
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
 });
 
+const sesiones = ref([]);
 const showAviso = ref(false);
 
 const contactarProfesor = async () => {
@@ -137,7 +138,7 @@ async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
         .then(async response => {
             asignatura.value = response.data;
-            console.log("asignatura: ", asignatura.value);
+            console.log("asignatura: ", asignatura);
             recuperarProfesor(response.data.profesorId);
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);

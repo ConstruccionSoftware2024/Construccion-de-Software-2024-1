@@ -20,6 +20,15 @@
                     </div>
             </div>
 
+            <div class="evaluations box-shadow">
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Evaluaciones</h3>
+                <div class="listaEvaluaciones">
+                    <div class="sesionesItem" v-for="eva in evaluations" :key="eva.id">
+                        <router-link :to="'/vistaEvaluacion/'+eva._id" class="navLink"><span class="session-title">{{ eva.nombre }}</span></router-link>
+                    </div>
+                </div>
+            </div>
+
             <div class="history box-shadow">
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
@@ -68,6 +77,7 @@ export default {
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
         const history = ref([]);
+        const evaluations = ref([]);
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -89,9 +99,18 @@ export default {
                     return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
                 });
             } catch (error) {
-                console.error('Error fetching history:', error);
+                //console.error('Error fetching history:', error);
             }
         };
+        async function recuperarEvaluaciones(id) {
+            await axios.get(`http://localhost:8080/evaluacion/${id}`)
+                .then(async response => {
+                    evaluations.value = response.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
         const startPolling = () => {
             fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
 
@@ -103,16 +122,17 @@ export default {
         const guardarHistorial = () => {
             axios.post('http://localhost:8080/guardar-procesos')
                 .then(response => {
-                    console.log('Historial guardado correctamente:', response.data);
+                    //console.log('Historial guardado correctamente:', response.data);
                 })
                 .catch(error => {
-                    console.error('Error al guardar el historial:', error);
+                    //console.error('Error al guardar el historial:', error);
                 });
         };
 
         onMounted(() => {
             startPolling();
             fetchHistory();
+            recuperarEvaluaciones(idRuta);
 
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
             new Chart(statusChartCtx, {
@@ -183,6 +203,7 @@ export default {
             dangerColor,
             history,
             idRuta,
+            evaluations,
             downloadLink: '/public/Downloads/Procesos-exe.exe',
             guardarHistorial,
         };
@@ -316,6 +337,34 @@ button {
     padding: 20px;
     background-color: var(--container-background-color);
     border-radius: 10px;
+}
+
+.evaluations {
+    margin-bottom: 20px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: var(--container-background-color);
+    border-radius: 10px;
+}
+
+.listaEvaluaciones{
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.navLink {
+    text-decoration: none;
+    color: var(--text-color);
+    display: block;
+    padding: 10px 10px;
+    border-radius: 5px;
+    background-color: var(--gray-text-color);
+    margin-bottom: 0.5rem;
+}
+
+.navLink:hover {
+    background-color: var(--gray-hover-color);
 }
 
 .history table {
