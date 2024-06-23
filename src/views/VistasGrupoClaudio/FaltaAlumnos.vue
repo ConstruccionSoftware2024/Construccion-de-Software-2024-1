@@ -3,7 +3,7 @@ avisos.*/
 
 <template>
   <div class="general-div">
-    <h1>Faltas Alumnos</h1>
+    <h1>Lista Alumnos</h1>
 
     <table class="lista-alumnos">
       <thead>
@@ -15,6 +15,7 @@ avisos.*/
           <th>Apellido Paterno</th>
           <th>Apellido Materno</th>
           <th>Correo</th>
+          <th>Campus</th>
           <th>Faltas</th>
         </tr>
       </thead>
@@ -28,6 +29,7 @@ avisos.*/
             <td>{{ falta.lastName }}</td>
             <td>{{ falta.secondLastName }}</td>
             <td>{{ falta.email }}</td>
+            <td>{{ falta.campus }}</td>
             <td>{{ falta.faltas }}</td>
           </tr>
           <tr v-if="selectedFalta === index">
@@ -160,6 +162,7 @@ export default {
         lastName: selectedAlumnoData.lastName,
         secondLastName: selectedAlumnoData.secondLastName,
         email: selectedAlumnoData.email,
+        campus: selectedAlumnoData.campus,
         rut: selectedAlumnoData.rut,
         faltas: 1,
         estado: 'Ninguno',
