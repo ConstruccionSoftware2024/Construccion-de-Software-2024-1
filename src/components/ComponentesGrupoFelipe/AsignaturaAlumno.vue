@@ -41,10 +41,21 @@
         </div>
 
         <div class="seccion2">
+            <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
             <div class="faltas">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas</h3>
-                <p>Resumen de Faltas: [Número de Faltas]</p>
-                <button>Ver Detalles</button>
+                <p>Cantidad de Faltas: {{faltaAlumnos.faltas}}</p>
+                <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
+                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de faltas</h1>
+                    <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
+                        <p class="subtitle">Falta: <span>{{falta.falta}}</span></p>
+                        <p class="subtitle">Fecha: <span>{{falta.fecha}}</span></p>
+                        <p class="subtitle">Profesor: <span> {{falta.profesor}}</span></p>
+                        <p class="subtitle">Descripción: <span>{{falta.motivo}}</span></p>
+                    </div>
+                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon :icon="['fas', 'circle-xmark']" /> Cerrar</button>
+                </div>
+                <button @click="toggleDetallesFaltas">Ver Detalles</button>
             </div>
 
             <div class="fechas">
@@ -77,12 +88,37 @@ import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '../../../back-end/src/store.js';
+import Swal from 'sweetalert2';
 
 const route = useRoute();
 const id = route.params.id;
 
 const userStore = useUserStore();
 const rolUsuario = userStore.user.role;
+const idUsuario = userStore.user._id;
+
+const mostrarDetallesFaltas = ref(false);
+
+const faltaAlumnos = ref([]);
+
+const toggleDetallesFaltas = () => {
+    mostrarDetallesFaltas.value = !mostrarDetallesFaltas.value;
+
+    if (faltaAlumnos.value.faltas === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'No hay faltas registradas',
+            timer: 1200
+        });
+    }
+};
+
+const closePopUp = (event) => {
+  if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value){
+    mostrarDetallesFaltas.value = false;
+  }
+}
 
 const asignatura = ref({
     nombre: 'Nombre Ejemplo',
@@ -117,7 +153,6 @@ async function recuperarAsignatura(id) {
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);
             sesiones.value = sesionesResultados;
-            console.log(sesiones.value);
         })
         .catch(error => {
             console.error(error);
@@ -134,6 +169,21 @@ async function recuperarProfesor(id) {
         });
 }
 
+async function recuperarFaltas(id) {
+    await axios.get(`http://localhost:8080/faltas/${id}`)
+        .then(response => {
+            if (response.data.length === 0) {
+                faltaAlumnos.value.faltas = 0;
+            }else{
+                faltaAlumnos.value = response.data;
+            }
+            return response.data;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
 function determinarRuta(id, rol) {
     if (rol === 'profesor') {
         return { name: 'VistaProfesor', params: { id: id } };
@@ -144,12 +194,69 @@ function determinarRuta(id, rol) {
 
 onMounted(async () => {
     recuperarAsignatura(id);
-
+    recuperarFaltas(idUsuario);
+    window.addEventListener('click', closePopUp);
 });
 
 </script>
 
 <style scoped>
+.pop-up-detalles-faltas {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--container-background-color);
+  padding: 20px;
+  border: 1px solid #ccc;
+  z-index: 1000;
+  width: 50%;
+  border-radius: 12px;
+  max-height: 70%;
+  overflow-y: auto;
+}
+
+.itemDetalleFaltas{
+    margin-bottom: 10px;
+    background-color: var(--gray-text-color);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.titleFaltas{
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.subtitle{
+    font-weight: bold;
+}
+
+.closeButton{
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998; /* Asegúrate de que este valor sea menor que el del pop-up pero suficiente para cubrir el resto */
+}
+
 .popup {
     position: fixed;
     top: 50%;
