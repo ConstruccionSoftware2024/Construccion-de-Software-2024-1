@@ -345,8 +345,10 @@ export default {
                     }
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
-                    if (!response.ok) {
-                        throw new Error('Error al actualizar la lista de participantes')
+                    if (response.status === 200) {
+                        await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                    } else {
+                        throw new Error('Error al actualizar la lista de participantes');
                     }
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -438,7 +440,12 @@ export default {
         async unbanStudent(student) {
             try {
                 const response = await axios.post('http://localhost:8080/desbanear/' + this.sessionId, { email: student.email });
-                console.log(response.data)
+
+                if (response.status === 200) {
+                    await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                } else {
+                    throw new Error('Error al actualizar la lista de participantes');
+                }
 
             } catch (error) {
                 console.error('Error fetching users:', error);
