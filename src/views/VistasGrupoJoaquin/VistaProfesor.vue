@@ -62,7 +62,7 @@
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-            selectedStudent.secondLastName }}</h2>
+                    selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -79,15 +79,41 @@
                 <h2 class="modal__title_añadir">Añadir Alumno</h2>
                 <div class="wrap-check-58">
                     <div class="round">
+                        <div class="input-container_añadir">
+                            <input type="text" name="text" v-model="searchQuery" class="input_añadir"
+                                placeholder="Buscar por nombre...">
+                            <span class="icon_añadir">
+                                <svg width="19px" height="19px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path opacity="1" d="M14 5H20" stroke="#000" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path opacity="1" d="M14 8H17" stroke="#000" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path
+                                            d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2"
+                                            stroke="#000" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round"></path>
+                                        <path opacity="1" d="M22 22L20 20" stroke="#000" stroke-width="3.5"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </g>
+                                </svg>
+                            </span>
+                        </div>
                         <ul name="user" id="user" class="modal__select_añadir">
-                            <li v-for="user in users" :key="user._id" class="listar_alumnos">
-
-                                <input type="checkbox" v-model="user.selected" class="input_alumnos">
-
-                                <span class="dato_alumno">{{ user.matricula }}</span>
-                                <span class="dato_alumno">{{ user.firstName }}</span>
-                                <span class="dato_alumno">{{ user.lastName }}</span>
-
+                            <li v-for="user in filteredUsers" :key="user._id" class="listar_alumnos">
+                                <label class="container_check">
+                                    <input type="checkbox" v-model="user.selected">
+                                    <div class="checkmark_check">
+                                        <div class="input_alumnos">
+                                            <span class="dato_alumno">{{ user.matricula }}</span>
+                                            <span class="dato_alumno">{{ user.firstName }}</span>
+                                            <span class="dato_alumno">{{ user.lastName }}</span>
+                                        </div>
+                                    </div>
+                                </label>
                             </li>
                         </ul>
                     </div>
@@ -126,6 +152,7 @@ export default {
             selectedStudent: '',
             sessionId: this.idRuta,
             users: [],
+            searchQuery: '',
         };
     },
 
@@ -398,12 +425,13 @@ export default {
         async anadir_Usuario() {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
-                console.log(selectedUsers.map(user => user._id));
+                //console.log(selectedUsers.map(user => user._id));
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
                 });
+                location.reload();
                 console.log(response.data);
 
             } catch (error) {
@@ -411,20 +439,79 @@ export default {
             }
         },
 
-    }
+
+    },
+    computed: {
+        // Filtra los usuarios basándose en el campo de búsqueda
+        filteredUsers() {
+            return this.users.filter(user => {
+                const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                return fullName.includes(this.searchQuery.toLowerCase());
+            });
+        },
+    },
 };
 
 </script>
 
 <style scoped>
-.container_check {
-    display: flex;
+.input_alumnos {
+    padding-left: 30px;
+}
 
-    align-items: center;
+.round {
+    width: 150%;
+    margin-left: 10px;
+}
+
+.input-container_añadir {
+    width: 130%;
+    position: relative;
+    margin-left: -20%;
+}
+
+.icon_añadir {
+    position: absolute;
+    right: 10px;
+    top: calc(50% + 5px);
+    transform: translateY(calc(-50% - 5px));
+}
+
+.input_añadir {
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    transition: .2s linear;
+    border: 2.5px solid black;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+}
+
+.input_añadir:focus {
+    outline: none;
+    border: 0.5px solid black;
+    box-shadow: -5px -5px 0px black;
+}
+
+.input-container_añadir:hover>.icon_añadir {
+    animation: anim 1s linear infinite;
+}
+
+@keyframes anim {
+
+    0%,
+    100% {
+        transform: translateY(calc(-50% - 5px)) scale(1);
+    }
+
+    50% {
+        transform: translateY(calc(-50% - 5px)) scale(1.1);
+    }
 }
 
 .container_check {
-    display: flex;
     --input-focus: #2d8cf0;
     --input-out-of-focus: #ccc;
     --bg-color: #fff;
@@ -432,12 +519,12 @@ export default {
     --main-color: #323232;
     position: relative;
     cursor: pointer;
+
 }
 
 .container_check input {
     position: absolute;
     opacity: 0;
-    display: flex;
 }
 
 .checkmark_check {
@@ -445,12 +532,13 @@ export default {
     height: 30px;
     position: relative;
     top: 0;
-    left: -500;
+    left: 0;
     border: 2px solid var(--main-color);
     border-radius: 5px;
     box-shadow: 4px 4px var(--main-color);
     background-color: var(--input-out-of-focus);
     transition: all 0.3s;
+    margin-left: -5%;
 }
 
 .container_check input:checked~.checkmark_check {
@@ -464,13 +552,14 @@ export default {
     position: absolute;
     top: 2px;
     left: 8px;
+    display: none;
     border: solid var(--bg-color);
     border-width: 0 2.5px 2.5px 0;
     transform: rotate(45deg);
 }
 
 .container_check input:checked~.checkmark_check:after {
-    display: none;
+    display: block;
 }
 
 .botones_añadir {
@@ -485,8 +574,6 @@ export default {
     margin-top: 1%;
     list-style-type: none;
     font-size: 1.2rem;
-    text-align: left;
-
 }
 
 .hero__cta {
@@ -502,6 +589,13 @@ export default {
 .hero__cta:hover {
     background-color: #fff;
     color: #1e3c72;
+}
+
+.modal__select_añadir {
+    max-height: 220px;
+    overflow-y: auto;
+    width: 135%;
+    margin-left: -30%;
 }
 
 .modal_añadir {
@@ -529,14 +623,14 @@ export default {
 
 .modal__container_añadir {
     margin: auto;
-    width: 90%;
+    width: 100%;
     max-width: 600px;
     max-height: 90%;
     background-color: #fff;
     border-radius: 6px;
-    padding: 3em 2.5em;
+    padding: 1em 1em;
     display: grid;
-    gap: 1em;
+    gap: 0.5em;
     place-items: center;
     grid-auto-columns: 100%;
     transform: var(--transform);
