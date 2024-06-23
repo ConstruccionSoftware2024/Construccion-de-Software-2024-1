@@ -395,7 +395,7 @@ export default {
             axios.get('http://localhost:8080/users')
                 .then(response => {
                     console.log("ID\n" + response.data.map(user => user._id));
-                    this.users = allUsers.filter(user => !participantesIds.includes(user._id));
+                    this.users = allUsers.filter(user => !participantesIds.includes(user._id) && user.role == 'alumno');
                     //console.log("a\n" + this.users.map(user => user._id));
                 })
                 .catch(error => {
