@@ -1,32 +1,31 @@
 <template>
     <div class="alumno-page">
         <main>
-            <div class="session-info box-shadow">
-                <h2>Sesion id: <input v-model="sessionId" /></h2>
-                <button @click="createSession">Unirse a Sesión</button>
-            </div>
+            <h1>Sesion id: {{ sessionId }}</h1>
             <div class="danger-level box-shadow" :style="{ backgroundColor: dangerColor }">
-                <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
-                <p>{{ dangerMessage }}</p>
-            </div>
-            <div class="charts">
-                <div class="chart-container box-shadow">
-                    <canvas id="statusChart"></canvas>
+                    <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
+                    <p>{{ dangerMessage }}</p>
                 </div>
-                <div class="chart-info box-shadow">
-                    <h3>Datos del Gráfico</h3>
-                    <p>Aplicaciones totales: {{ totalApps }}</p>
-                    <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
-                    <p>Última Actividad: {{ lastActivity }}</p>
-                    <canvas id="appsChart"></canvas>
-                </div>
+
+            <div class="mainContainer">
+                    <div class="chartContainer box-shadow">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="chartDataContainer box-shadow">
+                        <h3>Datos del Gráfico</h3>
+                        <p>Aplicaciones totales: {{ totalApps }}</p>
+                        <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
+                        <p>Última Actividad: {{ lastActivity }}</p>
+                        <canvas id="appsChart"></canvas>
+                    </div>
             </div>
+
             <div class="history box-shadow">
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR--> 
-                
+                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR-->
+
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -51,6 +50,7 @@
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import Chart from 'chart.js/auto';
+import { useRoute } from 'vue-router';
 
 export default {
     mounted() {
@@ -59,7 +59,9 @@ export default {
         }
     },
     setup() {
-        const sessionId = ref('');
+        const route = useRoute();
+        const idRuta = route.params.id;
+        const sessionId = idRuta;
         const totalApps = ref(0);
         const dangerousApps = ref(0);
         const lastActivity = ref('');
@@ -79,12 +81,6 @@ export default {
                     return '#FFFFFF';
             }
         });
-
-
-
-        const createSession = () => {
-            // Lógica para unirse a una sesión
-        };
 
         const fetchHistory = async () => {
             try {
@@ -153,7 +149,7 @@ export default {
                         {
                             label: 'Uso de Aplicaciones en tu sesión',
                             data: [3, 15, 4, 5, 2, 1, 3, 2, 1],
-                            backgroundColor: '#00BFFF',
+                            backgroundColor: '#08cccc',
                         },
                     ],
                 },
@@ -186,7 +182,7 @@ export default {
             dangerMessage,
             dangerColor,
             history,
-            createSession,
+            idRuta,
             downloadLink: '/public/Downloads/Procesos-exe.exe',
             guardarHistorial,
         };
@@ -196,7 +192,12 @@ export default {
 
 <style scoped>
 .alumno-page {
-    font-family: Arial, sans-serif;
+    padding: 2rem;
+    margin: 20px auto;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    width: 80%;
+    max-width: 1200px;
 }
 
 header h1 {
@@ -215,7 +216,7 @@ nav ul li {
 }
 
 nav ul li a {
-    color: white;
+    color: var(--text-color);
     text-decoration: none;
 }
 
@@ -233,8 +234,8 @@ nav ul li a {
 button {
     margin: 10px;
     padding: 10px 20px;
-    background-color: #4bb6b8;
-    color: white;
+    background-color: var(--button-hover-background-color);
+    color: var(--text-color);
     border: none;
     cursor: pointer;
 }
@@ -247,30 +248,62 @@ button {
     text-align: center;
 }
 
-.charts {
+.mainContainer {
     display: flex;
     justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
-.chart-container {
-    width: 500px;
-    flex: 1;
-    margin: 0 20px;
+.chartContainer, .chartDataContainer {
+    width: calc(50% - 10px);
     padding: 20px;
-    background: white;
+    background-color: var(--container-background-color);
     border-radius: 10px;
+    height: auto;
+    min-height: 300px;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
 }
 
-.chart-info {
+.chartContainer {
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    width: 500px;
-    flex: 1;
+    align-items: center;
+}
+
+.chartContainer canvas {
+    width: 100%;
+    height: auto;
+    max-width: 400px;
+    max-height: 400px;
+}
+
+.chartDataContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     padding: 20px;
-    background: white;
-    border-radius: 10px;
+}
+
+.chartDataContainer .charts {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    margin-top: 40px;
+}
+
+.chartDataContainer .charts canvas {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+}
+
+.chartDataContainer p {
+    margin: 10px 0;
 }
 
 .box-shadow {
@@ -281,7 +314,7 @@ button {
     margin-bottom: 50px;
     margin-top: 20px;
     padding: 20px;
-    background: white;
+    background-color: var(--container-background-color);
     border-radius: 10px;
 }
 
@@ -297,7 +330,85 @@ button {
 }
 
 .history th {
-    background-color: #f2f2f2;
+    background-color: var(--container-background-color);
     text-align: left;
+}
+
+
+@media (max-width: 1200px) {
+    .alumno-page {
+        width: 90%;
+    }
+
+    .mainContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chartContainer,
+    .chartDataContainer {
+        width: 100%;
+        height: auto;
+    }
+
+    .chartDataContainer .charts {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dashboard button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .bottomContainer {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .alumno-page {
+        padding: 1rem;
+    }
+
+    h1,
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard button {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        font-size: 0.7rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .closeButton {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
 }
 </style>

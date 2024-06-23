@@ -4,22 +4,26 @@
         <div class="seccion1">
 
             <div class="containerTitle">
-                <h2 class="title">Asignatura: {{ asignatura.title }}</h2>
+                <h1 class="title">Asignatura: {{ asignatura.title }}</h1>
                 <p>Profesor: {{ asignatura.profesor }}</p>
                 <p>Descripción: {{ asignatura.description }}</p>
                 <hr>
             </div>
-
+            <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Sesiones</h3>
             <div class="sesiones">
-                <h3 class="subtitulo">Listado de Sesiones</h3>
+
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink">{{ sesion.nombre
-                        }}</router-link>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span class="session-title">{{ sesion.nombre }}</span>
+                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}</p>
+                        <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{ sesion.participantes ?
+                            sesion.participantes.length : 0 }}</p>
+                    </router-link>
+
                 </div>
             </div>
 
             <div class="recursos">
-                <h3 class="subtitulo">Recursos de la Asignatura</h3>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book']" /> Recursos de la Asignatura</h3>
                 <ul>
                     <li><a href="#">PDF de Estudio</a></li>
                     <li><a href="#">Video de Clase</a></li>
@@ -29,7 +33,7 @@
 
 
             <div class="foro">
-                <h3 class="subtitulo">Foro de Preguntas</h3>
+                <h3 class="subtitulo"> <font-awesome-icon :icon="['far', 'comment-dots']" /> Foro de Preguntas</h3>
                 <p>Escribe tu pregunta aquí...</p>
                 <button @click="publicarPregunta">Publicar Pregunta</button>
             </div>
@@ -38,30 +42,20 @@
 
         <div class="seccion2">
             <div class="faltas">
-                <h3 class="subtitulo">Listado de Faltas</h3>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas</h3>
                 <p>Resumen de Faltas: [Número de Faltas]</p>
                 <button>Ver Detalles</button>
             </div>
 
             <div class="fechas">
-                <h3 class="subtitulo">Tareas y Exámenes</h3>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book-bookmark']" /> Tareas y Exámenes</h3>
                 <p>Próxima Tarea: [Fecha]</p>
                 <p>Próximo Examen: [Fecha]</p>
                 <button>Ver Calendario</button>
             </div>
 
-            <div class="actividades">
-                <h3 class="subtitulo">Actividades Recientes</h3>
-                <ul>
-                    <li>Entrega Tarea 1</li>
-                    <li>Participación en Foro</li>
-                    <li>Acceso a PDF de Estudio</li>
-                </ul>
-            </div>
-
-
             <div class="acciones">
-                <h3 class="subtitulo">Acciones Rápidas</h3>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h3>
                 <button @click="contactarProfesor">Contactar al Profesor</button>
                 <button>Reportar un Problema</button>
             </div>
@@ -79,7 +73,7 @@
             </div>
 
             <div class="participantes">
-                <h3 class="subtitulo">Participantes</h3>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h3>
                 <div class="team-members">
                     <img v-for="member in asignatura.members" :key="member" :src="member" alt="Team member"
                         class="team-member">
@@ -241,6 +235,7 @@ onMounted(async () => {
 }
 
 .sesiones,
+.participantes,
 .recursos,
 .foro,
 .actividades,
@@ -275,25 +270,23 @@ button:hover {
     background-color: var(--button-hover-background-color);
 }
 
-.sesiones {
-    background-color: var(--background-color);
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.sesionesItem {
-    border-bottom: 1px solid #ccc;
+.session-title{
+    font-size: 17px;
+    font-weight: bold;
 }
 
 .navLink {
     text-decoration: none;
     color: var(--text-color);
     display: block;
-    padding: 10px 0;
+    padding: 10px 10px;
+    border-radius: 5px;
+    background-color: var(--gray-text-color);
+    margin-bottom: 0.5rem;
 }
 
 .navLink:hover {
-    color: var(--button-hover-background-color);
+    background-color: var(--gray-hover-color);
 }
 
 .recursos {
