@@ -137,7 +137,7 @@ export default {
         const cargarRecursos = async () => {
         }
         const goToFaltas = () => {
-            router.push('/faltaAlumnos');
+            router.push(`/faltaAlumnos/${asignaturaId}`);
         };
 
         const publicarPregunta = () => {

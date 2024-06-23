@@ -3,14 +3,13 @@ avisos.*/
 
 <template>
   <div class="general-div">
-    <h1>Lista Alumnos</h1>
+    <h1>Faltas {{ asignatura.title }}</h1>
 
     <table class="lista-alumnos">
       <thead>
         <tr>
           <th>ID</th>
           <th>Matricula</th>
-          <th>Rut</th>
           <th>Nombre</th>
           <th>Apellido Paterno</th>
           <th>Apellido Materno</th>
@@ -20,27 +19,24 @@ avisos.*/
         </tr>
       </thead>
       <tbody>
-        <template v-for="(falta, index) in faltas" :key="falta._id">
+        <template v-for="(falta, index) in faltasFiltradas" :key="falta._id">
           <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
             <td>{{ falta._id }}</td>
             <td>{{ falta.matricula }}</td>
-            <td>{{ falta.rut }}</td>
             <td>{{ falta.name }}</td>
             <td>{{ falta.lastName }}</td>
             <td>{{ falta.secondLastName }}</td>
             <td>{{ falta.email }}</td>
             <td>{{ falta.campus }}</td>
-            <td>{{ falta.faltas }}</td>
+            <td>{{ falta.detalleFaltas.length }}</td>
           </tr>
           <tr v-if="selectedFalta === index">
-            <td colspan="8">
-              <div class="detail-falta-container">
-                <div class="detail-falta" v-for="(detalle, i) in falta.detalleFaltas" :key="i">
-                  <p class="faltaTitle">FALTA {{ i + 1 }}: {{ detalle.falta }}</p>
-                  <strong>Fecha:</strong> {{ detalle.fecha }} <br />
-                  <strong>Profesor:</strong> {{ detalle.profesor }} <br />
-                  <strong class="faltaDesc">Descripción:</strong> {{ detalle.motivo }}
-                </div>
+            <td class="detail-falta-container" colspan="8">
+              <div class="detail-falta" v-for="(detalle, i) in falta.detalleFaltas" :key="i">
+                <strong class="faltaTitle">FALTA {{ i + 1 }}: {{ detalle.falta }}</strong><br />
+                <strong>Fecha:</strong> {{ detalle.fecha }} <br />
+                <strong>Profesor:</strong> {{ detalle.profesor }} <br />
+                <strong>Descripción:</strong> {{ detalle.motivo }}
               </div>
             </td>
           </tr>
@@ -99,7 +95,6 @@ avisos.*/
 
 <script>
 import axios from 'axios'
-
 export default {
   data() {
     return {
@@ -114,15 +109,39 @@ export default {
       profesores: ['Daniel Moreno', 'Ricardo Perez', 'Luis Silvestre', 'Rodrigo Paredes', 'Matthew Bardeen'],
       selectedProfesor: '',
       showError: false,
+      asignaturaId: null,
+      faltasFiltradas: [],
+      asignatura: {}
     }
   },
+
   async created() {
+    this.asignaturaId = this.$route.params.id;
+
+    try {
+      const response = await axios.get(`http://localhost:8080/asignatura/${this.asignaturaId}`);
+      this.asignatura = response.data;
+    } catch (error) {
+      console.error(error);
+    }
     try {
       const response = await axios.get('http://localhost:8080/faltas')
       this.faltas = response.data
+      this.faltasFiltradas = this.faltas.map(falta => {
+        if (falta && falta.detalleFaltas) {
+          return {
+            ...falta,
+            detalleFaltas: falta.detalleFaltas.filter(detalle => detalle.asignatura === this.asignaturaId)
+          };
+        } else {
+          return falta;
+        }
+      }).filter(falta => falta.detalleFaltas.length > 0);
     } catch (error) {
       console.error(error)
     }
+
+
     this.fetchUsers()
   },
   methods: {
@@ -135,9 +154,20 @@ export default {
       }
     },
     async fetchFaltas() {
+      this.asignaturaId = this.$route.params.id;
       try {
         const response = await axios.get('http://localhost:8080/faltas')
         this.faltas = response.data
+        this.faltasFiltradas = this.faltas.map(falta => {
+          if (falta && falta.detalleFaltas) {
+            return {
+              ...falta,
+              detalleFaltas: falta.detalleFaltas.filter(detalle => detalle.asignatura === this.asignaturaId)
+            };
+          } else {
+            return falta;
+          }
+        }).filter(falta => falta.detalleFaltas.length > 0);
       } catch (error) {
         console.error('Failed to fetch faltas', error)
       }
@@ -152,7 +182,8 @@ export default {
         falta: this.falta,
         fecha: this.fecha,
         motivo: this.motivo,
-        profesor: this.selectedProfesor
+        profesor: this.selectedProfesor,
+        asignatura: this.asignaturaId
       }
       console.log()
       const newAlumno = {
@@ -194,6 +225,7 @@ export default {
   max-height: 200px;
   overflow-y: auto;
   width: 100%;
+  cursor: auto;
 }
 
 .text-form {
@@ -217,12 +249,12 @@ export default {
 .general-div {
   text-align: center;
   justify-content: center;
+
 }
 
 .detail-falta {
-  border: 1px solid #ccc;
-  border: 1px solid var(--container-background-color);
-  padding: 6px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px;
   text-align: left;
   padding-left: 3rem;
   width: 100%;
@@ -230,6 +262,7 @@ export default {
 
 .faltaTitle {
   font-weight: bold;
+  margin-bottom: 1rem;
 }
 
 
@@ -247,6 +280,10 @@ td {
   overflow-y: auto;
 }
 
+tr:hover {
+  background-color: var(--gray-text-color);
+}
+
 td {
   cursor: pointer;
   border: 1px solid var(--border-color);
@@ -259,9 +296,6 @@ th {
   border-right: 1px solid var(--container-background-color);
 }
 
-tr:nth-child(even) {
-  background-color: var(--container-background-color);
-}
 
 .addButton {
   margin-top: 2rem;
@@ -387,9 +421,10 @@ tr:nth-child(even) {
 }
 
 h1 {
-  margin-top: 1rem;
+  margin-top: 2rem;
+  font-size: 2.5rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin-bottom: 1.2rem;
 }
 
 h2 {
