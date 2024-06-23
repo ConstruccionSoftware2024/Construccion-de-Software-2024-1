@@ -1,42 +1,52 @@
+from flask import Flask, jsonify
+from flask_cors import CORS
 import psutil
-import time
+from datetime import datetime
 import os
-import numpy as np
-from sklearn.ensemble import IsolationForest
 
-# Función para obtener las características de los procesos .exe
-def obtener_caracteristicas():
-    caracteristicas = {}
-    for proceso in psutil.process_iter(['pid', 'name', 'username', 'cpu_percent', 'memory_percent']):
-        nombre_app = proceso.info['name']
-        if proceso.info['username'] is not None and nombre_app.endswith('.exe'):
-            if nombre_app not in caracteristicas:
-                caracteristicas[nombre_app] = {
-                    'pid': proceso.info['pid'],
-                    'cpu_percent': proceso.info['cpu_percent'],
-                    'memory_percent': proceso.info['memory_percent']
-                }
-            else:
-                caracteristicas[nombre_app]['cpu_percent'] += proceso.info['cpu_percent']
-                caracteristicas[nombre_app]['memory_percent'] += proceso.info['memory_percent']
+app = Flask(__name__)
+CORS(app)
 
-    return caracteristicas
+historial_procesos = []  # Lista para mantener el historial de procesos
 
-# Monitorear los procesos y detectar anomalías
-def monitorear_procesos():
-    # Obtener datos iniciales
-    datos_iniciales = obtener_caracteristicas()
+def obtener_aplicaciones():
+    global historial_procesos
 
-    while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        caracteristicas = obtener_caracteristicas()
-        
-        print(f"Actualizado: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        
-        for nombre_app, proc in caracteristicas.items():
-            print(f"Nombre de la aplicación: {nombre_app}")
-        
-        time.sleep(5)
+    # Obtener todos los procesos activos en este momento
+    procesos_activos = []
+    for proceso in psutil.process_iter(['pid', 'name', 'username', 'exe', 'create_time']):
+        if proceso.info['username'] is not None and proceso.info['exe']:
+            exe_path = proceso.info['exe'].lower()
+            filename = os.path.basename(exe_path)
+            if filename.endswith('.exe'):
+                proceso_id = proceso.info['pid']
+                proceso_name = proceso.info['name']
+                
+                # Filtrar procesos propios de Windows
+                if not es_proceso_windows(proceso_name):
+                    # Verificar si el proceso ya está en historial_procesos (por nombre)
+                    if not any(p['name'] == proceso_name for p in procesos_activos):
+                        procesos_activos.append({
+                            'pid': proceso_id,
+                            'name': proceso_name,
+                            'time': datetime.fromtimestamp(proceso.info['create_time']).strftime("%H:%M:%S"),
+                            'url': filename
+                        })
 
-# Ejecutar la función de monitoreo
-monitorear_procesos()
+    # Actualizar historial_procesos con nuevos procesos activos
+    historial_procesos[:] = procesos_activos
+
+    # Devolver todos los procesos activos en esta solicitud
+    return procesos_activos
+
+def es_proceso_windows(nombre_proceso):
+    # Función para determinar si un proceso es propio de Windows
+    procesos_windows = ['explorer.exe', 'svchost.exe', 'system.exe']  # Ejemplos de procesos de Windows
+    return nombre_proceso.lower() in procesos_windows
+
+@app.route('/historial', methods=['GET'])
+def historial():
+    return jsonify(obtener_aplicaciones())
+
+if __name__ == '__main__':
+    app.run(debug=True)
