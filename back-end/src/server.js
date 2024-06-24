@@ -54,6 +54,22 @@ app.get('/users', async (req, res) => {
   }
 })
 
+app.get('/name/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('evaluaciones')
+    const evaluations = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    if (evaluations) {
+      res.send(evaluations);
+    } else {
+      res.status(404).send('Evaluation not found');
+    }
+  } catch (error) {
+    console.error('Failed to fetch evaluations from database', error)
+    res.status(500).send('Failed to fetch evaluations from database')
+  }
+})
+
 app.get('/asignaturas', async (req, res) => {
   try {
     const database = client.db('construccion');
