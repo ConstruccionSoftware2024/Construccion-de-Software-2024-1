@@ -83,12 +83,80 @@ app.get('/asignatura/:id', async (req, res) => {
   }
 });
 
-app.get('/faltas', async (req, res) => {
+app.get('/faltas/', async (req, res) => {
+  try {
+    const db = client.db('construccion');
+    const userCollection = db.collection('users');
+    const faltasCollection = db.collection('faltas');
+
+    const usersData = await userCollection.find({}).toArray();
+
+    const usersWithFaltas = await Promise.all(usersData.map(async (user) => {
+      const userID = user._id.toString();
+      const userFaltas = await faltasCollection.findOne({ _id: userID });
+      return {
+        id: userID,
+        nombre: user.firstName,
+        apellidoPat: user.lastName,
+        apellidoMat: user.secondLastName,
+        rut: user.rut,
+        matricula: user.matricula,
+        correo: user.email,
+        campus: user.campus,
+        faltas: userFaltas ? userFaltas.faltas : 0,
+        detalleFaltas: userFaltas ? userFaltas.detalleFaltas : null
+      };
+    }));
+    res.send(usersWithFaltas);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error al recuperar los detalles de los usuarios" });
+  }
+});
+
+// Recuperar faltas especificas de un usuario
+app.get('/faltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const result = await collection.findOne({ _id: req.params.id });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+
+app.post('/addFaltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const id = req.params.id;
+    const newFalta = req.body;
+
+    const result = await collection.updateOne(
+      { _id: id },
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { upsert: true }
+    );
+
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+});
+
+// Cambiar estado de alumno (Peligroso / No Peligroso)
+app.post('/faltas/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { estado: req.body.estado } }
+    )
+    res.send(result)
   } catch (error) {
     res.status(500).send(error.message)
   }
@@ -120,46 +188,30 @@ app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
   }
 });
 
-app.post('/faltas-post', async (req, res) => {
+//Obtener campus
+app.get('/carreras/:campus', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const alumno = req.body
-    // Busca el alumno en la base de datos
-    const existingAlumno = await collection.findOne({ _id: alumno._id })
-
-    if (existingAlumno) {
-      // Si el alumno ya existe, actualiza detalleFaltas
-      const result = await collection.updateOne(
-        { _id: alumno._id },
-        { $push: { detalleFaltas: alumno.detalleFaltas[0] }, $inc: { faltas: 1 } }
-      )
-    } else {
-      // Si el alumno no existe, inserta el nuevo alumno
-      const result = await collection.insertOne(alumno)
-    }
-    res.status(200).send('Falta agregada correctamente')
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campus = req.params.campus;
+    const carrerasData = await collection.findOne({ campus: campus });
+    res.send(carrerasData ? carrerasData.carreras : []);
   } catch (error) {
-    console.error(error) // Imprime el error
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
+});
 
-// Cambiar estado de alumno (Peligroso / No Peligroso)
-app.post('/faltas/:id', async (req, res) => {
+//Obtener Carreras
+app.get('/campus', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const result = await collection.updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: { estado: req.body.estado } }
-    )
-    res.send(result)
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campusData = await collection.find({}).project({ campus: 1 }).toArray();
+    res.send(campusData);
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
-
+});
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -346,7 +398,7 @@ app.post('/resetPassword', async (req, res) => {
   await User.updateOne({ email }, { $set: { resetCode: resetCode } });
 
   let transporter = nodemailer.createTransport({
-    service: 'outlook', 
+    service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
       pass: 'RkUFFzM1LUTk'
@@ -386,8 +438,8 @@ app.post('/verifyResetCode', async (req, res) => {
     }
 
     if (user.resetCode === code) {
-      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
-      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
     } else {
       res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
     }

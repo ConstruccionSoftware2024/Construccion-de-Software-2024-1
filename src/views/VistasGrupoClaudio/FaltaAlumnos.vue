@@ -22,17 +22,17 @@ avisos.*/
       <tbody>
         <template v-for="(falta, index) in faltas" :key="falta._id">
           <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
-            <td>{{ falta._id }}</td>
+            <td>{{ falta.id }}</td>
             <td>{{ falta.matricula }}</td>
             <td>{{ falta.rut }}</td>
-            <td>{{ falta.name }}</td>
-            <td>{{ falta.lastName }}</td>
-            <td>{{ falta.secondLastName }}</td>
-            <td>{{ falta.email }}</td>
+            <td>{{ falta.nombre }}</td>
+            <td>{{ falta.apellidoPat }}</td>
+            <td>{{ falta.apellidoMat }}</td>
+            <td>{{ falta.correo }}</td>
             <td>{{ falta.campus }}</td>
             <td>{{ falta.faltas }}</td>
           </tr>
-          <tr v-if="selectedFalta === index">
+          <tr v-if="selectedFalta === index && falta.detalleFaltas != null">
             <td colspan="8">
               <div class="detail-falta-container">
                 <div class="detail-falta" v-for="(detalle, i) in falta.detalleFaltas" :key="i">
@@ -154,32 +154,21 @@ export default {
         motivo: this.motivo,
         profesor: this.selectedProfesor
       }
-      console.log()
-      const newAlumno = {
-        _id: selectedAlumnoData._id,
-        matricula: selectedAlumnoData.matricula,
-        name: selectedAlumnoData.firstName,
-        lastName: selectedAlumnoData.lastName,
-        secondLastName: selectedAlumnoData.secondLastName,
-        email: selectedAlumnoData.email,
-        campus: selectedAlumnoData.campus,
-        rut: selectedAlumnoData.rut,
-        faltas: 1,
-        estado: 'Ninguno',
-        detalleFaltas: [newFalta]
-      }
+
       try {
-        await axios.post('http://localhost:8080/faltas-post', newAlumno)
+        await axios.post(`http://localhost:8080/addFaltas/${this.selectedAlumno}`, newFalta)
+        this.showAddFalta = false;
+        this.fetchFaltas()
       } catch (error) {
-        console.error('Failed to post new alumno', error)
+        console.error('Failed to save falta', error)
       }
 
+      // limpiar form
       this.selectedAlumno = ''
+      this.selectedProfesor = ''
       this.falta = ''
       this.motivo = ''
       this.fecha = ''
-      this.showAddFalta = false
-      this.fetchFaltas()
     },
     cerrarModal() {
       this.showError = false;
