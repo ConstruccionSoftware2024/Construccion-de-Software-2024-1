@@ -27,10 +27,8 @@
 
                 <div class="section">
                     <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
-                    <div class="input-group">
-                        <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
-                        <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
-                    </div>
+                    <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
+                    <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
                 </div>
             </div>
 
@@ -50,6 +48,27 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal" v-if="mostrarPopup">
+            <div class="modal-content">
+                <span class="close" @click="mostrarPopup = false">&times;</span>
+                <div class="add-falta">
+                    <h2>Crear nueva sesión</h2>
+                    <div class="input-group">
+                        <input required placeholder="Nombre de la sesión" type="text" id="nombre"
+                            v-model="nuevaSesion.nombre">
+                        <textarea required placeholder="Descripción de la sesión"></textarea>
+                        <div v-if="showError" class="error-message">
+                            Por favor complete todos los campos.
+                        </div>
+                    </div>
+                    <button @click.prevent="enviarFormulario" class="btn btn-modal"
+                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popup for adding resource -->
         <div v-if="mostrarPopupRecurso" class="modal">
             <div class="modal-content">
                 <span class="close" @click="mostrarPopupRecurso = false">&times;</span>
@@ -57,7 +76,7 @@
                 <input required placeholder="Título del recurso" type="text" v-model="nuevoRecurso.titulo">
                 <textarea required placeholder="Descripción del recurso" v-model="nuevoRecurso.descripcion"></textarea>
                 <input required type="file" @change="onFileChange">
-                <button @click="enviarRecurso" class="btn">Añadir Recurso</button>
+                <button @click="enviarRecurso" class="btn btn-modal">Añadir Recurso</button>
             </div>
         </div>
     </div>
@@ -74,55 +93,53 @@ export default {
         return {
             sesiones: [],
             mostrarPopup: false,
-            mostrarPopupRecurso: false,
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
                 asignatura: ''
             },
-            nuevoRecurso: {
-                titulo: '',
-                descripcion: '',
-                archivo: null
-            }
         }
     },
     setup() {
         const sesiones = ref([]);
         const router = useRouter();
-        const route = useRoute();
-        const asignaturaId = route.params.id;
-        const asignatura = ref('Nombre Ejemplo');
-        const mostrarPopup = ref(false);
-        const mostrarPopupRecurso = ref(false);
-        const nuevaPregunta = ref('');
+        const route = useRoute()
+        const asignaturaId = route.params.id
+        const asignatura = ref('Nombre Ejemplo')
+        const mostrarPopup = ref(false)
+        const mostrarPopupRecurso = ref(false)
+        const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
-            titulo: '',
-            descripcion: '',
-            archivo: null
-        });
-        const info = ref([]);
-        const recursos = ref([]);
+            nombre: '',
+            enlace: ''
+        })
+        const nuevaTarea = reactive({
+            nombre: '',
+            descripcion: ''
+        })
+        const info = ref([])
+        const recursos = ref([])
 
-        const cargarRecursos = async () => { };
+        const formulario = reactive({
+            nombre: '',
+            descripcion: '',
+            creador: 'default'
+        })
+
+        const cargarRecursos = async () => {
+        }
         const goToFaltas = () => {
-            router.push('/faltaAlumnos');
+            router.push(`/faltaAlumnos/${asignaturaId}`);
         };
 
         const publicarPregunta = () => {
-            console.log('Pregunta publicada:', nuevaPregunta.value);
-        };
+            console.log('Pregunta publicada:', nuevaPregunta.value)
 
-        const onFileChange = (e) => {
-            nuevoRecurso.archivo = e.target.files[0];
-        };
+        }
 
         const enviarRecurso = async () => {
-            console.log('Enviando recurso:', nuevoRecurso);
-            // lógica para enviar el recurso al servidor
-            mostrarPopupRecurso.value = false;
-        };
-
+            console.log('Enviando recurso:')
+        }
         const cargarSesiones = async () => {
             try {
                 const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
@@ -142,11 +159,10 @@ export default {
                 console.error(error);
             }
         };
-
         onMounted(() => {
             cargarRecursos();
             cargarSesiones();
-        });
+        })
 
         return {
             asignatura,
@@ -156,23 +172,117 @@ export default {
             nuevoRecurso,
             info,
             recursos,
+            formulario,
+            enviarRecurso,
             sesiones,
             publicarPregunta,
             goToFaltas,
-            onFileChange,
-            enviarRecurso
-        };
+        }
+    },
+    methods: {
+        recuperarSesiones() {
+            axios.get(`http://localhost:8080/sesion`)
+                .then(response => {
+                    this.sesiones = response.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        publicarPregunta() {
+            alert('Pregunta Publicada');
+        },
+        async fetchProjects() {
+            try {
+                const response = await axios.get('http://localhost:8080/asignaturas');
+                this.projects = response.data;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        },
+        goToProject(id) {
+            this.$router.push(`/asignatura/${id}`);
+        },
+        async enviarFormulario() {
+            if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                this.showError = true;
+                return;
+            }
+            try {
+                // Obtiene la id de la asignatura de la URL
+                const asignaturaId = this.$route.params.id;
+
+                if (!asignaturaId) {
+                    console.error('No se encontró la id de la asignatura');
+                    return;
+                }
+
+                // Agrega la id de la asignatura al objeto nuevaSesion
+                this.nuevaSesion.asignatura = asignaturaId;
+                console.log('Datos a enviar:', this.nuevaSesion);
+
+                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
+
+                if (respuesta.status === 200) {
+                    this.nuevaSesion.nombre = '';
+                    this.nuevaSesion.descripcion = '';
+                    // Obtiene la id de la sesión creada
+                    const sessionId = respuesta.data._id;
+
+                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
+
+                    console.log('Sesión creada con ID:', sessionId);
+
+                    this.fetchProjects();
+                    this.mostrarPopup = false;
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+    },
+    created() {
+        this.fetchProjects();
     }
-};
+}
 </script>
 
+
 <style scoped>
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.close:hover {
+    color: var(--button-background-color);
+}
+
+input[type="text"] {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+input[type="text"]:focus {
+    box-shadow: 0 0 0 2px var(--button-background-color);
+    outline: none;
+}
+
 .container {
     display: flex;
     flex-direction: column;
     padding: 1rem;
-    width: 100%;
-    max-width: 1200px;
+    width: 70%;
     margin: auto;
     justify-content: space-between;
     margin-bottom: 3rem;
@@ -193,13 +303,19 @@ h2 {
     display: flex;
     gap: 2rem;
     margin-top: 1rem;
-    flex-wrap: wrap;
 }
 
-.left-column,
+.left-column {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
 .right-column {
     flex: 1;
-    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .section {
@@ -207,8 +323,13 @@ h2 {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+}
+
+.section:not(:last-child) {
     margin-bottom: 1.5rem;
 }
+
 
 .session-item {
     cursor: pointer;
@@ -266,15 +387,41 @@ button.btn {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.btn-modal {
+    float: right;
 }
 
 button.btn:hover {
     background-color: var(--button-hover-background-color);
     color: black;
 }
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+h2 {
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
 
 .modal {
     display: flex;
@@ -321,74 +468,5 @@ button.btn:hover {
     border-radius: 4px;
     resize: none;
     height: 150px;
-}
-
-:focus {
-    outline: none;
-    box-shadow: 0 0 0 1px var(--button-background-color);
-}
-
-.modal-content .btn {
-    margin-right: 0.5rem;
-}
-
-.close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.input-group {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.input-group input {
-    flex: 1;
-    min-width: 200px;
-}
-
-@media (max-width: 768px) {
-    .content {
-        flex-direction: column;
-    }
-}
-
-.button-container {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.button-container button {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-button.new-section-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    margin-top: 0.5rem;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-    .input-group {
-        flex-direction: column;
-    }
-
-    .input-group input,
-    .input-group button {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
 }
 </style>

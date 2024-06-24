@@ -112,7 +112,7 @@ const router = createRouter({
       component: VistaAlumno
     },
     {
-      path: '/faltaAlumnos',
+      path: '/faltaAlumnos/:id',
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
