@@ -211,6 +211,21 @@ async function recuperarFaltas(id) {
         });
 }
 
+async function recuperarFaltas(id) {
+    await axios.get(`http://localhost:8080/faltas/${id}`)
+        .then(response => {
+            if (response.data.length === 0) {
+                faltaAlumnos.value.faltas = 0;
+            }else{
+                faltaAlumnos.value = response.data;
+            }
+            return response.data;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
 function determinarRuta(id, rol) {
     if (rol === 'profesor') {
         return { name: 'VistaProfesor', params: { id: id } };
@@ -239,7 +254,7 @@ onMounted(async () => {
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-
+}
 .pop-up-detalles-faltas {
   position: fixed;
   top: 50%;
