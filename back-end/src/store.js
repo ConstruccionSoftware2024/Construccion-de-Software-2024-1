@@ -37,7 +37,7 @@ export const useUserStore = defineStore('user', {
   }
 })
 
-export const useSesionStore = defineStore('sesion', {
+export const useSesionStore = defineStore('', {
   state: () => ({
     sesionId: JSON.parse(localStorage.getItem('sesion')) || null,
   }),

@@ -6,73 +6,75 @@
         </div>
         <div class="dashboard">
             <!--  <button @click="createSession">Crear Sesión</button> -->
-            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
-        <div class="mainContainer">
-            <div class="chartContainer">
-                <canvas id="studentsPieChart"></canvas>
-                <div class="legend"></div>
-            </div>
-            <div class="chartDataContainer">
-                <h2>Datos del Gráfico</h2>
-                <p><strong>Total de Estudiantes:</strong> {{ alumnos.length }}</p>
-                <p><strong>Aplicaciones Peligrosas Abiertas:</strong> {{ totalDangerousApps }}</p>
-                <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
-                <div class="charts">
-                    <canvas id="appsBarChart"></canvas>
-                </div>
+    </div>
+    <div class="mainContainer">
+        <div class="chartContainer">
+            <canvas id="studentsPieChart"></canvas>
+            <div class="legend"></div>
+        </div>
+        <div class="chartDataContainer">
+            <h2>Datos del Gráfico</h2>
+            <p><strong>Total de Estudiantes:</strong> {{ alumnos.length }}</p>
+            <p><strong>Aplicaciones Peligrosas Abiertas:</strong> {{ totalDangerousApps }}</p>
+            <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
+            <div class="charts">
+                <canvas id="appsBarChart"></canvas>
             </div>
         </div>
-        <div class="bottomContainer">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Matrícula</th>
-                        <th>Nombre</th>
-                        <th>Apellido Paterno</th>
-                        <th>Apellido Materno</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="alumno in alumnos" :key="alumno._id">
-                        <td>{{ alumno.matricula }}</td>
-                        <td>{{ alumno.firstName }}</td>
-                        <td>{{ alumno.lastName }}</td>
-                        <td>{{ alumno.secondLastName }}</td>
-                        <td
-                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
-                            {{ alumno.status }}
-                        </td>
-                        <td>
-                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
-                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
-                            <!-- Si "accion" es true se banea, si no, no -->
-                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
-                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
-                            <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
-                            <BotonNotificar :participante="alumno" />
-                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
-                                    class="fas fa-eye"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div v-if="showModal" class="modal" @click.self="closeModal">
-            <div class="modal-content">
-                <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-                    selectedStudent.secondLastName }}</h2>
-                <ul>
-                    <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
-                    </li>
-                </ul>
-                <button class="closeButton" @click="closeModal">Cerrar</button>
-            </div>
+    </div>
+    <div class="bottomContainer">
+        <table>
+            <thead>
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Apellido Paterno</th>
+                    <th>Apellido Materno</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="alumno in alumnos" :key="alumno._id">
+                    <td>{{ alumno.matricula }}</td>
+                    <td>{{ alumno.firstName }}</td>
+                    <td>{{ alumno.lastName }}</td>
+                    <td>{{ alumno.secondLastName }}</td>
+                    <td
+                        :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                        {{ alumno.status }}
+                    </td>
+                    <td>
+                        <button v-if=!isCancelada class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
+                            :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
+                        <!-- Si "accion" es true se banea, si no, no -->
+                        <button v-if=!isCancelada class="actionButton expel"
+                            @click="banExpStudent(alumno, accion = false)"
+                            :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
+                        <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
+                        <BotonNotificar :participante="alumno" :ocultar="isCancelada" />
+                        <button class="actionButton view" @click="viewProcesses(alumno)"><i
+                                class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div v-if="showModal" class="modal" @click.self="closeModal">
+        <div class="modal-content">
+            <span class="close" @click="closeModal">&times;</span>
+            <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                selectedStudent.secondLastName }}</h2>
+            <ul>
+                <li v-for="app in selectedStudent.apps" :key="app.name">
+                    <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
+                </li>
+            </ul>
+            <button class="closeButton" @click="closeModal">Cerrar</button>
         </div>
     </div>
     <div>
@@ -110,18 +112,20 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 import { onMounted, ref } from 'vue';
+
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
         let nombreSesion = ref('');
-
+        let isCancelada = ref(false);
         const obtenerDatosSesion = async () => {
             try {
                 const respuesta = await fetch('http://localhost:8080/sessions/' + idRuta);
                 if (respuesta.ok) {
                     const datos = await respuesta.json();
                     nombreSesion.value = datos.nombre;
+                    isCancelada.value = datos.cancelada;
                 } else {
                     console.error('Error al obtener los datos:', respuesta.statusText);
                 }
@@ -129,15 +133,33 @@ export default {
                 console.error('Error en la petición fetch:', error);
             }
         };
+        const cancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/cancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    console.log("marcado como cancelado")
+                }
+                else {
+                    console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
+        }
         onMounted(obtenerDatosSesion)
         return {
             idRuta,
             nombreSesion,
-        }
+            cancelarSesion,
+            isCancelada,
+
+        };
     },
-
-
-
     data() {
 
         return {
@@ -612,6 +634,7 @@ export default {
 }
 
 .dashboard button {
+    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;

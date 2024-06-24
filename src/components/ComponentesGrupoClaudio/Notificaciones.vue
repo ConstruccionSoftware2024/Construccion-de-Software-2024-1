@@ -29,7 +29,7 @@ const getUsers = async () => {
             return
         }
         clearInterval(interval)
-        idUsuario = user.value._id
+        idUsuario.value = user.value._id
         await getMensajes()
 
         //Lo que está a continuación es la forma anterior de traer el usuario, ahora se saca de la base de datos el usuario loggeado
@@ -65,7 +65,7 @@ const getUsers = async () => {
 
 const getMensajes = async () => {
     try {
-        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario}`);
+        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario.value}`);
         let data = await respuesta.json()
         console.log("valor data : ", data)
         mensajesPendientes(data)
