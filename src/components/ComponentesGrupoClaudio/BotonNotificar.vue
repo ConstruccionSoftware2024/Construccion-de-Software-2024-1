@@ -33,6 +33,7 @@ export default {
     props: {
         participante: Object,
         ocultar: Boolean,
+        session: String
     },
     setup(props) {
 
@@ -41,7 +42,7 @@ export default {
 
         let alumno = ref(props.participante)
         let ocultado = ref(props.ocultar)
-
+        let sesion = ref(props.session)
         let showModal = ref(false)
         let showAlerta = ref(false)
         let showMensaje = ref(false)
@@ -78,7 +79,9 @@ export default {
                         mensaje: mensaje,
                         remitente: remitenteId,
                         visto: false,
-                        alerta: estado
+                        alerta: estado,
+                        sesion: sesion.value
+
                     }),
                 })
                 if (!respuesta.ok) {
@@ -101,7 +104,8 @@ export default {
                         mensaje: '',
                         remitente: remitenteId,
                         visto: false,
-                        alerta: estado
+                        alerta: estado,
+                        sesion: sesion.value
                     }),
                 })
                 if (!respuesta.ok) {
@@ -124,7 +128,8 @@ export default {
                         mensaje: mensaje,
                         remitente: remitenteId,
                         visto: false,
-                        alerta: ''
+                        alerta: '',
+                        sesion: sesion.value
                     }),
                 })
                 if (!respuesta.ok) {

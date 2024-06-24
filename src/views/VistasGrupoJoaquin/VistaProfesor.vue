@@ -10,71 +10,81 @@
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
-    </div>
-    <div class="mainContainer">
-        <div class="chartContainer">
-            <canvas id="studentsPieChart"></canvas>
-            <div class="legend"></div>
-        </div>
-        <div class="chartDataContainer">
-            <h2>Datos del Gráfico</h2>
-            <p><strong>Total de Estudiantes:</strong> {{ alumnos.length }}</p>
-            <p><strong>Aplicaciones Peligrosas Abiertas:</strong> {{ totalDangerousApps }}</p>
-            <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
-            <div class="charts">
-                <canvas id="appsBarChart"></canvas>
+        <div class="mainContainer">
+            <div class="chartContainer">
+                <canvas id="studentsPieChart"></canvas>
+                <div class="legend"></div>
+            </div>
+            <div class="chartDataContainer">
+                <h2>Datos del Gráfico</h2>
+                <p><strong>Total de Estudiantes:</strong> {{ alumnos.length }}</p>
+                <p><strong>Aplicaciones Peligrosas Abiertas:</strong> {{ totalDangerousApps }}</p>
+                <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
+                <div class="charts">
+                    <canvas id="appsBarChart"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="bottomContainer">
-        <table>
-            <thead>
-                <tr>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th>Apellido Paterno</th>
-                    <th>Apellido Materno</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="alumno in alumnos" :key="alumno._id">
-                    <td>{{ alumno.matricula }}</td>
-                    <td>{{ alumno.firstName }}</td>
-                    <td>{{ alumno.lastName }}</td>
-                    <td>{{ alumno.secondLastName }}</td>
-                    <td
-                        :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
-                        {{ alumno.status }}
-                    </td>
-                    <td>
-                        <button v-if=!isCancelada class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
-                            :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
-                        <!-- Si "accion" es true se banea, si no, no -->
-                        <button v-if=!isCancelada class="actionButton expel"
-                            @click="banExpStudent(alumno, accion = false)"
-                            :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
-                        <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
-                        <BotonNotificar :participante="alumno" :ocultar="isCancelada" />
-                        <button class="actionButton view" @click="viewProcesses(alumno)"><i
-                                class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <div v-if="showModal" class="modal" @click.self="closeModal">
-        <div class="modal-content">
-            <span class="close" @click="closeModal">&times;</span>
-            <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-                selectedStudent.secondLastName }}</h2>
-            <ul>
-                <li v-for="app in selectedStudent.apps" :key="app.name">
-                    <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
-                </li>
-            </ul>
-            <button class="closeButton" @click="closeModal">Cerrar</button>
+        <div class="bottomContainer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matrícula</th>
+                        <th>Nombre</th>
+                        <th>Apellido Paterno</th>
+                        <th>Apellido Materno</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="alumno in alumnos" :key="alumno._id">
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.matricula }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.firstName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.lastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.secondLastName }}
+                        </td>
+                        <td
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            {{ alumno.status }}
+                        </td>
+                        <td v-if="!alumnosBaneados.includes(alumno.email)"
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
+                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
+                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
+                            <!-- Si "accion" es true se banea, si no, no -->
+                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
+                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
+                            <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
+                            <BotonNotificar :participante="alumno" :session="sessionId" />
+                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
+                                    class="fas fa-eye"></i></button>
+                        </td>
+                        <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
+                            style="font-size: 20px;">
+                            <b>Baneado</b>
+                            <button class="actionButton desban" @click="unbanStudent(alumno)">Desbanear</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-if="showModal" class="modal" @click.self="closeModal">
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                    selectedStudent.secondLastName }}</h2>
+                <ul>
+                    <li v-for="app in selectedStudent.apps" :key="app.name">
+                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
+                    </li>
+                </ul>
+                <button class="closeButton" @click="closeModal">Cerrar</button>
+            </div>
         </div>
     </div>
     <div>
@@ -105,7 +115,6 @@
         </section>
     </div>
 </template>
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
@@ -164,6 +173,7 @@ export default {
 
         return {
             alumnos: [],
+            alumnosBaneados: [],
             session: {},
             totalDangerousApps: 0,
             lastActivity: '',
@@ -175,6 +185,7 @@ export default {
     },
 
     created() {
+        this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
     },
@@ -368,11 +379,15 @@ export default {
         async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
-                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    if (!accion) {
+                        this.alumnos = this.alumnos.filter(al => al !== student)
+                    }
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
-                    if (!response.ok) {
-                        throw new Error('Error al actualizar la lista de participantes')
+                    if (response.status === 200) {
+                        await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                    } else {
+                        throw new Error('Error al actualizar la lista de participantes');
                     }
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -450,8 +465,32 @@ export default {
                 console.error(error);
             }
         },
+        async alumnosbaneados() {
+            try {
+                const response = await axios.get('http://localhost:8080/bannedusers/' + this.sessionId);
 
-    }
+                this.alumnosBaneados = response.data
+                console.log(this.alumnosBaneados)
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        async unbanStudent(student) {
+            try {
+                const response = await axios.post('http://localhost:8080/desbanear/' + this.sessionId, { email: student.email });
+
+                if (response.status === 200) {
+                    await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                } else {
+                    throw new Error('Error al actualizar la lista de participantes');
+                }
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+    },
 };
 
 </script>
@@ -884,6 +923,19 @@ th {
     background-color: var(--button-hover-background-color);
 }
 
+.row-red {
+    background-color: #E52B50;
+}
+
+.ban-text {
+    color: white;
+}
+
+.desban {
+    margin-left: 7vw;
+    background-color: #008000;
+}
+
 @media (max-width: 1200px) {
     .profesorPage {
         width: 90%;
@@ -964,7 +1016,6 @@ th {
 
 .containerTitle {
     display: flex;
-    color: white;
     justify-content: space-between;
     align-items: center;
 }

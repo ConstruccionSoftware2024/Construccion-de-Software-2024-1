@@ -21,6 +21,7 @@ import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.v
 import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
+import Mensajes from '../views/VistasGrupoClaudio/Mensajes.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -181,6 +182,11 @@ const router = createRouter({
       path: '/VerForo',
       name: 'VerForo',
       component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
+    {
+      path: '/mensajes',
+      name: 'mensajes',
+      component: Mensajes
     },
   ],
   scrollBehavior(to, from, savedPosition) {
