@@ -955,47 +955,99 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
-/* revisiar esta funcion de grupo joaquin*/
-app.post('/guardar-procesos', async (req, res) => {
+// Guarda/actualiza los procesos en la base de datos
+app.post('/checkTabs', async (req, res) => {
+  const { procesos, userId, sessionId } = req.body;
   const database = client.db('construccion');
   const collection = database.collection('procesos');
+
   try {
-    const procesos = req.body.procesos;
-    await collection.insertOne({ procesos: procesos })
-      .then(result => {
-        console.log('Datos guardados en MongoDB:', result.ops);
-        res.send('Datos recibidos y guardados en MongoDB');
-      })
-      .catch(err => {
-        console.error('Error al guardar datos en MongoDB:', err);
-        res.status(500).send('Error interno del servidor al guardar datos en MongoDB');
+    // Asegurarse de que procesos sea un array
+    const nuevosProcesoArray = Array.isArray(procesos) ? procesos : [procesos];
+
+    // Primero, obtener el documento actual
+    const currentDoc = await collection.findOne({ userId, sessionId });
+
+    let procesosActualizados = [];
+    let cambios = {
+      agregados: [],
+      existentes: []
+    };
+
+    if (currentDoc && Array.isArray(currentDoc.procesos)) {
+      // Combinar procesos existentes con nuevos
+      procesosActualizados = [...new Set([...currentDoc.procesos, ...nuevosProcesoArray])];
+      cambios.agregados = nuevosProcesoArray.filter(p => !currentDoc.procesos.includes(p));
+      cambios.existentes = nuevosProcesoArray.filter(p => currentDoc.procesos.includes(p));
+    } else {
+      // Si no hay documento previo o procesos no es un array, todos los procesos son nuevos
+      procesosActualizados = nuevosProcesoArray;
+      cambios.agregados = nuevosProcesoArray;
+    }
+
+    // Actualizar o insertar el documento
+    const result = await collection.findOneAndUpdate(
+      {
+        userId: userId,
+        sessionId: sessionId
+      },
+      {
+        $set: {
+          userId: userId,
+          sessionId: sessionId,
+          procesos: procesosActualizados
+        }
+      },
+      {
+        upsert: true,
+        returnDocument: 'after'
+      }
+    );
+
+    if (result.lastErrorObject.updatedExisting) {
+      console.log('Los procesos han sido actualizados en la base de datos.');
+      res.json({
+        updated: true,
+        message: 'Procesos actualizados',
+        cambios: cambios
       });
-  } catch (error) {
-    console.error('Error al guardar el historial:', error);
-    res.status(500).send('Error al guardar el historial');
+    } else if (result.lastErrorObject.upserted) {
+      console.log('Nuevos procesos agregados a la base de datos.');
+      res.json({
+        inserted: true,
+        message: 'Nuevos procesos agregados',
+        cambios: cambios
+      });
+    } else {
+      console.log('No se realizaron cambios en la base de datos.');
+      res.json({
+        unchanged: true,
+        message: 'No se realizaron cambios',
+        cambios: cambios
+      });
+    }
+  } catch (err) {
+    console.error('Error al interactuar con la base de datos:', err);
+    res.status(500).send('Error interno del servidor al interactuar con la base de datos');
   }
 });
 
-app.post('/checkTabs', (req, res) => {
-  const procesos = req.body.procesos;
+app.get('/obtenerProcesos/:userId', async (req, res) => {
+  const userId = req.params.userId;
   const database = client.db('construccion');
   const collection = database.collection('procesos');
 
-  // Buscar si ya existe algún documento con las mismas URLs en la colección
-  collection.findOne({ procesos: procesos })
-    .then(doc => {
-      if (doc) {
-        // Si se encuentra un documento, significa que las URLs ya existen
-        console.log('Las URLs ya existen en la base de datos:', doc);
-        res.json({ exists: true }); // Responder que los datos ya existen
-      } else {
-        // Si no se encuentra ningún documento, las URLs no existen aún
-        console.log('Las URLs no existen en la base de datos, se pueden procesar.');
-        res.json({ exists: false }); // Responder que los datos no existen y pueden ser procesados
-      }
-    })
-    .catch(err => {
-      console.error('Error al buscar en la base de datos:', err);
-      res.status(500).send('Error interno del servidor al buscar en la base de datos');
-    });
+  try {
+    const result = await collection.findOne({ userId });
+    if (result) {
+      console.log('Procesos obtenidos:', result.procesos);
+      res.json(result.procesos);
+    } else {
+      console.log('No se encontraron procesos para el usuario en la sesión');
+      res.json([]);
+    }
+  } catch (err) {
+    console.error('Error al obtener los procesos:', err);
+    res.status(500).send('Error al obtener los procesos');
+  }
 });

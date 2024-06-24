@@ -50,6 +50,7 @@
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import Chart from 'chart.js/auto';
+import { useUserStore } from '../../../back-end/src/store.js';
 
 export default {
     mounted() {
@@ -65,6 +66,7 @@ export default {
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
         const history = ref([]);
+        const userId = ref('');
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -78,8 +80,6 @@ export default {
                     return '#FFFFFF';
             }
         });
-
-
 
         const createSession = () => {
             // Lógica para unirse a una sesión
@@ -96,8 +96,7 @@ export default {
             }
         };
         const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling             
-            guardarHistorial(); // Guarda el historial inmediatamente al iniciar              
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling            
             setInterval(async () => {
                 await fetchHistory(); // Actualiza el historial cada intervalo                 
                 await guardarHistorial(); // Guarda el historial cada intervalo             
@@ -106,21 +105,12 @@ export default {
 
         const guardarHistorial = () => {
             const procesos = history.value.map(proceso => proceso.name);
-            const procesosString = procesos.join(',');
-            axios.post('http://localhost:8080/checkTabs', { procesos: procesosString }) // Endpoint para verificar en el servidor
-                .then(response => {
-                    if (response.data.exists) {
-                        console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
-                        return; // Si los datos ya existen, no se hace nada más
-                    }
-                    axios.post('http://localhost:8080/guardar-procesos', { procesos: procesosString })
-                        .then(response => {
-                            console.log('Historial guardado correctamente:', response.data);
-                        })
-                        .catch(error => {
-                            console.error('Error al guardar el historial:', error);
-                        });
-                })
+            //const procesosString = procesos.join(',');
+            const userStore = useUserStore();
+            const user = computed(() => userStore.user);
+            const userId = user.value._id;
+            axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
+
         };
 
         onMounted(() => {
