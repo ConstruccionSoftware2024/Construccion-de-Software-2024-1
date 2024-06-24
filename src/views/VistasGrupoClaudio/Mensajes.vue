@@ -26,7 +26,7 @@ const cargarMensajes = async () => {
 
         if (respuesta.ok) {
             const datos = await respuesta.json();
-            info.value = datos
+            info.value = datos.reverse()
             console.log('Datos recibidos mensajes:', info.value);
             finish.value.tried = true
             finish.value.success = true
@@ -39,7 +39,19 @@ const cargarMensajes = async () => {
         console.error('Error en la petición fetch:', error);
     }
 };
+const getStatus = (mensaje) => {
+    if (mensaje.alerta == "Peligro") {
+        return 'danger'
+    }
+    if (mensaje.alerta == "Advertencia") {
+        return 'warning'
+    }
+    if (mensaje.alerta == "Normal") {
+        return 'ok'
+    }
 
+    return ''
+}
 </script>
 
 <template>
@@ -52,6 +64,9 @@ const cargarMensajes = async () => {
             No tienes notificaciones
         </div>
         <div class="mensaje" v-for="mensaje in info">
+            <p :class="getStatus(mensaje)">
+                {{ mensaje.alerta }}
+            </p>
             <h3>
                 {{ mensaje.mensaje }}
             </h3>
@@ -90,10 +105,11 @@ h4 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
     width: 90%;
     margin: 0 auto;
     gap: 1rem;
+    padding: 1rem;
 }
 
 .mensaje {
@@ -105,5 +121,20 @@ h4 {
     max-width: 30%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     flex-grow: 1;
+}
+
+.danger {
+    color: rgb(156, 15, 15);
+    font-weight: bold;
+}
+
+.warning {
+    font-weight: bold;
+    color: rgb(224, 146, 0);
+}
+
+.ok {
+    color: rgb(18, 105, 18);
+    font-weight: bold;
 }
 </style>

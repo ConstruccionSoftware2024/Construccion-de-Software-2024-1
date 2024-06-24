@@ -894,7 +894,6 @@ app.post('/message', async (req, res) => {
 
     //traemos la información de la sesion correspondiente
     let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
-    console.log(sesionCorrecta)
 
     const newMessage = {
       destinatario: req.body.destinatario,
