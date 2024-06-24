@@ -693,7 +693,7 @@ app.post('/sesion', async (req, res) => {
       creador: req.body.creador,
       participantes: [],
       banlist: [],
-
+      cancelada: false,
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
@@ -1047,3 +1047,22 @@ app.post('/guardar-procesos', async (req, res) => {
     res.status(500).send('Error al guardar el historial');
   }
 });
+
+app.put('/cancelarSesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, {
+      $set: { cancelada: true }
+    })
+    if (result.modifiedCount === 1) {
+      console.log('AAAAAAAAYUDA')
+      res.send(result)
+    } else {
+      res.status(404).send('Sesion no encontrada')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})

@@ -22,11 +22,6 @@
                 </div>
             </div>
             <div class="history box-shadow">
-                <a :href="downloadLink" download="Procesos-exe.exe">
-                    <button>Descargar Ejecutable</button>
-                </a>
-                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR--> 
-                
                 <h3>Historial de Aplicaciones</h3>
                 <table>
                     <thead>
@@ -49,15 +44,14 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
 import Chart from 'chart.js/auto';
 
 export default {
-    mounted() {
-        if (this.$store.state.usuario.role == "profesor") {
-            this.$router.push('/listaAsignaturas')
-        }
-    },
+    /*  mounted() {
+          if (this.$store.state.usuario.role == "profesor") {
+              this.$router.push('/listaAsignaturas')
+          }
+      }, */
     setup() {
         const sessionId = ref('');
         const totalApps = ref(0);
@@ -65,7 +59,10 @@ export default {
         const lastActivity = ref('');
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
-        const history = ref([]);
+        const history = ref([
+            { time: '10:00 AM', url: 'http://ejemplo.com' },
+            { time: '10:05 AM', url: 'http://Discord.org' },
+        ]);
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -86,38 +83,7 @@ export default {
             // Lógica para unirse a una sesión
         };
 
-        const fetchHistory = async () => {
-            try {
-                const response = await axios.get('http://127.0.0.1:5000/historial');
-                history.value = response.data.sort((a, b) => {
-                    return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
-                });
-            } catch (error) {
-                console.error('Error fetching history:', error);
-            }
-        };
-        const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
-
-            setInterval(async () => {
-                await fetchHistory(); // Actualiza el historial cada intervalo
-            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
-        };
-
-        const guardarHistorial = () => {
-            axios.post('http://localhost:8080/guardar-procesos')
-                .then(response => {
-                    console.log('Historial guardado correctamente:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error al guardar el historial:', error);
-                });
-        };
-
         onMounted(() => {
-            startPolling();
-            fetchHistory();
-
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
             new Chart(statusChartCtx, {
                 type: 'pie',
@@ -187,8 +153,6 @@ export default {
             dangerColor,
             history,
             createSession,
-            downloadLink: '/public/Downloads/Procesos-exe.exe',
-            guardarHistorial,
         };
     },
 };

@@ -36,3 +36,15 @@ export const useUserStore = defineStore('user', {
     }
   }
 })
+
+export const useSesionStore = defineStore('', {
+  state: () => ({
+    sesionId: JSON.parse(localStorage.getItem('sesion')) || null,
+  }),
+  actions: {
+    setSesion(sesion) {
+      this.sesionId = sesion
+      localStorage.setItem('sesion', JSON.stringify(this.sesionId))
+    },
+  }
+}) 

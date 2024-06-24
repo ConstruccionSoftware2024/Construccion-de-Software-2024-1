@@ -1,10 +1,14 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
+        <div class="containerTitle">
+            <h1>{{ nombreSesion }}</h1>
+            <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
+        </div>
         <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button @click="otherOptions">Otras Opciones</button>
+            <!--  <button @click="createSession">Crear Sesión</button> -->
+            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+            <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -111,19 +115,59 @@
         </section>
     </div>
 </template>
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
+import { onMounted, ref } from 'vue';
+
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
-        return {
-            idRuta
+        let nombreSesion = ref('');
+        let isCancelada = ref(false);
+        const obtenerDatosSesion = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/sessions/' + idRuta);
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    nombreSesion.value = datos.nombre;
+                    isCancelada.value = datos.cancelada;
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error);
+            }
+        };
+        const cancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/cancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    console.log("marcado como cancelado")
+                }
+                else {
+                    console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
         }
+        onMounted(obtenerDatosSesion)
+        return {
+            idRuta,
+            nombreSesion,
+            cancelarSesion,
+            isCancelada,
+
+        };
     },
     data() {
 
@@ -140,17 +184,12 @@ export default {
         };
     },
 
-    /*  mounted() {
-         if (this.$store.state.usuario.role == "alumno") {
-             this.$router.push('/')
-         }
-     }, */
-
     created() {
         this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
     },
+
     name: 'ProfesorPage',
     components: {
         BotonNotificar,
@@ -627,7 +666,14 @@ export default {
     max-width: 1200px;
 }
 
+.dashboard {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+}
+
 .dashboard button {
+    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -965,5 +1011,17 @@ th {
         padding: 8px 16px;
         font-size: 0.9rem;
     }
+
+}
+
+.containerTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.claseNumeroSesion {
+    font-size: medium;
+    color: gray;
 }
 </style>
