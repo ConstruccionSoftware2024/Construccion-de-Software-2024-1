@@ -30,7 +30,7 @@
             <tr v-if="alumnoSeleccionado === index">
               <td colspan="8">
                 <div class="detail-falta-container">
-                  <strong>Asignaturas inscritas:</strong>
+                  <strong class="titulo">Asignaturas inscritas:</strong>
                   <ul>
                     <li v-for="asignatura in asignaturas" :key="asignatura._id">{{ asignatura.title }}</li>
                   </ul>
@@ -93,6 +93,11 @@ export default {
 </script>
 
 <style scoped>
+
+.titulo {
+  font-weight: bold;
+}
+
 h1 {
   font-size: 40px;
   font-weight: bold;
