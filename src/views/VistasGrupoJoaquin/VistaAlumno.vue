@@ -100,7 +100,7 @@ export default {
             setInterval(async () => {
                 await fetchHistory(); // Actualiza el historial cada intervalo                 
                 await guardarHistorial(); // Guarda el historial cada intervalo             
-            }, 30000); // Intervalo de 30 segundos
+            }, 5000); // Intervalo de 30 segundos
         };
 
         const guardarHistorial = () => {
@@ -110,7 +110,7 @@ export default {
             const user = computed(() => userStore.user);
             const userId = user.value._id;
             axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
-
+            //window.alert('Procesos guardados en DB');
         };
 
         onMounted(() => {

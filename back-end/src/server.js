@@ -1004,28 +1004,6 @@ app.post('/checkTabs', async (req, res) => {
       }
     );
 
-    if (result.lastErrorObject.updatedExisting) {
-      console.log('Los procesos han sido actualizados en la base de datos.');
-      res.json({
-        updated: true,
-        message: 'Procesos actualizados',
-        cambios: cambios
-      });
-    } else if (result.lastErrorObject.upserted) {
-      console.log('Nuevos procesos agregados a la base de datos.');
-      res.json({
-        inserted: true,
-        message: 'Nuevos procesos agregados',
-        cambios: cambios
-      });
-    } else {
-      console.log('No se realizaron cambios en la base de datos.');
-      res.json({
-        unchanged: true,
-        message: 'No se realizaron cambios',
-        cambios: cambios
-      });
-    }
   } catch (err) {
     console.error('Error al interactuar con la base de datos:', err);
     res.status(500).send('Error interno del servidor al interactuar con la base de datos');
