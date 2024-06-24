@@ -146,6 +146,18 @@ app.get('/faltas/', async (req, res) => {
   }
 });
 
+// Recuperar faltas especificas de un usuario
+app.get('/faltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const result = await collection.findOne({ _id: req.params.id });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 
 app.post('/addFaltas/:id', async (req, res) => {
   try {
