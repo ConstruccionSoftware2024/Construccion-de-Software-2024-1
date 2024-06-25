@@ -479,7 +479,7 @@ export default {
 }
 
 .input-container_añadir {
-    width: 130%;
+    width: 100%;
     position: relative;
     margin-left: -20%;
 }
