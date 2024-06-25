@@ -7,6 +7,7 @@ import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+
 dotenv.config()
 
 // Configuración de la aplicación
@@ -23,6 +24,9 @@ const corsOptions = {
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }
+
+
+
 app.use(cors(corsOptions))
 app.use(express.json())
 // Conexión a la base de datos de MongoDB

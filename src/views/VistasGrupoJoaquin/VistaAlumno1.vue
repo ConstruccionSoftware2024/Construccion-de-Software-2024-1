@@ -25,9 +25,7 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-            <button @click="guardarHistorial">Guardar procesos</button>
-
-
+                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR-->
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
@@ -45,6 +43,11 @@
                     </tbody>
                 </table>
             </div>
+            <div class="response-data box-shadow">
+                <h3>Datos de Respuesta</h3>
+                <pre v-if="responseData">{{ responseData }}</pre>
+                <p v-else>Cargando datos...</p>
+            </div>
         </main>
     </div>
 </template>
@@ -55,11 +58,10 @@ import axios from 'axios';
 import Chart from 'chart.js/auto';
 import { useUserStore } from '../../../back-end/src/store.js';
 
-
 export default {
     mounted() {
-        if (this.$store.state.usuario.role == "profesor") {
-            this.$router.push('/listaAsignaturas')
+        if (this.$store.state.usuario.role === "profesor") {
+            this.$router.push('/listaAsignaturas');
         }
     },
     setup() {
@@ -70,7 +72,7 @@ export default {
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
         const history = ref([]);
-        const userId = ref('');
+        const responseData = ref('');
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -99,27 +101,48 @@ export default {
                 console.error('Error fetching history:', error);
             }
         };
+
         const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling            
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
             setInterval(async () => {
-                await fetchHistory(); // Actualiza el historial cada intervalo                 
-                await guardarHistorial(); // Guarda el historial cada intervalo             
-            }, 5000); // Intervalo de 30 segundos
+                await fetchHistory(); // Actualiza el historial cada intervalo
+            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
         };
 
         const guardarHistorial = () => {
-            const procesos = history.value.map(proceso => proceso.name);
-            //const procesosString = procesos.join(',');
-            const userStore = useUserStore();
-            const user = computed(() => userStore.user);
-            const userId = user.value._id;
-            axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
-            //window.alert('Procesos guardados en DB');
+            axios.post('http://localhost:8080/guardar-procesos')
+                .then(response => {
+                    console.log('Historial guardado correctamente:', response.data);
+                })
+                .catch(error => {
+                    console.error('Error al guardar el historial:', error);
+                });
+        };
+
+        const fetchResponseData = async () => {
+            try {
+                const response = await fetch('http://localhost:5173/respuesta.txt');
+                if (!response.ok) {
+                    throw new Error('La respuesta de la red no fue satisfactoria');
+                }
+                responseData.value = await response.text();
+            } catch (error) {
+                console.error('Error en la solicitud fetch:', error);
+                responseData.value = 'Error al cargar datos';
+            }
+        };
+
+        const startResponsePolling = () => {
+            fetchResponseData(); // Llama a fetchResponseData inmediatamente al iniciar el polling
+            setInterval(async () => {
+                await fetchResponseData(); // Actualiza los datos cada intervalo
+            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
         };
 
         onMounted(() => {
             startPolling();
             fetchHistory();
+            startResponsePolling();
 
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
             new Chart(statusChartCtx, {
@@ -178,13 +201,7 @@ export default {
                     }
                 }
             });
-
-
         });
-
-
-
-
 
         return {
             sessionId,
@@ -195,6 +212,7 @@ export default {
             dangerMessage,
             dangerColor,
             history,
+            responseData,
             createSession,
             downloadLink: '/public/Downloads/Procesos-exe.exe',
             guardarHistorial,
@@ -354,5 +372,19 @@ button {
 .history th {
     background-color: #f2f2f2;
     text-align: left;
+}
+
+.response-data {
+    margin-top: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 </style>

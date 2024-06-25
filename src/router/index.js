@@ -20,6 +20,7 @@ import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
 import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import VistaAlumno1 from '../views/VistasGrupoJoaquin/VistaAlumno1.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
 
 const router = createRouter({
@@ -125,6 +126,11 @@ const router = createRouter({
       path: '/vistaalumno',
       name: 'vista-alumno',
       component: VistaAlumno
+    },
+    {
+      path: '/vistaalumno1',
+      name: 'vista-alumno1',
+      component: VistaAlumno1
     },
     {
       path: '/perfil',
