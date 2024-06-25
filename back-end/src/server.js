@@ -992,32 +992,6 @@ app.put('/message/:id', async (req, res) => {
   }
 })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Enviar email (página contacto)
 app.post('/send-email', async (req, res) => {
   let { fullName, email, mobile, msg } = req.body;
@@ -1065,6 +1039,18 @@ app.post('/guardar-procesos', async (req, res) => {
     res.status(500).send('Error al guardar el historial');
   }
 });
+
+
+app.get('/configs', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('configuraciones')
+    const configs = await collection.find({}).toArray()
+    res.send(configs)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
 
 app.put('/cancelarSesion/:id', async (req, res) => {
   try {
