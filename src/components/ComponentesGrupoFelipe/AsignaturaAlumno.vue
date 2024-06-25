@@ -67,8 +67,20 @@
 
             <div class="acciones">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h3>
-                <button>Contactar al Profesor</button>
+                <button @click="contactarProfesor">Contactar al Profesor</button>
                 <button>Reportar un Problema</button>
+            </div>
+            <div v-if="showAviso" class="aviso">
+                Correo del profesor copiado al portapapeles!
+            </div>
+            <button @click="mostrarPopup = true">Crear sesión</button>
+
+            <div v-if="mostrarPopup" class="popup">
+                <h2>Crear sesión</h2>
+                <label>Nombre de la sesión: <input v-model="nuevaSesion.nombre" type="text"></label>
+                <label>Descripción: <input v-model="nuevaSesion.descripcion" type="text"></label>
+                <button @click="enviarFormulario">Crear</button>
+                <button @click="mostrarPopup = false">Cancelar</button>
             </div>
 
             <div class="participantes">
@@ -123,13 +135,26 @@ const closePopUp = (event) => {
 const asignatura = ref({
     nombre: 'Nombre Ejemplo',
     profesor: 'Profesor Ejemplo',
+    email: 'ejemplo@utalca.cl',
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
 });
 
-
 const sesiones = ref([]);
+const showAviso = ref(false);
+
+const contactarProfesor = async () => {
+  try {
+    await navigator.clipboard.writeText(asignatura.value.email);
+    showAviso.value = true;
+    setTimeout(() => {
+      showAviso.value = false;
+    }, 2000); // Ocultar el aviso después de 2 segundos
+  } catch (err) {
+    console.error('Error al copiar el correo: ', err);
+  }
+};
 
 function recuperarSesiones(id) {
     return axios.get(`http://localhost:8080/sesion/${id}`)
@@ -149,6 +174,7 @@ async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
         .then(async response => {
             asignatura.value = response.data;
+            console.log("asignatura: ", asignatura);
             recuperarProfesor(response.data.profesorId);
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);
@@ -163,6 +189,22 @@ async function recuperarProfesor(id) {
     await axios.get(`http://localhost:8080/user/${id}`)
         .then(response => {
             asignatura.value.profesor = response.data.firstName + ' ' + response.data.lastName;
+            asignatura.value.email = response.data.email;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function recuperarFaltas(id) {
+    await axios.get(`http://localhost:8080/faltas/${id}`)
+        .then(response => {
+            if (response.data.length === 0) {
+                faltaAlumnos.value.faltas = 0;
+            }else{
+                faltaAlumnos.value = response.data;
+            }
+            return response.data;
         })
         .catch(error => {
             console.error(error);
@@ -201,6 +243,18 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.aviso {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4caf50;
+  color: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
 .pop-up-detalles-faltas {
   position: fixed;
   top: 50%;
