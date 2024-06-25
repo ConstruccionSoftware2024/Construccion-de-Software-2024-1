@@ -1,10 +1,14 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
+        <div class="containerTitle">
+            <h1>{{ nombreSesion }}</h1>
+            <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
+        </div>
         <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button @click="otherOptions">Otras Opciones</button>
+            <!--  <button @click="createSession">Crear Sesión</button> -->
+            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+            <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -35,15 +39,21 @@
                 </thead>
                 <tbody>
                     <tr v-for="alumno in alumnos" :key="alumno._id">
-                        <td>{{ alumno.matricula }}</td>
-                        <td>{{ alumno.firstName }}</td>
-                        <td>{{ alumno.lastName }}</td>
-                        <td>{{ alumno.secondLastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.matricula }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.firstName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.lastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.secondLastName }}
+                        </td>
                         <td
-                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
                             {{ alumno.status }}
                         </td>
-                        <td>
+                        <td v-if="!alumnosBaneados.includes(alumno.email)"
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
                             <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
@@ -54,6 +64,11 @@
                             <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
+                        <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
+                            style="font-size: 20px;">
+                            <b>Baneado</b>
+                            <button class="actionButton desban" @click="unbanStudent(alumno)">Desbanear</button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -62,7 +77,7 @@
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-            selectedStudent.secondLastName }}</h2>
+                    selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -100,25 +115,65 @@
         </section>
     </div>
 </template>
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
+import { onMounted, ref } from 'vue';
+
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
-        return {
-            idRuta
+        let nombreSesion = ref('');
+        let isCancelada = ref(false);
+        const obtenerDatosSesion = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/sessions/' + idRuta);
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    nombreSesion.value = datos.nombre;
+                    isCancelada.value = datos.cancelada;
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error);
+            }
+        };
+        const cancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/cancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    console.log("marcado como cancelado")
+                }
+                else {
+                    console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
         }
-    },
+        onMounted(obtenerDatosSesion)
+        return {
+            idRuta,
+            nombreSesion,
+            cancelarSesion,
+            isCancelada,
 
+        };
+    },
     data() {
 
         return {
             alumnos: [],
+            alumnosBaneados: [],
             session: {},
             totalDangerousApps: 0,
             lastActivity: '',
@@ -129,16 +184,12 @@ export default {
         };
     },
 
-    /*  mounted() {
-         if (this.$store.state.usuario.role == "alumno") {
-             this.$router.push('/')
-         }
-     }, */
-
     created() {
+        this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
     },
+
     name: 'ProfesorPage',
     components: {
         BotonNotificar,
@@ -328,11 +379,15 @@ export default {
         async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
-                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    if (!accion) {
+                        this.alumnos = this.alumnos.filter(al => al !== student)
+                    }
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
-                    if (!response.ok) {
-                        throw new Error('Error al actualizar la lista de participantes')
+                    if (response.status === 200) {
+                        await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                    } else {
+                        throw new Error('Error al actualizar la lista de participantes');
                     }
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -410,8 +465,32 @@ export default {
                 console.error(error);
             }
         },
+        async alumnosbaneados() {
+            try {
+                const response = await axios.get('http://localhost:8080/bannedusers/' + this.sessionId);
 
-    }
+                this.alumnosBaneados = response.data
+                console.log(this.alumnosBaneados)
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        async unbanStudent(student) {
+            try {
+                const response = await axios.post('http://localhost:8080/desbanear/' + this.sessionId, { email: student.email });
+
+                if (response.status === 200) {
+                    await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                } else {
+                    throw new Error('Error al actualizar la lista de participantes');
+                }
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+    },
 };
 
 </script>
@@ -587,7 +666,14 @@ export default {
     max-width: 1200px;
 }
 
+.dashboard {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+}
+
 .dashboard button {
+    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -837,6 +923,19 @@ th {
     background-color: var(--button-hover-background-color);
 }
 
+.row-red {
+    background-color: #E52B50;
+}
+
+.ban-text {
+    color: white;
+}
+
+.desban {
+    margin-left: 7vw;
+    background-color: #008000;
+}
+
 @media (max-width: 1200px) {
     .profesorPage {
         width: 90%;
@@ -912,5 +1011,17 @@ th {
         padding: 8px 16px;
         font-size: 0.9rem;
     }
+
+}
+
+.containerTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.claseNumeroSesion {
+    font-size: medium;
+    color: gray;
 }
 </style>
