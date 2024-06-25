@@ -569,6 +569,24 @@ app.post('/anadir_Usuario', async (req, res) => {
     res.status(500).send('Hubo un error al añadir los usuarios');
   }
 });
+app.get('/obtenerMiembrosAsignatura', async (req, res) => {
+  try {
+    const { asignaturaId } = req.query;
+    //console.log("asignaturaId recibido:", asignaturaId);
+
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
+    const miembros = asignatura.members;
+
+    //console.log("Miembros encontrados:", miembros);
+    res.send(miembros);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error interno del servidor' });
+  }
+});
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
@@ -693,7 +711,7 @@ app.post('/sesion', async (req, res) => {
       creador: req.body.creador,
       participantes: [],
       banlist: [],
-
+      cancelada: false,
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
@@ -894,7 +912,6 @@ app.post('/message', async (req, res) => {
 
     //traemos la información de la sesion correspondiente
     let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
-    console.log(sesionCorrecta)
 
     const newMessage = {
       destinatario: req.body.destinatario,
@@ -975,32 +992,6 @@ app.put('/message/:id', async (req, res) => {
   }
 })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Enviar email (página contacto)
 app.post('/send-email', async (req, res) => {
   let { fullName, email, mobile, msg } = req.body;
@@ -1049,12 +1040,32 @@ app.post('/guardar-procesos', async (req, res) => {
   }
 });
 
+
 app.get('/configs', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('configuraciones')
     const configs = await collection.find({}).toArray()
     res.send(configs)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.put('/cancelarSesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, {
+      $set: { cancelada: true }
+    })
+    if (result.modifiedCount === 1) {
+      console.log('AAAAAAAAYUDA')
+      res.send(result)
+    } else {
+      res.status(404).send('Sesion no encontrada')
+    }
   } catch (error) {
     res.status(500).send(error.message)
   }
