@@ -8,6 +8,7 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -144,7 +145,7 @@
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
@@ -154,6 +155,7 @@ export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
+        const router = useRouter();
         let nombreSesion = ref('');
         let isCancelada = ref(false);
         const obtenerDatosSesion = async () => {
@@ -194,6 +196,7 @@ export default {
             nombreSesion,
             cancelarSesion,
             isCancelada,
+            router
 
         };
     },
@@ -238,7 +241,9 @@ export default {
                 console.error('Error fetching session data:', error);
             }
         },*/
-
+        redirigirCrearEvaluacion() {
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
 
         assignAppsToStudents(students) {
             const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
