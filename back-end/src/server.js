@@ -569,6 +569,24 @@ app.post('/anadir_Usuario', async (req, res) => {
     res.status(500).send('Hubo un error al añadir los usuarios');
   }
 });
+app.get('/obtenerMiembrosAsignatura', async (req, res) => {
+  try {
+    const { asignaturaId } = req.query;
+    //console.log("asignaturaId recibido:", asignaturaId);
+
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
+    const miembros = asignatura.members;
+
+    //console.log("Miembros encontrados:", miembros);
+    res.send(miembros);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error interno del servidor' });
+  }
+});
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {

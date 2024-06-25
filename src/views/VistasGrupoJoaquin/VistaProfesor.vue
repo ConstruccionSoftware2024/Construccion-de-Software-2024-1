@@ -152,6 +152,7 @@ export default {
             selectedStudent: '',
             sessionId: this.idRuta,
             users: [],
+            asignaturas: [],
             searchQuery: '',
         };
     },
@@ -385,22 +386,20 @@ export default {
         async mounted() {
             const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
             const sessionUsers = sessionResponse.data;
-
+            const asignatura = sessionUsers.asignatura;
             const participantesIds = sessionUsers.participantes;
 
             const response = await axios.get('http://localhost:8080/users');
             const allUsers = response.data;
 
-            //console.log("participantes\n" + participantesIds)
-            axios.get('http://localhost:8080/users')
-                .then(response => {
-                    console.log("ID\n" + response.data.map(user => user._id));
-                    this.users = allUsers.filter(user => !participantesIds.includes(user._id) && user.role == 'alumno');
-                    //console.log("a\n" + this.users.map(user => user._id));
-                })
-                .catch(error => {
-                    console.error(error);
-                });
+            // Obtener los miembros de la asignatura como strings
+            const members = await this.AsignaturaMembers(asignatura);
+
+            // Filtrar allUsers para incluir solo aquellos que son miembros y no son participantes
+            this.users = allUsers.filter(user =>
+                members.includes(user._id.toString()) && !participantesIds.includes(user._id.toString())
+            );
+
         },
         añadir() {
             const openModal = document.querySelector('.hero__cta');
@@ -438,8 +437,23 @@ export default {
                 console.error(error);
             }
         },
+        async AsignaturaMembers(asignaturaId) {
+            try {
+                //console.log("-->" + asignaturaId);
+                const response = await axios.get('http://localhost:8080/obtenerMiembrosAsignatura', {
+                    params: {
+                        asignaturaId: asignaturaId
+                    }
+                });
+                //console.log("Members de la asignatura:", response.data);
+                const memberIdsAsString = response.data.map(member => member.toString());
+                return memberIdsAsString;
 
-
+            } catch (error) {
+                console.error(error);
+                return [];
+            }
+        },
     },
     computed: {
         // Filtra los usuarios basándose en el campo de búsqueda
@@ -587,7 +601,7 @@ export default {
 }
 
 .hero__cta:hover {
-    background-color: #fff;
+    background-color: var(--container-background-color);
     color: #1e3c72;
 }
 
@@ -626,7 +640,7 @@ export default {
     width: 100%;
     max-width: 600px;
     max-height: 90%;
-    background-color: #fff;
+    background-color: var(--container-background-color);
     border-radius: 6px;
     padding: 1em 1em;
     display: grid;
