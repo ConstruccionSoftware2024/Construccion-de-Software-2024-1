@@ -151,7 +151,7 @@ export default {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    gap: 100px;
+    gap: 10%;
     height: 450px;
     overflow-y: auto;
 }
