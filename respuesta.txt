@@ -1,43 +1,44 @@
-## Clasificación de aplicaciones del usuario para estudiar:
+## Clasificación de Aplicaciones para Estudiar:
 
 **Bueno:**
 
-* **Code.exe:**  IDE para desarrollo de código, ideal para estudiar programación. 
-* **MongoDBCompass.exe:** Herramienta para trabajar con bases de datos MongoDB, útil para el estudio de tecnologías de bases de datos.
-* **gitkraken.exe:**  Interfaz gráfica para el control de versiones con Git, muy útil para aprender sobre Git y control de versiones.
-* **postgres.exe:**  Motor de base de datos PostgreSQL, ideal para el estudio de bases de datos relacionales.
-* **Discord.exe:**  Plataforma de comunicación para colaborar con otros estudiantes, ideal para trabajar en proyectos y resolver dudas. 
-* **brave.exe:**  Navegador web que bloquea anuncios y rastreadores, ideal para navegar por la web de forma eficiente y segura.
+* **brave:** Navegador web. Es una herramienta esencial para la investigación, acceso a información y aprendizaje online. 
+* **Discord:** Plataforma de comunicación online. Útil para colaborar en proyectos, grupos de estudio y comunicación con compañeros.
+* **MongoDBCompass:** Herramienta de gestión de bases de datos NoSQL. Ideal para el estudio de bases de datos y desarrollo de aplicaciones.
+* **Code:** Editor de código de Visual Studio Code. Permite desarrollar y editar código en diferentes lenguajes de programación, útil para proyectos de programación y aprendizaje de tecnologías.
+* **gitkraken:** Herramienta gráfica para Git. Permite realizar un seguimiento del código, realizar versiones y colaborar en proyectos, ideal para el desarrollo de software y trabajo en equipo.
+* **SpotifyWidgetProvider:** Reproductor de música. Es útil para concentrarse, relajarse y ambientar el ambiente de estudio.
+* **Microsoft.SharePoint:** Servicio de colaboración de Microsoft. Facilita el trabajo en equipo y acceso a archivos en la nube.
 
 **Intermedio:**
 
-* **node.exe:**  Entorno de ejecución para JavaScript, útil para el estudio de desarrollo web backend.
-* **cmd.exe:**  Consola de comandos de Windows,  útil para aprender comandos básicos y ejecutar scripts.
-* **powershell.exe:**  Entorno de automatización de tareas de Windows, útil para aprender scripting avanzado.
-* **SpotifyWidgetProvider.exe:** Proveedor de widgets de Spotify, útil si se utiliza Spotify para estudiar música o podcasts.
+* **pg_ctl:**  Herramienta de gestión de PostgreSQL. Útil para el estudio de bases de datos relacionales.
+* **postgres:** Base de datos relacional. Permite almacenar y gestionar datos estructurados.
+* **node-spawn-server:** Servidor de Node.js. Útil para desarrollo de aplicaciones web y aprendizaje de JavaScript. 
+* **node:** Entorno de ejecución para JavaScript. Permite desarrollar aplicaciones y aprender JavaScript.
+* **esbuild:** Herramienta de empaquetado de código JavaScript. Útil para optimizar el rendimiento de las aplicaciones web.
+* **powershell:** Shell de comandos de Microsoft. Permite ejecutar comandos y scripts para automatizar tareas, útil para administradores de sistemas y desarrollo.
+* **cmd:** Consola de comandos de Windows. Permite ejecutar comandos y scripts para administrar el sistema.
+* **mspaint:** Editor de imágenes sencillo. Permite editar imágenes de forma básica.
+* **tasklist:** Muestra la lista de procesos activos en el sistema. Útil para analizar el uso de recursos y solucionar problemas.
+* **GameInputSvc:** Servicio de entrada de juegos. No tiene una utilidad directa para el estudio.
 
 **Malo:**
 
-* **LenovoNow.Task.exe:**  Herramienta de Lenovo para actualizaciones y sugerencias, no directamente relacionada con el estudio.
-* **AutoModeDetect.exe:**  Herramienta para detectar el modo de conexión de red, no directamente relacionada con el estudio.
-* **SearchHost.exe:**  Motor de búsqueda de Windows, no directamente relacionado con el estudio.
-* **esbuild.exe:**  Herramienta para compilar código JavaScript, no directamente relacionada con el estudio a menos que se esté estudiando desarrollo web.
-* **PhoneExperienceHost.exe:**  Componente relacionado con las funciones de llamada y mensajes del sistema, no directamente relacionado con el estudio.
-* **esrv.exe:**  Componente relacionado con la detección de redes inalámbricas, no directamente relacionado con el estudio.
-* **Microsoft.SharePoint.exe:**  Componente relacionado con SharePoint, no directamente relacionado con el estudio a menos que se esté trabajando con esta plataforma.
-* **backgroundTaskHost.exe:**  Componente que ejecuta tareas en segundo plano, no directamente relacionado con el estudio.
-* **WsToastNotification.exe:**  Componente relacionado con las notificaciones del sistema, no directamente relacionado con el estudio.
-* **UserOOBEBroker.exe:**  Componente relacionado con la configuración inicial del usuario, no directamente relacionado con el estudio.
-* **SystemSettings.exe:**  Aplicación para la configuración del sistema, no directamente relacionado con el estudio.
-* **Video.UI.exe:**  Componente relacionado con la reproducción de videos, no directamente relacionado con el estudio.
-* **DataExchangeHost.exe:**  Componente para el intercambio de datos, no directamente relacionado con el estudio.
-* **EABackgroundService.exe:**  Componente relacionado con la seguridad, no directamente relacionado con el estudio.
-* **WmiPrvSE.exe:**  Componente relacionado con la administración del sistema, no directamente relacionado con el estudio.
-* **tasklist.exe:**  Herramienta para listar procesos, no directamente relacionada con el estudio.
+* **AutoModeDetect:** Detectar la configuración de red. No es relevante para el estudio. 
+* **ipf_helper:**  Componente de Intel. No es relevante para el estudio.
+* **sihost:** Componente del sistema operativo. No es relevante para el estudio. 
+* **taskhostw:** Ejecutar tareas y aplicaciones. No es relevante para el estudio.
+* **LenovoNow.Task:** Programa de Lenovo. No es relevante para el estudio.
+* **WsToastNotification:** Notificaciones del sistema. No es relevante para el estudio.
+* **Discord.exe:** Comunicación en línea. Si bien es útil para la colaboración, puede ser una distracción durante el estudio.
+* **UserOOBEBroker.exe:**  Experiencia de usuario. No es relevante para el estudio.
+* **Video.UI.exe:**  Aplicación para videos. No es relevante para el estudio.
+* **DataExchangeHost.exe:** Componente del sistema operativo. No es relevante para el estudio.
+* **EABackgroundService.exe:** Servicio de fondo. No es relevante para el estudio.
+* **audiodg.exe:** Servicio de audio. No es relevante para el estudio.
+* **WmiPrvSE.exe:**  Servicio de administración de Windows. No es relevante para el estudio.
 
-**Nota:** 
+**Nota:**
 
-* La clasificación es subjetiva y puede variar según el tipo de estudio.
-* Es importante recordar que la presencia de algunas aplicaciones de sistema como **svchost.exe** o **conhost.exe** es normal y no necesariamente negativa. 
-
-Espero que esta clasificación te sea útil para organizar tu entorno de trabajo para estudiar. 
+La clasificación se basa en la función principal de las aplicaciones y su posible impacto en el proceso de estudio. Algunas aplicaciones pueden ser útiles en determinados casos, pero en general, su impacto en la productividad del estudio es mínimo o incluso negativo. 

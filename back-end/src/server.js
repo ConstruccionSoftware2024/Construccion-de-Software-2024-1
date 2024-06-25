@@ -277,20 +277,6 @@ app.post('/login', async (req, res) => {
   }
 })
 
-//metodo para recuperar el .txt
-
-app.get('/read-local-file', (req, res) => {
-  const filePath = path.join(__dirname, '../../src/lib/respuesta.txt');
-
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error al leer el archivo:', err);
-      return res.status(500).send('Error al leer el archivo');
-    }
-    res.send(data);
-  });
-});
-
 app.post('/register', async (req, res) => {
   const {
     email,

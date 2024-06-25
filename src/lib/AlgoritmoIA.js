@@ -19,7 +19,7 @@ export async function generateTextFile() {
       return;
     }
 
-    const prompt = `Dada la lista de procesos: ${stdout}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales.`;
+    const prompt = `Dada la lista de procesos: ${stdout}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales y describe que hace cada proceso, ademas debes mostrar los procesos sin el .exe del final.`;
 
     try {
       const result = await model.generateContent(prompt);
