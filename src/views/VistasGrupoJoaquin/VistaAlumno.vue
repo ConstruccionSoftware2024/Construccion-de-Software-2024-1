@@ -61,6 +61,9 @@
 import { ref, onMounted, computed } from 'vue';
 import Chart from 'chart.js/auto';
 import { useUserStore } from '../../../back-end/src/store.js';
+import axios from 'axios';
+import { useRoute } from 'vue-router';
+
 
 
 export default {
