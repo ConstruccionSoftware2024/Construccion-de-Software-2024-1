@@ -87,6 +87,7 @@ import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { showText } from 'pdf-lib';
+import Swal from 'sweetalert2';
 
 export default {
     data() {
@@ -243,9 +244,14 @@ export default {
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
 
                     console.log('Sesión creada con ID:', sessionId);
-
+                    
                     this.fetchProjects();
                     this.mostrarPopup = false;
+                    Swal.fire({
+                    title: 'Sesion creada correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                    });
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)
                 }

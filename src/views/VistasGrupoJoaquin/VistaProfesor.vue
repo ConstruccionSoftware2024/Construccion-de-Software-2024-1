@@ -147,6 +147,8 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 import { onMounted, ref } from 'vue';
+import Swal from 'sweetalert2';
+import { time } from 'xpress/lib/string';
 
 export default {
     setup() {
@@ -514,12 +516,17 @@ export default {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-
+                
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
                 });
-                location.reload();
+                Swal.fire({
+                    title: 'Alumnos agregados correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+                this.fetchUsers();
                 console.log(response.data);
 
             } catch (error) {
