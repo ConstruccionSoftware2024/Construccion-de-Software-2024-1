@@ -1,11 +1,7 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
-        <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button @click="otherOptions">Otras Opciones</button>
-        </div>
+        <h1>Sesion id: {{ sessionId }}</h1>
+        <strong>Asignatura: {{ asignatura }}</strong>
         <div class="mainContainer">
             <div class="chartContainer">
                 <canvas id="studentsPieChart"></canvas>
@@ -18,6 +14,15 @@
                 <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
                 <div class="charts">
                     <canvas id="appsBarChart"></canvas>
+                </div>
+                <div class="menuContainer">
+                    <h2>Herramientas del docente</h2>
+                    <button @click="toggleMenu" class="menuButton">Opciones</button>
+                    <div v-if="menuOpen" class="dropdownMenu">
+                        <button @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+                        <button @click="añadir(); menuOpen = false">Añadir Alumno</button>
+                        <button @click="otherOptions(); menuOpen = false">Otras Opciones</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -44,12 +49,10 @@
                             {{ alumno.status }}
                         </td>
                         <td>
-                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
+                            <button class="actionButton ban" @click="banExpStudent(alumno, true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
-                            <!-- Si "accion" es true se banea, si no, no -->
-                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
+                            <button class="actionButton expel" @click="banExpStudent(alumno, false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
-                            <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" />
                             <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
                                     class="fas fa-eye"></i></button>
@@ -75,88 +78,112 @@
     <div>
         <section class="modal_añadir">
             <div class="modal__container_añadir">
-                <img src="@/assets/logo.svg" class="modal__img_añadir">
-                <h2 class="modal__title_añadir">Añadir Alumno</h2>
-                <div class="wrap-check-58">
-                    <div class="round">
-                        <ul name="user" id="user" class="modal__select_añadir">
-                            <li v-for="user in users" :key="user._id" class="listar_alumnos">
-
-                                <input type="checkbox" v-model="user.selected" class="input_alumnos">
-
-                                <span class="dato_alumno">{{ user.matricula }}</span>
-                                <span class="dato_alumno">{{ user.firstName }}</span>
-                                <span class="dato_alumno">{{ user.lastName }}</span>
-
-                            </li>
-                        </ul>
+                <div class="modal__header">
+                    <h2 class="modal__title_añadir">Añadir Alumno</h2>
+                    <span class="modal__counter">{{ selectedUsersCount }} / {{ users.length }} seleccionados</span>
+                </div>
+                <input type="text" class="modal__search" placeholder="Buscar alumnos..." v-model="searchTerm" />
+                <div class="modal__content">
+                    <ul name="user" id="user" class="modal__select_añadir">
+                        <li v-for="user in paginatedUsers" :key="user._id" class="listar_alumnos">
+                            <input type="checkbox" v-model="user.selected" class="input_alumnos">
+                            <span class="dato_alumno">{{ user.matricula }}</span>
+                            <span class="dato_alumno">{{ user.firstName }}</span>
+                            <span class="dato_alumno">{{ user.lastName }}</span>
+                        </li>
+                    </ul>
+                    <div class="pagination">
+                        <button @click="prevPage" :disabled="currentPage === 1">Anterior</button>
+                        <span>{{ currentPage }} / {{ totalPages }}</span>
+                        <button @click="nextPage" :disabled="currentPage === totalPages">Siguiente</button>
                     </div>
                 </div>
                 <div class="botones_añadir">
-                    <a href="#" @click.prevent="anadir_Usuario" class="modal_close_añadir">Añadir</a>
-                    <a href="#" class="modal__close_añadir">Cerrar</a>
+                    <button @click.prevent="cerrarModal" class="modal__close_añadir">Cancelar</button>
+                    <button @click.prevent="anadir_Usuario" class="modal_close_añadir">Guardar</button>
                 </div>
             </div>
         </section>
     </div>
 </template>
 
+
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
+
 export default {
     setup() {
         const route = useRoute();
+        const router = useRouter();
         const idRuta = route.params.id;
+        const sesionId = route.params.sesionId;
         return {
-            idRuta
+            idRuta,
+            router
         }
     },
 
     data() {
-
         return {
             alumnos: [],
             session: {},
+            asignatura: '',
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
             selectedStudent: '',
             sessionId: this.idRuta,
             users: [],
+            currentPage: 1,
+            itemsPerPage: 10,
+            searchTerm: '',
+            menuOpen: false
         };
     },
 
-    /*  mounted() {
-         if (this.$store.state.usuario.role == "alumno") {
-             this.$router.push('/')
-         }
-     }, */
-
     created() {
         this.fetchUsers();
+        this.encontrarAsignatura();
         this.mounted();
     },
+
     name: 'ProfesorPage',
     components: {
         BotonNotificar,
     },
+
+    computed: {
+        totalPages() {
+            return Math.ceil(this.filteredUsers.length / this.itemsPerPage);
+        },
+        paginatedUsers() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.filteredUsers.slice(start, end);
+        },
+        filteredUsers() {
+            return this.users.filter(user => {
+                const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                return fullName.includes(this.searchTerm.toLowerCase()) || user.matricula.includes(this.searchTerm);
+            });
+        },
+        selectedUsersCount() {
+            return this.users.filter(user => user.selected).length;
+        }
+    },
+
     methods: {
-        /*async fetchSessionData() {
-            try {
-                const response = await axios.get(`http://localhost:8080/sessions/${this.idRuta}`);
-                const sessionData = response.data;
-                this.session = sessionData;
-                this.alumnos = this.assignAppsToStudents(sessionData.participantes);
-                this.totalDangerousApps = this.calculateTotalDangerousApps(this.alumnos);
-                this.lastActivity = new Date().toLocaleString();
-                this.createCharts();
-            } catch (error) {
-                console.error('Error fetching session data:', error);
-            }
-        },*/
+        toggleMenu() {
+            this.menuOpen = !this.menuOpen;
+        },
+
+        closeMenu() {
+            this.menuOpen = false;
+        },
+
         assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
@@ -187,6 +214,7 @@ export default {
                 };
             });
         },
+
         shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -194,19 +222,14 @@ export default {
             }
             return array;
         },
+
         async fetchUsers() {
             try {
-                //el gran problema que hubo para hacer filtro y usar los usuarios dentro de la bd fue que no habia usuarios y no existia un metodo para agregarlos
-                //por lo que se tuvo que hacer un metodo para agregar usuarios  directamente en el array de la bd de mongo
-                //pero al menos ya funcion el filtro y se pueden ver los usuarios en la tabla con su respectiva información
-
                 const response = await axios.get('http://localhost:8080/users');
                 const participantes = response.data;
 
-                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);// + this.sessionId);
+                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
                 const sessionUsers = sessionResponse.data;
-
-                console.log("ID de los Usuarios de la Sesion \n" + sessionUsers.participantes);
 
                 const participantesIds = sessionUsers.participantes;
 
@@ -214,10 +237,9 @@ export default {
                     participantesIds.includes(user._id)
                 );
 
-                //const studentsWithApps = this.assignAppsToStudents(response.data);
                 this.alumnos = studentsWithApps;
                 this.totalDangerousApps = studentsWithApps.reduce((total, student) => {
-                    return total + student.apps.filter(app => app.status === 'danger').length;
+                    return total + student.apps.filter(app => app.status === 'Peligro').length;
                 }, 0);
                 this.lastActivity = new Date().toLocaleString();
                 this.createCharts();
@@ -225,11 +247,24 @@ export default {
                 console.error('Error fetching users:', error);
             }
         },
+
+        async encontrarAsignatura() {
+            try {
+                console.log(this.sessionId);
+                const response = await axios.get(`http://localhost:8080/sesionAsignatura/${this.sessionId}`);
+                console.log(response);
+                this.asignatura = response.data;
+            } catch (error) {
+                console.error('Error encontrando asignatura:', error);
+            }
+        },
+
         calculateTotalDangerousApps(students) {
             return students.reduce((total, student) => {
                 return total + student.apps.filter(app => app.status === 'Peligro').length;
             }, 0);
         },
+
         createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
@@ -313,6 +348,7 @@ export default {
                 },
             });
         },
+
         handleChartClick(elements) {
             if (elements.length) {
                 const chart = elements[0].element.$context.raw;
@@ -322,9 +358,11 @@ export default {
                 this.showModal = true;
             }
         },
+
         closeModal() {
             this.showModal = false;
         },
+
         async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
@@ -332,7 +370,7 @@ export default {
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
                     if (!response.ok) {
-                        throw new Error('Error al actualizar la lista de participantes')
+                        throw new Error('Error al actualizar la lista de participantes');
                     }
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -342,6 +380,7 @@ export default {
                 alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
             }
         },
+
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
         },
@@ -367,12 +406,15 @@ export default {
                 alert('Error al obtener los procesos del estudiante');
             }
         },
-        createSession() {
-            console.log(this.idRuta);
+
+        redirigirCrearEvaluacion() {
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
         },
+
         otherOptions() {
             alert('Otras opciones.');
         },
+
         async mounted() {
             const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
             const sessionUsers = sessionResponse.data;
@@ -382,220 +424,54 @@ export default {
             const response = await axios.get('http://localhost:8080/users');
             const allUsers = response.data;
 
-            //console.log("participantes\n" + participantesIds)
             axios.get('http://localhost:8080/users')
                 .then(response => {
-                    console.log("ID\n" + response.data.map(user => user._id));
                     this.users = allUsers.filter(user => !participantesIds.includes(user._id));
-                    //console.log("a\n" + this.users.map(user => user._id));
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        añadir() {
-            const openModal = document.querySelector('.hero__cta');
-            const modal = document.querySelector('.modal_añadir');
-            const closeModal = document.querySelector('.modal__close_añadir');
-            const closeModal2 = document.querySelector('.modal_close_añadir');
-            openModal.addEventListener('click', (e) => {
-                e.preventDefault();
-                modal.classList.add('modal_añadir--show');
-            });
 
-            closeModal.addEventListener('click', (e) => {
-                e.preventDefault();
-                modal.classList.remove('modal_añadir--show');
-            });
-            closeModal2.addEventListener('click', (e) => {
-                e.preventDefault();
-                modal.classList.remove('modal_añadir--show');
-                //alert("alumnos agregados correctamente");
-            });
+        añadir() {
+            const modal = document.querySelector('.modal_añadir');
+            modal.classList.add('modal_añadir--show');
         },
+
+        cerrarModal() {
+            const modal = document.querySelector('.modal_añadir');
+            modal.classList.remove('modal_añadir--show');
+        },
+
         async anadir_Usuario() {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
-                console.log(selectedUsers.map(user => user._id));
-
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
                 });
-                console.log(response.data);
-
+                this.cerrarModal();
             } catch (error) {
                 console.error(error);
             }
         },
 
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        }
     }
 };
-
 </script>
 
 <style scoped>
-.container_check {
-    display: flex;
-
-    align-items: center;
-}
-
-.container_check {
-    display: flex;
-    --input-focus: #2d8cf0;
-    --input-out-of-focus: #ccc;
-    --bg-color: #fff;
-    --bg-color-alt: #666;
-    --main-color: #323232;
-    position: relative;
-    cursor: pointer;
-}
-
-.container_check input {
-    position: absolute;
-    opacity: 0;
-    display: flex;
-}
-
-.checkmark_check {
-    width: 30px;
-    height: 30px;
-    position: relative;
-    top: 0;
-    left: -500;
-    border: 2px solid var(--main-color);
-    border-radius: 5px;
-    box-shadow: 4px 4px var(--main-color);
-    background-color: var(--input-out-of-focus);
-    transition: all 0.3s;
-}
-
-.container_check input:checked~.checkmark_check {
-    background-color: var(--input-focus);
-}
-
-.checkmark_check:after {
-    content: "";
-    width: 7px;
-    height: 15px;
-    position: absolute;
-    top: 2px;
-    left: 8px;
-    border: solid var(--bg-color);
-    border-width: 0 2.5px 2.5px 0;
-    transform: rotate(45deg);
-}
-
-.container_check input:checked~.checkmark_check:after {
-    display: none;
-}
-
-.botones_añadir {
-    display: inline;
-}
-
-.dato_alumno {
-    margin: 0 7px;
-}
-
-.listar_alumnos {
-    margin-top: 1%;
-    list-style-type: none;
-    font-size: 1.2rem;
-    text-align: left;
-
-}
-
-.hero__cta {
-    text-decoration: none;
-    color: #fff;
-    border: 1px solid;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: background-color .3s;
-
-}
-
-.hero__cta:hover {
-    background-color: #fff;
-    color: #1e3c72;
-}
-
-.modal_añadir {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #111111bd;
-    display: flex;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .6s .9s;
-    --transform: translateY(-100vh);
-    --transition: transform .8s;
-}
-
-.modal_añadir--show {
-    opacity: 1;
-    pointer-events: unset;
-    transition: opacity .6s;
-    --transform: translateY(0);
-    --transition: transform .8s .8s;
-}
-
-.modal__container_añadir {
-    margin: auto;
-    width: 90%;
-    max-width: 600px;
-    max-height: 90%;
-    background-color: #fff;
-    border-radius: 6px;
-    padding: 3em 2.5em;
-    display: grid;
-    gap: 1em;
-    place-items: center;
-    grid-auto-columns: 100%;
-    transform: var(--transform);
-    transition: var(--transition);
-}
-
-.modal__title_añadir {
-    font-size: 2.5rem;
-}
-
-.modal__img_añadir {
-    width: 25%;
-    max-width: 300px;
-}
-
-.modal_close_añadir,
-.modal__close_añadir {
-    text-decoration: none;
-    color: #000;
-    background-color: #06bfbf;
-    padding: 1em 3em;
-    border: 1px solid;
-    border-radius: 6px;
-    display: inline-block;
-    font-weight: 600;
-    transition: background-color .3s;
-    margin: 0 5px;
-}
-
-.modal_close_añadir:hover,
-.modal__close_añadir:hover {
-    color: #000;
-    background-color: #1f9b9b;
-}
-
-.actionButton[disabled] {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    color: #666666;
-}
-
 .profesorPage {
     padding: 2rem;
     margin: 60px auto;
@@ -603,6 +479,12 @@ export default {
     color: #333;
     width: 80%;
     max-width: 1200px;
+}
+
+.dashboard {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
 }
 
 .dashboard button {
@@ -630,14 +512,80 @@ export default {
 .chartDataContainer {
     width: calc(50% - 10px);
     color: var(--text-color);
-    height: 500px;
+    height: auto;
+    min-height: 300px;
     padding: 10px;
     border-radius: 10px;
     background-color: var(--container-background-color);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
+    overflow: visible;
+}
+
+.menuContainer {
+    margin-top: 20px;
+    text-align: left;
+    position: relative;
+    width: 100%;
+}
+
+.menuButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--button-background-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    position: relative;
+}
+
+.menuButton::after {
+    content: "▼";
+    margin-left: 10px;
+    font-size: 0.8rem;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    background-color: var(--container-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
+
+.dropdownMenu button {
+    padding: 10px 20px;
+    background-color: var(--container-background-color);
+    color: var(--text-color);
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dropdownMenu button:last-child {
+    border-bottom: none;
+}
+
+.dropdownMenu button:hover {
+    background-color: var(--gray-hover-color);
+}
+
 
 .chartContainer {
     display: flex;
@@ -777,12 +725,167 @@ th {
 .normal-text {
     font-weight: bold;
     color: #008000;
-
 }
 
 .advertencia-text {
     font-weight: bold;
     color: #f7d547;
+}
+
+.modal_añadir {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s;
+}
+
+.modal_añadir--show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal__container_añadir {
+    width: 90%;
+    max-width: 600px;
+    max-height: 90%;
+    background-color: var(--container-background-color);
+    border-radius: 6px;
+    padding: 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    overflow-y: auto;
+}
+
+.modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal__title_añadir {
+    font-size: 1.5rem;
+}
+
+.modal__counter {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.modal__search {
+    width: 100%;
+    padding: 0.5em;
+    margin-bottom: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.modal__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.modal__select_añadir {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.listar_alumnos {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding: 0.5em;
+    border-bottom: 1px solid #ddd;
+}
+
+.input_alumnos {
+    margin-right: 1em;
+}
+
+.dato_alumno {
+    flex: 1;
+    text-align: left;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.pagination button {
+    padding: 0.5em 1em;
+    background-color: var(--button-background-color);
+    border: none;
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination span {
+    font-weight: bold;
+}
+
+.botones_añadir {
+    display: flex;
+    justify-content: right;
+    gap: 20px;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.modal_reset,
+.modal__close_añadir,
+.modal_close_añadir {
+    text-decoration: none;
+    color: #fff;
+    background-color: #6c757d;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.modal__close_añadir {
+    background-color: var(--button-background-color);
+}
+
+.modal_close_añadir {
+    background-color: var(--button-background-color);
+}
+
+.modal_reset:hover,
+.modal__close_añadir:hover,
+.modal_close_añadir:hover {
+    background-color: #555;
+}
+
+.modal__close_añadir:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+.modal_close_añadir:hover {
+    background-color: var(--button-hover-background-color);
 }
 
 .modal {
@@ -849,6 +952,11 @@ th {
     color: var(--text-color);
     cursor: pointer;
     font-size: 1rem;
+}
+
+h1 {
+    color: var(--text-color);
+    font-weight: bold;
 }
 
 .closeButton:hover {

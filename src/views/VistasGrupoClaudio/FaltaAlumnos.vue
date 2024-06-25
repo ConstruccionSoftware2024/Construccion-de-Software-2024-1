@@ -3,14 +3,12 @@ avisos.*/
 
 <template>
   <div class="general-div">
-    <h1>Lista Alumnos</h1>
+    <h1>Faltas {{ asignatura.title }}</h1>
 
-    <table class="lista-alumnos">
+    <table v-if="faltasFiltradas.length" class="lista-alumnos">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Matricula</th>
-          <th>Rut</th>
           <th>Nombre</th>
           <th>Apellido Paterno</th>
           <th>Apellido Materno</th>
@@ -20,33 +18,32 @@ avisos.*/
         </tr>
       </thead>
       <tbody>
-        <template v-for="(falta, index) in faltas" :key="falta._id">
+        <template v-for="(falta, index) in faltasFiltradas" :key="falta._id">
           <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
-            <td>{{ falta._id }}</td>
             <td>{{ falta.matricula }}</td>
-            <td>{{ falta.rut }}</td>
-            <td>{{ falta.name }}</td>
-            <td>{{ falta.lastName }}</td>
-            <td>{{ falta.secondLastName }}</td>
-            <td>{{ falta.email }}</td>
+            <td>{{ falta.nombre }}</td>
+            <td>{{ falta.apellidoPat }}</td>
+            <td>{{ falta.apellidoMat }}</td>
+            <td>{{ falta.correo }}</td>
             <td>{{ falta.campus }}</td>
-            <td>{{ falta.faltas }}</td>
+            <td>{{ falta.detalleFaltas.length }}</td>
           </tr>
           <tr v-if="selectedFalta === index">
-            <td colspan="8">
-              <div class="detail-falta-container">
-                <div class="detail-falta" v-for="(detalle, i) in falta.detalleFaltas" :key="i">
-                  <p class="faltaTitle">FALTA {{ i + 1 }}: {{ detalle.falta }}</p>
-                  <strong>Fecha:</strong> {{ detalle.fecha }} <br />
-                  <strong>Profesor:</strong> {{ detalle.profesor }} <br />
-                  <strong class="faltaDesc">Descripción:</strong> {{ detalle.motivo }}
-                </div>
+            <td class="detail-falta-container" colspan="8">
+              <div class="detail-falta" v-for="(detalle, i) in falta.detalleFaltas" :key="i">
+                <strong class="faltaTitle">FALTA {{ i + 1 }}: {{ detalle.falta }}</strong><br />
+                <strong>Fecha:</strong> {{ detalle.fecha }} <br />
+                <strong>Profesor:</strong> {{ detalle.profesor }} <br />
+                <strong>Descripción:</strong> {{ detalle.motivo }}
               </div>
             </td>
           </tr>
         </template>
       </tbody>
     </table>
+    <div v-else>
+      <span>No hay faltas.</span>
+    </div>
     <button @click="showAddFalta = true" class="addButton">Agregar Falta</button>
 
 
@@ -62,14 +59,6 @@ avisos.*/
                 <select v-model="selectedAlumno" placeholder="Seleccionar alumno">
                   <option v-for="alumno in alumnos" :key="alumno._id" :value="alumno._id">
                     {{ alumno.firstName }} {{ alumno.lastName }} {{ alumno.secondLastName }}
-                  </option>
-                </select>
-              </div>
-              <p class="text-form">Seleccionar profesor</p>
-              <div class="custom-select">
-                <select v-model="selectedProfesor">
-                  <option v-for="profesor in profesores" :key="profesor.id" :value="profesor">
-                    {{ profesor }}
                   </option>
                 </select>
               </div>
@@ -100,6 +89,7 @@ avisos.*/
 <script>
 import axios from 'axios'
 
+import { useUserStore } from '../../../back-end/src/store.js'
 export default {
   data() {
     return {
@@ -111,40 +101,61 @@ export default {
       motivo: '',
       fecha: '',
       showAddFalta: false,
-      profesores: ['Daniel Moreno', 'Ricardo Perez', 'Luis Silvestre', 'Rodrigo Paredes', 'Matthew Bardeen'],
-      selectedProfesor: '',
       showError: false,
+      asignaturaId: null,
+      faltasFiltradas: [],
+      asignatura: {}
     }
   },
+  setup() {
+    const userStore = useUserStore();
+    return { userStore }
+  },
   async created() {
+    this.asignaturaId = this.$route.params.id;
+
     try {
-      const response = await axios.get('http://localhost:8080/faltas')
-      this.faltas = response.data
+      const response = await axios.get(`http://localhost:8080/asignatura/${this.asignaturaId}`);
+      this.asignatura = response.data;
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
+
+    this.fetchFaltas()
     this.fetchUsers()
   },
   methods: {
     async fetchUsers() {
       try {
         const response = await axios.get('http://localhost:8080/users')
-        this.alumnos = response.data
+        const users = response.data
+        this.alumnos = users.filter(user => user.role === 'alumno' && this.asignatura.members.includes(user._id));
       } catch (error) {
         console.error('Failed to fetch users', error)
       }
     },
     async fetchFaltas() {
+      this.asignaturaId = this.$route.params.id;
       try {
         const response = await axios.get('http://localhost:8080/faltas')
         this.faltas = response.data
+        this.faltasFiltradas = this.faltas.map(falta => {
+          if (falta && falta.detalleFaltas) {
+            return {
+              ...falta,
+              detalleFaltas: falta.detalleFaltas.filter(detalle => detalle.asignatura === this.asignaturaId)
+            };
+          } else {
+            return falta;
+          }
+        }).filter(falta => falta.detalleFaltas && falta.detalleFaltas.length > 0);
       } catch (error) {
-        console.error('Failed to fetch faltas', error)
+        console.error(error)
       }
     },
     async guardarFalta() {
       const selectedAlumnoData = this.alumnos.find((alumno) => alumno._id === this.selectedAlumno)
-      if (!selectedAlumnoData || !this.selectedProfesor || !this.falta || !this.motivo || !this.fecha) {
+      if (!selectedAlumnoData || !this.falta || !this.motivo || !this.fecha) {
         this.showError = true;
         return;
       }
@@ -152,34 +163,23 @@ export default {
         falta: this.falta,
         fecha: this.fecha,
         motivo: this.motivo,
-        profesor: this.selectedProfesor
+        profesor: this.userStore.user.firstName + ' ' + this.userStore.user.lastName + ' ' + this.userStore.user.secondLastName,
+        asignatura: this.asignaturaId
       }
-      console.log()
-      const newAlumno = {
-        _id: selectedAlumnoData._id,
-        matricula: selectedAlumnoData.matricula,
-        name: selectedAlumnoData.firstName,
-        lastName: selectedAlumnoData.lastName,
-        secondLastName: selectedAlumnoData.secondLastName,
-        email: selectedAlumnoData.email,
-        campus: selectedAlumnoData.campus,
-        rut: selectedAlumnoData.rut,
-        faltas: 1,
-        estado: 'Ninguno',
-        detalleFaltas: [newFalta]
-      }
+
       try {
-        await axios.post('http://localhost:8080/faltas-post', newAlumno)
+        await axios.post(`http://localhost:8080/addFaltas/${this.selectedAlumno}`, newFalta)
+        this.showAddFalta = false;
+        this.fetchFaltas()
       } catch (error) {
-        console.error('Failed to post new alumno', error)
+        console.error('Failed to save falta', error)
       }
 
       this.selectedAlumno = ''
       this.falta = ''
       this.motivo = ''
       this.fecha = ''
-      this.showAddFalta = false
-      this.fetchFaltas()
+      this.fetchUsers()
     },
     cerrarModal() {
       this.showError = false;
@@ -194,6 +194,7 @@ export default {
   max-height: 200px;
   overflow-y: auto;
   width: 100%;
+  cursor: auto;
 }
 
 .text-form {
@@ -217,12 +218,12 @@ export default {
 .general-div {
   text-align: center;
   justify-content: center;
+  align-items: center;
 }
 
 .detail-falta {
-  border: 1px solid #ccc;
-  border: 1px solid var(--container-background-color);
-  padding: 6px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px;
   text-align: left;
   padding-left: 3rem;
   width: 100%;
@@ -230,12 +231,15 @@ export default {
 
 .faltaTitle {
   font-weight: bold;
+  margin-bottom: 1rem;
 }
 
 
 .lista-alumnos {
   border-collapse: collapse;
-  width: 100%;
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 
@@ -245,6 +249,10 @@ td {
   text-align: center;
   max-height: 40px;
   overflow-y: auto;
+}
+
+tr:hover {
+  background-color: var(--gray-text-color);
 }
 
 td {
@@ -259,9 +267,6 @@ th {
   border-right: 1px solid var(--container-background-color);
 }
 
-tr:nth-child(even) {
-  background-color: var(--container-background-color);
-}
 
 .addButton {
   margin-top: 2rem;
@@ -387,9 +392,10 @@ tr:nth-child(even) {
 }
 
 h1 {
-  margin-top: 1rem;
+  margin-top: 2.5rem;
+  font-size: 2.5rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 h2 {

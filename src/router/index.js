@@ -8,6 +8,7 @@ import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOp
 import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
 import VistaAlumno from '../views/VistasGrupoJoaquin/VistaAlumno.vue'
+import VistaEvaluacion from '../views/VistasGrupoFelipe/VistaEvaluacion.vue'
 import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
@@ -63,11 +64,6 @@ const router = createRouter({
       component: HistorialEvaluaciones
     },
     {
-      path: '/crearevaluacion',
-      name: 'crearevaluacion',
-      component: CrearEvaluacion
-    },
-    {
       path: '/home',
       name: 'home',
       component: HomeView
@@ -98,6 +94,11 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
+      path: '/crear-evaluacion/:sesionId',
+      name: 'CrearEvaluacion',
+      component: CrearEvaluacion
+    },
+    {
       path: '/vistaProfesor/:id',
       name: 'VistaProfesor',
       component: VistaProfesor
@@ -108,7 +109,12 @@ const router = createRouter({
       component: VistaAlumno
     },
     {
-      path: '/faltaAlumnos',
+      path: '/vistaEvaluacion/:id',
+      name: 'VistaEvaluacion',
+      component: VistaEvaluacion
+    },
+    {
+      path: '/faltaAlumnos/:id',
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
