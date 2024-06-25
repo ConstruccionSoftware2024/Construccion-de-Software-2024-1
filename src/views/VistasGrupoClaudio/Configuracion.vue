@@ -143,6 +143,10 @@ export default {
     text-wrap: nowrap;
 }
 
+.container-botones button:hover {
+    background-color: #06bfbf;
+}
+
 .container-tablas {
     display: flex;
     justify-content: space-between;
