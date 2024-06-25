@@ -979,6 +979,34 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
+// Enviar email (página contacto alumno)
+app.post('/email-alumno', async (req, res) => {
+  let { fullName, email, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: `Mensaje de profesor ${fullName}`,
+    text: `Profesor: ${fullName}\nMensaje enviado a: ${email}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
 /* revisiar esta funcion de grupo joaquin*/
 app.post('/guardar-procesos', async (req, res) => {
   const database = client.db('construccion');
