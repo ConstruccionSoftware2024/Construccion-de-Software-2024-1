@@ -29,7 +29,7 @@ const getUsers = async () => {
             return
         }
         clearInterval(interval)
-        idUsuario = user.value._id
+        idUsuario.value = user.value._id
         await getMensajes()
 
         //Lo que está a continuación es la forma anterior de traer el usuario, ahora se saca de la base de datos el usuario loggeado
@@ -65,7 +65,7 @@ const getUsers = async () => {
 
 const getMensajes = async () => {
     try {
-        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario}`);
+        let respuesta = await fetch(`http://localhost:8080/message/${idUsuario.value}`);
         let data = await respuesta.json()
         console.log("valor data : ", data)
         mensajesPendientes(data)
@@ -99,6 +99,20 @@ const mensajesPendientes = (mensajes) => {
         }
     });
 
+}
+
+const getStatus = (mensaje) => {
+    if (mensaje.alerta == "Peligro") {
+        return 'danger'
+    }
+    if (mensaje.alerta == "Advertencia") {
+        return 'warning'
+    }
+    if (mensaje.alerta == "Normal") {
+        return 'ok'
+    }
+
+    return ''
 }
 
 
@@ -142,9 +156,13 @@ const marcarMensajeComoLeido = async (idMensaje) => {
                 <!-- solo mostramos los mensajes que no han sido visto -->
                 <li class="notificacion" v-if="!mensaje.visto">
                     <div class="info">
+                        <p :class="getStatus(mensaje)">
+                            {{ mensaje.alerta }}
+                        </p>
                         <p style="">
                             {{ mensaje.mensaje }}
                         </p>
+
                         <p class="sesion">
                             {{ mensaje.sesion }}
                         </p>
@@ -195,7 +213,6 @@ a {
 }
 
 .sesion {
-    color: #08cccc;
     font-size: .9rem;
 }
 
@@ -251,6 +268,10 @@ ul.lista1 {
     position: relative;
 }
 
+.supercontainer * {
+    box-sizing: border-box;
+}
+
 .container {
     display: flex;
     justify-content: center;
@@ -288,12 +309,12 @@ ul.lista1 {
     border-top-right-radius: 0;
     padding: 10px;
     width: 400px;
-    overflow: scroll;
     z-index: 10;
+    overflow-y: scroll;
+    max-height: 600px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, .4);
     flex-direction: column;
     display: flex;
-    justify-content: center;
     align-items: center;
 }
 
@@ -349,5 +370,20 @@ ul.lista1 {
 .notificacion:hover {
     /* background-color: #323233; */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.danger {
+    color: rgb(156, 15, 15);
+    font-weight: bold;
+}
+
+.warning {
+    font-weight: bold;
+    color: rgb(224, 146, 0);
+}
+
+.ok {
+    color: rgb(18, 105, 18);
+    font-weight: bold;
 }
 </style>
