@@ -22,23 +22,16 @@
                 </div>
             </div>
             <div class="history box-shadow">
-                <a :href="downloadLink" download="Procesos-exe.exe">
-                    <button>Descargar Ejecutable</button>
-                </a>
-                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR-->
-
-
-
                 <h3>Historial de Aplicaciones</h3>
                 <table>
-                    <thead v-if="tabs.length">
-                        <tr v-for="(tab, index) in tabs" :key="index">
+                    <thead>
+                        <tr>
                             <th>Hora</th>
-                            <th><a :href="tab.url" target="_blank">Url: {{ tab.url }}</a></th>
+                            <th>Url</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="entry in history" :key="entry.time">
+                        <tr v-for="(entry, index) in history" :key="index">
                             <td>{{ entry.time }}</td>
                             <td>{{ entry.url }}</td>
                         </tr>
@@ -51,17 +44,8 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
-import Chart from 'chart.js/auto';
-import { useUserStore } from '../../../back-end/src/store.js';
-
 
 export default {
-    mounted() {
-        if (this.$store.state.usuario.role == "profesor") {
-            this.$router.push('/listaAsignaturas')
-        }
-    },
     setup() {
         const sessionId = ref('');
         const totalApps = ref(0);
@@ -84,22 +68,34 @@ export default {
             }
         });
 
-
-
-        const createSession = () => {
-            // Lógica para unirse a una sesión
+        const readLocalFile = async () => {
+            try {
+                const response = await fetch('../../lib/respuesta.txt'); // Ajusta la ruta según donde se encuentre tu archivo
+                if (!response.ok) {
+                    throw new Error('No se pudo cargar el archivo.');
+                }
+                const text = await response.text();
+                return text;
+            } catch (error) {
+                console.error('Error al leer el archivo:', error);
+                return ''; // Retorna una cadena vacía en caso de error
+            }
         };
 
         const fetchHistory = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:5000/historial');
-                history.value = response.data.sort((a, b) => {
-                    return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
+                const text = await readLocalFile();
+                const lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
+                const formattedHistory = lines.map(line => {
+                    const [time, url] = line.split('\t'); // Asume que el formato es "hora    url"
+                    return { time, url };
                 });
+                history.value = formattedHistory;
             } catch (error) {
                 console.error('Error fetching history:', error);
             }
         };
+
         const startPolling = () => {
             fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
 
@@ -108,20 +104,10 @@ export default {
             }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
         };
 
-        const guardarHistorial = () => {
-            axios.post('http://localhost:8080/guardar-procesos')
-                .then(response => {
-                    console.log('Historial guardado correctamente:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error al guardar el historial:', error);
-                });
-        };
-
         onMounted(() => {
             startPolling();
-            fetchHistory();
 
+            // Ejemplo de configuración de gráficos con Chart.js (solo para referencia)
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
             new Chart(statusChartCtx, {
                 type: 'pie',
@@ -179,13 +165,7 @@ export default {
                     }
                 }
             });
-
-
         });
-
-
-
-
 
         return {
             sessionId,
@@ -196,83 +176,14 @@ export default {
             dangerMessage,
             dangerColor,
             history,
-            createSession,
-            downloadLink: '/public/Downloads/Procesos-exe.exe',
-            guardarHistorial,
         };
     },
-    data() {
-        return {
-            tabs: []
-        };
-    },
-    created() {
-        this.fetchTabs(); // Fetch data when the component is created
-        setInterval(this.fetchTabs, 10000); // Fetch data every 10 seconds
-    },
-    methods: {
-        async fetchTabs() {
-            try {
-                const response = await axios.get('http://localhost:5151/tabs'); // Adjust the URL to your server endpoint
-                this.tabs = response.data; // Assuming the server responds with tab data in JSON format
-
-                // Extract URLs into a string array
-                const urls = this.tabs.map(tab => tab.url);
-                const urlsString = urls.join(', '); // Join URLs into a single string
-                console.log('URLs:', urlsString); // Print URLs as a single string to console
-
-                // Send data to server
-                this.sendDataToServer(urlsString);
-            } catch (error) {
-                console.error('Error al obtener los datos:', error);
-            }
-        },
-        async sendDataToServer(urlsString) {
-            const userStore = useUserStore();
-            const user = computed(() => userStore.user);
-
-            try {
-                // Primero, realiza una petición al servidor para verificar si los datos ya existen
-                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para verificar en el servidor
-                if (checkResponse.data.exists) {
-                    console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
-                    return; // Si los datos ya existen, no se hace nada más
-                }
-
-                // Si los datos no existen, procede a enviarlos al servidor
-                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para procesar en el servidor
-                console.log('Datos enviados al servidor correctamente:', processResponse.data);
-            } catch (error) {
-                console.error('Error al enviar los datos al servidor:', error);
-            }
-        }
-    }
 };
 </script>
 
 <style scoped>
 .alumno-page {
     font-family: Arial, sans-serif;
-}
-
-header h1 {
-    margin: 0;
-}
-
-nav ul {
-    list-style-type: none;
-    padding: 0;
-    display: flex;
-    gap: 10px;
-}
-
-nav ul li {
-    display: inline;
-}
-
-nav ul li a {
-    color: white;
-    text-decoration: none;
 }
 
 .session-info {

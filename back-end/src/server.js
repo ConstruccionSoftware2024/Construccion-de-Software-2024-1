@@ -7,6 +7,7 @@ import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+
 dotenv.config()
 
 // Configuración de la aplicación
@@ -23,6 +24,9 @@ const corsOptions = {
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }
+
+
+
 app.use(cors(corsOptions))
 app.use(express.json())
 // Conexión a la base de datos de MongoDB
@@ -272,6 +276,20 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+
+//metodo para recuperar el .txt
+
+app.get('/read-local-file', (req, res) => {
+  const filePath = path.join(__dirname, '../../src/lib/respuesta.txt');
+
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error al leer el archivo:', err);
+      return res.status(500).send('Error al leer el archivo');
+    }
+    res.send(data);
+  });
+});
 
 app.post('/register', async (req, res) => {
   const {

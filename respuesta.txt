@@ -1,0 +1,43 @@
+## Clasificación de aplicaciones del usuario para estudiar:
+
+**Bueno:**
+
+* **Code.exe:**  IDE para desarrollo de código, ideal para estudiar programación. 
+* **MongoDBCompass.exe:** Herramienta para trabajar con bases de datos MongoDB, útil para el estudio de tecnologías de bases de datos.
+* **gitkraken.exe:**  Interfaz gráfica para el control de versiones con Git, muy útil para aprender sobre Git y control de versiones.
+* **postgres.exe:**  Motor de base de datos PostgreSQL, ideal para el estudio de bases de datos relacionales.
+* **Discord.exe:**  Plataforma de comunicación para colaborar con otros estudiantes, ideal para trabajar en proyectos y resolver dudas. 
+* **brave.exe:**  Navegador web que bloquea anuncios y rastreadores, ideal para navegar por la web de forma eficiente y segura.
+
+**Intermedio:**
+
+* **node.exe:**  Entorno de ejecución para JavaScript, útil para el estudio de desarrollo web backend.
+* **cmd.exe:**  Consola de comandos de Windows,  útil para aprender comandos básicos y ejecutar scripts.
+* **powershell.exe:**  Entorno de automatización de tareas de Windows, útil para aprender scripting avanzado.
+* **SpotifyWidgetProvider.exe:** Proveedor de widgets de Spotify, útil si se utiliza Spotify para estudiar música o podcasts.
+
+**Malo:**
+
+* **LenovoNow.Task.exe:**  Herramienta de Lenovo para actualizaciones y sugerencias, no directamente relacionada con el estudio.
+* **AutoModeDetect.exe:**  Herramienta para detectar el modo de conexión de red, no directamente relacionada con el estudio.
+* **SearchHost.exe:**  Motor de búsqueda de Windows, no directamente relacionado con el estudio.
+* **esbuild.exe:**  Herramienta para compilar código JavaScript, no directamente relacionada con el estudio a menos que se esté estudiando desarrollo web.
+* **PhoneExperienceHost.exe:**  Componente relacionado con las funciones de llamada y mensajes del sistema, no directamente relacionado con el estudio.
+* **esrv.exe:**  Componente relacionado con la detección de redes inalámbricas, no directamente relacionado con el estudio.
+* **Microsoft.SharePoint.exe:**  Componente relacionado con SharePoint, no directamente relacionado con el estudio a menos que se esté trabajando con esta plataforma.
+* **backgroundTaskHost.exe:**  Componente que ejecuta tareas en segundo plano, no directamente relacionado con el estudio.
+* **WsToastNotification.exe:**  Componente relacionado con las notificaciones del sistema, no directamente relacionado con el estudio.
+* **UserOOBEBroker.exe:**  Componente relacionado con la configuración inicial del usuario, no directamente relacionado con el estudio.
+* **SystemSettings.exe:**  Aplicación para la configuración del sistema, no directamente relacionado con el estudio.
+* **Video.UI.exe:**  Componente relacionado con la reproducción de videos, no directamente relacionado con el estudio.
+* **DataExchangeHost.exe:**  Componente para el intercambio de datos, no directamente relacionado con el estudio.
+* **EABackgroundService.exe:**  Componente relacionado con la seguridad, no directamente relacionado con el estudio.
+* **WmiPrvSE.exe:**  Componente relacionado con la administración del sistema, no directamente relacionado con el estudio.
+* **tasklist.exe:**  Herramienta para listar procesos, no directamente relacionada con el estudio.
+
+**Nota:** 
+
+* La clasificación es subjetiva y puede variar según el tipo de estudio.
+* Es importante recordar que la presencia de algunas aplicaciones de sistema como **svchost.exe** o **conhost.exe** es normal y no necesariamente negativa. 
+
+Espero que esta clasificación te sea útil para organizar tu entorno de trabajo para estudiar. 

@@ -5,7 +5,7 @@ import { writeFile } from 'fs/promises';
 // Accede a tu clave API como una variable de entorno
 const genAI = new GoogleGenerativeAI("AIzaSyBheR5f8PrwOnPRaY_CNlU8eZlccqSkre4");
 
-async function generateTextFile() {
+export async function generateTextFile() {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   exec('tasklist', async (error, stdout, stderr) => {
@@ -28,7 +28,6 @@ async function generateTextFile() {
 
       // Escribir el texto a un archivo
       await writeFile('respuesta.txt', text);
-      console.log('El archivo de texto ha sido creado y actualizado');
     } catch (e) {
       console.error(`Error generando contenido: ${e}`);
     }
