@@ -388,17 +388,19 @@ export default {
             const sessionUsers = sessionResponse.data;
             const asignatura = sessionUsers.asignatura;
             const participantesIds = sessionUsers.participantes;
-
+            console.log("--------->" + asignatura)
             const response = await axios.get('http://localhost:8080/users');
             const allUsers = response.data;
 
-            // Obtener los miembros de la asignatura como strings
             const members = await this.AsignaturaMembers(asignatura);
 
-            // Filtrar allUsers para incluir solo aquellos que son miembros y no son participantes
-            this.users = allUsers.filter(user =>
-                members.includes(user._id.toString()) && !participantesIds.includes(user._id.toString()) && user.role == 'alumno'
-            );
+            this.users = allUsers.filter(user => {
+                const isMember = members.includes(user._id.toString());
+                const isNotParticipant = !participantesIds.includes(user._id.toString());
+                const isAlumno = user.role == 'alumno';
+                //console.log(`User ${user._id}: isMember=${isMember}, isNotParticipant=${isNotParticipant}, isAlumno=${isAlumno}`);
+                return isMember && isNotParticipant && isAlumno;
+            });
 
         },
         añadir() {
