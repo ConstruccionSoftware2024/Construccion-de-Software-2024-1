@@ -7,6 +7,7 @@ import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+
 dotenv.config()
 
 // Configuración de la aplicación
@@ -23,6 +24,9 @@ const corsOptions = {
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }
+
+
+
 app.use(cors(corsOptions))
 app.use(express.json())
 // Conexión a la base de datos de MongoDB
@@ -346,7 +350,7 @@ app.post('/resetPassword', async (req, res) => {
   await User.updateOne({ email }, { $set: { resetCode: resetCode } });
 
   let transporter = nodemailer.createTransport({
-    service: 'outlook', 
+    service: 'outlook',
     auth: {
       user: 'pruebas.construccion2024@outlook.com',
       pass: 'RkUFFzM1LUTk'
@@ -386,8 +390,8 @@ app.post('/verifyResetCode', async (req, res) => {
     }
 
     if (user.resetCode === code) {
-      res.json({ success: true, message: 'Código verificado correctamente.', email: email});
-      await User.updateOne({ email: email }, { $set: { resetCode: ''} });
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
     } else {
       res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
     }
@@ -955,22 +959,150 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
-/* revisiar esta funcion de grupo joaquin*/
-app.post('/guardar-procesos', async (req, res) => {
+// Guarda/actualiza los procesos en la base de datos
+app.post('/checkTabs', async (req, res) => {
+  const { procesos, userId, sessionId } = req.body;
   const database = client.db('construccion');
   const collection = database.collection('procesos');
-  try {
-    const response = await axios.get('http://127.0.0.1:5000/historial');
-    const aplicaciones = response.data;
 
-    if (aplicaciones.length > 0) {
-      await collection.insertOne(aplicaciones);
-      res.status(200).send('Historial guardado en la base de datos');
+  try {
+    // Asegurarse de que procesos sea un array
+    const nuevosProcesoArray = Array.isArray(procesos) ? procesos : [procesos];
+
+    // Primero, obtener el documento actual
+    const currentDoc = await collection.findOne({ userId, sessionId });
+
+    let procesosActualizados = [];
+    let cambios = {
+      agregados: [],
+      existentes: []
+    };
+
+    if (currentDoc && Array.isArray(currentDoc.procesos)) {
+      // Combinar procesos existentes con nuevos
+      procesosActualizados = [...new Set([...currentDoc.procesos, ...nuevosProcesoArray])];
+      cambios.agregados = nuevosProcesoArray.filter(p => !currentDoc.procesos.includes(p));
+      cambios.existentes = nuevosProcesoArray.filter(p => currentDoc.procesos.includes(p));
     } else {
-      res.status(204).send('No hay aplicaciones para guardar');
+      // Si no hay documento previo o procesos no es un array, todos los procesos son nuevos
+      procesosActualizados = nuevosProcesoArray;
+      cambios.agregados = nuevosProcesoArray;
     }
+
+    // Actualizar o insertar el documento
+    const result = await collection.findOneAndUpdate(
+      {
+        userId: userId,
+        sessionId: sessionId
+      },
+      {
+        $set: {
+          userId: userId,
+          sessionId: sessionId,
+          procesos: procesosActualizados
+        }
+      },
+      {
+        upsert: true,
+        returnDocument: 'after'
+      }
+    );
+
+  } catch (err) {
+    console.error('Error al interactuar con la base de datos:', err);
+    res.status(500).send('Error interno del servidor al interactuar con la base de datos');
+  }
+});
+
+app.get('/obtenerProcesos/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+
+  try {
+    const result = await collection.findOne({ userId });
+    if (result) {
+      console.log('Procesos obtenidos:', result.procesos);
+      res.json(result.procesos);
+    } else {
+      console.log('No se encontraron procesos para el usuario en la sesión');
+      res.json([]);
+    }
+  } catch (err) {
+    console.error('Error al obtener los procesos:', err);
+    res.status(500).send('Error al obtener los procesos');
+  }
+});
+app.post('/processTabs', (req, res) => {
+  const { userId, urls } = req.body;
+  console.log('Received data:', { userId, urls });
+
+  // Guardar datos en MongoDB
+  const database = client.db('construccion');
+  const collection = database.collection('Pestanas'); // Nombre de la colección en MongoDB
+
+  // Insertar documento con userId y URLs en la colección
+  collection.insertOne({ userId, urls })
+    .then(result => {
+      console.log('Datos guardados en MongoDB:', result.ops);
+      res.send('Datos recibidos y guardados en MongoDB');
+    })
+    .catch(err => {
+      console.error('Error al guardar datos en MongoDB:', err);
+      res.status(500).send('Error interno del servidor al guardar datos en MongoDB');
+    });
+});
+
+app.post('/checkTabs', (req, res) => {
+  const { userId, urls } = req.body;
+  console.log('Checking data:', { userId, urls });
+
+  const database = client.db('construccion');
+  const collection = database.collection('Pestanas');
+
+  // Buscar si ya existe algún documento con las mismas userId y URLs en la colección
+  collection.findOne({ userId, urls })
+    .then(doc => {
+      if (doc) {
+        // Si se encuentra un documento, significa que las URLs ya existen para ese usuario
+        console.log('Las URLs ya existen en la base de datos para este usuario:', doc);
+        res.json({ exists: true }); // Responder que los datos ya existen
+      } else {
+        // Si no se encuentra ningún documento, las URLs no existen aún para ese usuario
+        console.log('Las URLs no existen en la base de datos para este usuario, se pueden procesar.');
+        res.json({ exists: false }); // Responder que los datos no existen y pueden ser procesados
+      }
+    })
+    .catch(err => {
+      console.error('Error al buscar en la base de datos:', err);
+      res.status(500).send('Error interno del servidor al buscar en la base de datos');
+    });
+});
+
+app.get('/getTabs/:userId', (req, res) => {
+  try {
+    const userId = req.params.userId; // Obtener el userId de los parámetros de la URL
+
+    const database = client.db('construccion');
+    const collection = database.collection('Pestanas');
+
+    // Buscar documentos con el userId específico en la colección
+    collection.find({ userId }).toArray()
+      .then(docs => {
+        if (docs.length === 0) {
+          // Si no se encuentra ningún documento para el userId dado
+          res.status(404).send('No se encontraron pestañas para el usuario.');
+        } else {
+          // Si se encuentran documentos, enviar las URLs encontradas
+          const urls = docs.map(doc => doc.urls);
+          res.json(urls);
+        }
+      })
+      .catch(err => {
+        console.error('Error al buscar en la base de datos:', err);
+        res.status(500).send('Error interno del servidor al buscar en la base de datos');
+      });
   } catch (error) {
-    console.error('Error al guardar el historial:', error);
-    res.status(500).send('Error al guardar el historial');
+    res.status(500).send(error.message);
   }
 });
