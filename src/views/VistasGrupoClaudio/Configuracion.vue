@@ -192,12 +192,12 @@ th {
     color: black;
     font-weight: bold;
     padding: 8px;
-    /* border: 1px solid black; */
+    border: 1px solid #d6d6d6;
 }
 
 td {
     text-align: center;
     padding: 8px;
-    /* border: 1px solid black; */
+    border: 1px solid #d6d6d6;
 }
 </style>
