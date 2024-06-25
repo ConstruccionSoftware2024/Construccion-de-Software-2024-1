@@ -184,7 +184,7 @@ export default {
             goToFaltas,
             goToListaAlumnos,
             goToContact,
-            onFileChange,
+            //onFileChange,
             enviarRecurso
         }
     },
