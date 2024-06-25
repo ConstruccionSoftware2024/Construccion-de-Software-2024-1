@@ -1,6 +1,7 @@
 <template>
     <div class="profesorPage">
         <h1>Sesion id: {{ sessionId }}</h1>
+        <strong>Asignatura: {{ asignatura }}</strong>
         <div class="mainContainer">
             <div class="chartContainer">
                 <canvas id="studentsPieChart"></canvas>
@@ -118,6 +119,7 @@ export default {
         const route = useRoute();
         const router = useRouter();
         const idRuta = route.params.id;
+        const sesionId = route.params.sesionId;
         return {
             idRuta,
             router
@@ -128,6 +130,7 @@ export default {
         return {
             alumnos: [],
             session: {},
+            asignatura: '',
             totalDangerousApps: 0,
             lastActivity: '',
             showModal: false,
@@ -143,6 +146,7 @@ export default {
 
     created() {
         this.fetchUsers();
+        this.encontrarAsignatura();
         this.mounted();
     },
 
@@ -241,6 +245,17 @@ export default {
                 this.createCharts();
             } catch (error) {
                 console.error('Error fetching users:', error);
+            }
+        },
+
+        async encontrarAsignatura() {
+            try {
+                console.log(this.sessionId);
+                const response = await axios.get(`http://localhost:8080/sesionAsignatura/${this.sessionId}`);
+                console.log(response);
+                this.asignatura = response.data;
+            } catch (error) {
+                console.error('Error encontrando asignatura:', error);
             }
         },
 
@@ -924,6 +939,7 @@ th {
 
 h1 {
     color: var(--text-color);
+    font-weight: bold;
 }
 
 .closeButton:hover {

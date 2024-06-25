@@ -42,8 +42,8 @@
                 <div class="section">
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
-                        <button class="btn">Contactar a un Alumno</button>
-                        <button class="btn">Reportar un Problema</button>
+                        <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
+                        <button class="btn" @click="goToContact">Reportar un Problema</button>
                     </div>
                 </div>
             </div>
@@ -131,7 +131,12 @@ export default {
         const goToFaltas = () => {
             router.push(`/faltaAlumnos/${asignaturaId}`);
         };
-
+        const goToListaAlumnos = () => {
+            router.push('/lista-alumnos');
+        };
+        const goToContact = () => {
+            router.push('/contact');
+        };
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
 
@@ -177,6 +182,10 @@ export default {
             sesiones,
             publicarPregunta,
             goToFaltas,
+            goToListaAlumnos,
+            goToContact,
+            onFileChange,
+            enviarRecurso
         }
     },
     methods: {

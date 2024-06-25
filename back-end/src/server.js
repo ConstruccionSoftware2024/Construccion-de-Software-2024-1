@@ -99,6 +99,19 @@ app.get('/asignatura/:id', async (req, res) => {
   }
 });
 
+app.get('/asignaturas/:alumnoId', async (req, res) => {
+  try {
+    const alumnoId = new ObjectId(req.params.alumnoId);
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find({ members: { $in: [alumnoId] } }).toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
 app.get('/evaluacion/:id', async (req, res) => {
   try {
     const database = client.db('construccion');
@@ -256,6 +269,24 @@ app.get('/sesion', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.get('/sesionAsignatura/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const database = client.db('construccion');
+    const asignaturaCollection = database.collection('asignaturas');
+
+    const asignatura = await asignaturaCollection.findOne({ sesiones: new ObjectId(id) });
+    if (!asignatura) {
+      return res.status(404).send('Asignatura not found');
+    }
+
+    res.send(asignatura.title);
+  } catch (error) {
+    console.error('Failed to fetch asignatura', error);
+    res.status(500).send('Failed to fetch asignatura');
+  }
+});
 
 // Obtener una sesión específica por ID
 const getParticipantDetails = async (participantIds, usersCollection) => {
@@ -1014,33 +1045,6 @@ app.put('/message/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Enviar email (página contacto)
 app.post('/send-email', async (req, res) => {
   let { fullName, email, mobile, msg } = req.body;
