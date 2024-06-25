@@ -1029,3 +1029,76 @@ app.get('/obtenerProcesos/:userId', async (req, res) => {
     res.status(500).send('Error al obtener los procesos');
   }
 });
+app.post('/processTabs', (req, res) => {
+  const { userId, urls } = req.body;
+  console.log('Received data:', { userId, urls });
+
+  // Guardar datos en MongoDB
+  const database = client.db('construccion');
+  const collection = database.collection('Pestanas'); // Nombre de la colección en MongoDB
+
+  // Insertar documento con userId y URLs en la colección
+  collection.insertOne({ userId, urls })
+    .then(result => {
+      console.log('Datos guardados en MongoDB:', result.ops);
+      res.send('Datos recibidos y guardados en MongoDB');
+    })
+    .catch(err => {
+      console.error('Error al guardar datos en MongoDB:', err);
+      res.status(500).send('Error interno del servidor al guardar datos en MongoDB');
+    });
+});
+
+app.post('/checkTabs', (req, res) => {
+  const { userId, urls } = req.body;
+  console.log('Checking data:', { userId, urls });
+
+  const database = client.db('construccion');
+  const collection = database.collection('Pestanas');
+
+  // Buscar si ya existe algún documento con las mismas userId y URLs en la colección
+  collection.findOne({ userId, urls })
+    .then(doc => {
+      if (doc) {
+        // Si se encuentra un documento, significa que las URLs ya existen para ese usuario
+        console.log('Las URLs ya existen en la base de datos para este usuario:', doc);
+        res.json({ exists: true }); // Responder que los datos ya existen
+      } else {
+        // Si no se encuentra ningún documento, las URLs no existen aún para ese usuario
+        console.log('Las URLs no existen en la base de datos para este usuario, se pueden procesar.');
+        res.json({ exists: false }); // Responder que los datos no existen y pueden ser procesados
+      }
+    })
+    .catch(err => {
+      console.error('Error al buscar en la base de datos:', err);
+      res.status(500).send('Error interno del servidor al buscar en la base de datos');
+    });
+});
+
+app.get('/getTabs/:userId', (req, res) => {
+  try {
+    const userId = req.params.userId; // Obtener el userId de los parámetros de la URL
+
+    const database = client.db('construccion');
+    const collection = database.collection('Pestanas');
+
+    // Buscar documentos con el userId específico en la colección
+    collection.find({ userId }).toArray()
+      .then(docs => {
+        if (docs.length === 0) {
+          // Si no se encuentra ningún documento para el userId dado
+          res.status(404).send('No se encontraron pestañas para el usuario.');
+        } else {
+          // Si se encuentran documentos, enviar las URLs encontradas
+          const urls = docs.map(doc => doc.urls);
+          res.json(urls);
+        }
+      })
+      .catch(err => {
+        console.error('Error al buscar en la base de datos:', err);
+        res.status(500).send('Error interno del servidor al buscar en la base de datos');
+      });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
