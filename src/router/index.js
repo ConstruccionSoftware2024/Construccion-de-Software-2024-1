@@ -22,6 +22,7 @@ import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlu
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
 import Mensajes from '../views/VistasGrupoClaudio/Mensajes.vue'
+import Configuracion from '@/views/VistasGrupoClaudio/Configuracion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -187,6 +188,11 @@ const router = createRouter({
       path: '/mensajes',
       name: 'mensajes',
       component: Mensajes
+    },
+    {
+      path: '/configuracion',
+      name: 'configuracion',
+      component: Configuracion
     },
   ],
   scrollBehavior(to, from, savedPosition) {
