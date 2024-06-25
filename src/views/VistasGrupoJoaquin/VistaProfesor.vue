@@ -208,7 +208,38 @@ export default {
                 console.error('Error fetching session data:', error);
             }
         },*/
+
+
         assignAppsToStudents(students) {
+            const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
+            const warningApps = ['Slack', 'Skype', 'Zoom', "EpicGames", "Word", "Excel", "PowerPoint", "Paint", "Illustrator", "Photoshop", "Premiere", "Acrobat", "Ink"];
+            const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome', "PSeInt", "Spyder", "Eclipse", "NetBeans", "IntelliJ", "PyCharm", "VisualStudio", "CodeBlocks", "DevC++", "SublimeText", "Atom", "Notepad++", "Vim", "Emacs", "Nano", "Gedit", "pgAdmin", "GitBash"];
+            const statuses = ['Peligro', 'Advertencia', 'Normal'];
+            let statusIndex = 0;
+
+            return students.map((student) => {
+                const apps = [];
+                const status = statuses[statusIndex];
+
+                const appList = status === 'Peligro' ? dangerApps : (status === 'Advertencia' ? warningApps : normalApps);
+                const randomApps = this.shuffleArray(appList);
+
+                const numberOfApps = Math.floor(Math.random() * 2) + 2;
+                for (let i = 0; i < numberOfApps; i++) {
+                    apps.push({ name: randomApps[i], status });
+                }
+
+                statusIndex = (statusIndex + 1) % statuses.length;
+
+                return {
+                    ...student,
+                    apps,
+                    status,
+                };
+            });
+        },
+
+        /*assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
             const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome'];
@@ -237,7 +268,7 @@ export default {
                     status,
                 };
             });
-        },
+        },*/
         shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
