@@ -57,13 +57,12 @@
                     <div class="input-group">
                         <input required placeholder="Nombre de la sesión" type="text" id="nombre"
                             v-model="nuevaSesion.nombre">
-                        <textarea required placeholder="Descripción de la sesión"></textarea>
+                        <textarea required placeholder="Descripción de la sesión" v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
                         </div>
                     </div>
-                    <button @click.prevent="enviarFormulario" class="btn btn-modal"
-                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                    <button @click.prevent="enviarFormulario" class="btn btn-modal">Crear</button>
                 </div>
             </div>
         </div>
@@ -87,6 +86,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { showText } from 'pdf-lib';
 
 export default {
     data() {
@@ -98,6 +98,7 @@ export default {
                 descripcion: '',
                 asignatura: ''
             },
+            showError: false,
         }
     },
     setup() {
@@ -214,6 +215,7 @@ export default {
         },
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                console.log(this.nuevaSesion.nombre+" "+this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }

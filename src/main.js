@@ -42,5 +42,4 @@ app.use(createPinia());
 app.use(store);
 app.component('font-awesome-icon', FontAwesomeIcon);
 app.provide('storage', storage);
-
 app.mount('#app');

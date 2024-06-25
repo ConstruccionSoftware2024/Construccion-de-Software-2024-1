@@ -23,6 +23,8 @@ import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlu
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
 import VistaAlumno1 from '../views/VistasGrupoJoaquin/VistaAlumno1.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
+import Mensajes from '../views/VistasGrupoClaudio/Mensajes.vue'
+import Configuracion from '@/views/VistasGrupoClaudio/Configuracion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -193,6 +195,16 @@ const router = createRouter({
       path: '/VerForo',
       name: 'VerForo',
       component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
+    {
+      path: '/mensajes',
+      name: 'mensajes',
+      component: Mensajes
+    },
+    {
+      path: '/configuracion',
+      name: 'configuracion',
+      component: Configuracion
     },
   ],
   scrollBehavior(to, from, savedPosition) {

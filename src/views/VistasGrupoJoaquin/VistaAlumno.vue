@@ -59,17 +59,16 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
 import Chart from 'chart.js/auto';
 import { useUserStore } from '../../../back-end/src/store.js';
 
 
 export default {
-    mounted() {
-        if (this.$store.state.usuario.role == "profesor") {
-            this.$router.push('/listaAsignaturas')
-        }
-    },
+    /*  mounted() {
+          if (this.$store.state.usuario.role == "profesor") {
+              this.$router.push('/listaAsignaturas')
+          }
+      }, */
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
