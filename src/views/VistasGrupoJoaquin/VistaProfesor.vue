@@ -391,7 +391,7 @@ export default {
         },
 
         redirigirCrearEvaluacion() {
-            this.router.push({ name: 'CrearEvaluacion', params: { id: this.sessionId } });
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
         },
 
         otherOptions() {
