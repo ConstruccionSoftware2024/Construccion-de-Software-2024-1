@@ -955,26 +955,80 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
-/* revisiar esta funcion de grupo joaquin*/
-app.post('/guardar-procesos', async (req, res) => {
+// Guarda/actualiza los procesos en la base de datos
+app.post('/checkTabs', async (req, res) => {
+  const { procesos, userId, sessionId } = req.body;
   const database = client.db('construccion');
   const collection = database.collection('procesos');
-  try {
-    const response = await axios.get('http://127.0.0.1:5000/historial');
-    const aplicaciones = response.data;
 
-    if (aplicaciones.length > 0) {
-      await collection.insertOne(aplicaciones);
-      res.status(200).send('Historial guardado en la base de datos');
+  try {
+    // Asegurarse de que procesos sea un array
+    const nuevosProcesoArray = Array.isArray(procesos) ? procesos : [procesos];
+
+    // Primero, obtener el documento actual
+    const currentDoc = await collection.findOne({ userId, sessionId });
+
+    let procesosActualizados = [];
+    let cambios = {
+      agregados: [],
+      existentes: []
+    };
+
+    if (currentDoc && Array.isArray(currentDoc.procesos)) {
+      // Combinar procesos existentes con nuevos
+      procesosActualizados = [...new Set([...currentDoc.procesos, ...nuevosProcesoArray])];
+      cambios.agregados = nuevosProcesoArray.filter(p => !currentDoc.procesos.includes(p));
+      cambios.existentes = nuevosProcesoArray.filter(p => currentDoc.procesos.includes(p));
     } else {
-      res.status(204).send('No hay aplicaciones para guardar');
+      // Si no hay documento previo o procesos no es un array, todos los procesos son nuevos
+      procesosActualizados = nuevosProcesoArray;
+      cambios.agregados = nuevosProcesoArray;
     }
-  } catch (error) {
-    console.error('Error al guardar el historial:', error);
-    res.status(500).send('Error al guardar el historial');
+
+    // Actualizar o insertar el documento
+    const result = await collection.findOneAndUpdate(
+      {
+        userId: userId,
+        sessionId: sessionId
+      },
+      {
+        $set: {
+          userId: userId,
+          sessionId: sessionId,
+          procesos: procesosActualizados
+        }
+      },
+      {
+        upsert: true,
+        returnDocument: 'after'
+      }
+    );
+
+  } catch (err) {
+    console.error('Error al interactuar con la base de datos:', err);
+    res.status(500).send('Error interno del servidor al interactuar con la base de datos');
   }
 });
 
+app.get('/obtenerProcesos/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+
+  try {
+    const result = await collection.findOne({ userId });
+    if (result) {
+      console.log('Procesos obtenidos:', result.procesos);
+      res.json(result.procesos);
+    } else {
+      console.log('No se encontraron procesos para el usuario en la sesión');
+      res.json([]);
+    }
+  } catch (err) {
+    console.error('Error al obtener los procesos:', err);
+    res.status(500).send('Error al obtener los procesos');
+  }
+});
 app.post('/processTabs', (req, res) => {
   const { userId, urls } = req.body;
   console.log('Received data:', { userId, urls });

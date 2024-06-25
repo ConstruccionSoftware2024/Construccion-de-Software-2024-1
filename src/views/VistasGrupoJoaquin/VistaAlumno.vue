@@ -25,7 +25,7 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR-->
+            <button @click="guardarHistorial">Guardar procesos</button>
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
@@ -67,6 +67,7 @@ export default {
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
         const history = ref([]);
+        const userId = ref('');
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -80,8 +81,6 @@ export default {
                     return '#FFFFFF';
             }
         });
-
-
 
         const createSession = () => {
             // Lógica para unirse a una sesión
@@ -98,21 +97,21 @@ export default {
             }
         };
         const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
-
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling            
             setInterval(async () => {
-                await fetchHistory(); // Actualiza el historial cada intervalo
-            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
+                await fetchHistory(); // Actualiza el historial cada intervalo                 
+                await guardarHistorial(); // Guarda el historial cada intervalo             
+            }, 5000); // Intervalo de 30 segundos
         };
 
         const guardarHistorial = () => {
-            axios.post('http://localhost:8080/guardar-procesos')
-                .then(response => {
-                    console.log('Historial guardado correctamente:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error al guardar el historial:', error);
-                });
+            const procesos = history.value.map(proceso => proceso.name);
+            //const procesosString = procesos.join(',');
+            const userStore = useUserStore();
+            const user = computed(() => userStore.user);
+            const userId = user.value._id;
+            axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
+            //window.alert('Procesos guardados en DB');
         };
 
         onMounted(() => {

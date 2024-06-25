@@ -51,7 +51,7 @@
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" />
-                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
+                            <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
                     </tr>
@@ -65,7 +65,7 @@
                     selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
+                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
                     </li>
                 </ul>
                 <button class="closeButton" @click="closeModal">Cerrar</button>
@@ -345,9 +345,27 @@ export default {
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
         },
-        viewProcesses(student) {
-            this.selectedStudent = student;
-            this.showModal = true;
+        async viewProcesses(userId) {
+            console.log("ID de la sesión: " + this.sessionId);
+            const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
+
+            if (!selectedStudent) {
+                alert('Estudiante no encontrado');
+                return;
+            }
+
+            try {
+                const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                this.selectedStudent = {
+                    ...selectedStudent,
+                    apps: response.data
+                };
+                console.log("procesos: " + response.data);
+                this.showModal = true;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                alert('Error al obtener los procesos del estudiante');
+            }
         },
         createSession() {
             console.log(this.idRuta);
@@ -402,7 +420,7 @@ export default {
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
-                    sesion_id : this.sessionId
+                    sesion_id: this.sessionId
                 });
                 console.log(response.data);
 
