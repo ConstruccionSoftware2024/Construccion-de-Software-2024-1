@@ -397,7 +397,7 @@ export default {
 
             // Filtrar allUsers para incluir solo aquellos que son miembros y no son participantes
             this.users = allUsers.filter(user =>
-                members.includes(user._id.toString()) && !participantesIds.includes(user._id.toString())
+                members.includes(user._id.toString()) && !participantesIds.includes(user._id.toString()) && user.role == 'alumno'
             );
 
         },
