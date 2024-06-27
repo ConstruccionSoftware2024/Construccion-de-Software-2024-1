@@ -59,7 +59,7 @@ export default {
             const data = { email: this.email, msg: event.target.msg.value };
             console.log(data); // Imprime los datos que se enviarán
             try {
-                await axios.post('http://localhost:8080/send-email', data);
+                await axios.post('http://localhost:8080/email-alumno', data);
                 alert('Correo electrónico enviado correctamente');
             } catch (error) {
                 console.error(error);
