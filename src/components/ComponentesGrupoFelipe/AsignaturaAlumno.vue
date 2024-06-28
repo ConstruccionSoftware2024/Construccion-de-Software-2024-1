@@ -35,18 +35,53 @@
                 <hr>
                 <h3><font-awesome-icon :icon="['fas', 'list-ul']" /> Preguntas Realizadas</h3>
                 <div class="preguntas">
-                    <div v-for="pregunta in listadoPreguntas" :key="pregunta" class="pregunta">
+                    <div v-for="pregunta in listadoPreguntas" :key="pregunta.preguntaId" class="pregunta">
                         <div class="pregunta-container">
-                            <p class="tituloPregunta">{{ pregunta.texto }}</p>
+                            <p class="autorPregunta">{{ pregunta.autor }}</p>
                             <div class="pregunta-responder">
-                                <p class="autorPregunta">Realizada por: {{ pregunta.autor }}</p>
-
-                                <div class="botonesPregunta">
-                                    <button class="btn-responder" @click="responderPregunta">Responder</button>
-                                <button v-if="pregunta.autorId === idUsuario" @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar"><font-awesome-icon
-                                    :icon="['fas', 'trash-alt']" /></button>
-                                </div>
+                                <p class="tituloPregunta">{{ pregunta.texto }}</p>
                             </div>
+
+                            <button @click="toggleRespuestas(pregunta.preguntaId)" class="btn-mostrarRespuestas"
+                                v-if="pregunta.respuestas && pregunta.respuestas.length > 0">
+                                <font-awesome-icon class="iconoRespuesta" v-if="mostrarRespuestas[pregunta.preguntaId]"
+                                    :icon="['fas', 'eye-slash']"/>
+                                <font-awesome-icon class="iconoRespuesta" v-else :icon="['fas', 'eye']"/>{{
+                                    mostrarRespuestas[pregunta.preguntaId] ? 'Ocultar Respuestas' : 'Mostrar Respuestas' }}
+                            </button>
+                            <div class="respuestas">
+                                <div class="respuestas-container" v-if="mostrarRespuestas[pregunta.preguntaId]">
+                                    <div v-for="respuesta in pregunta.respuestas" :key="respuesta.respuestaId"
+                                        class="respuesta">
+                                        <p class="autorRespuesta">Autor:</p>
+                                        <p class="textoRespuestas">{{ respuesta.texto }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="btn-responder">
+                                    <div v-if="inputRespuesta === pregunta.preguntaId" class="responderPregunta">
+                                        <input type="text" placeholder="Escribe tu respuesta aquí..."
+                                            v-model="textoRespuesta">
+                                        <div class="btn-publicar-container">
+                                            <button class="btn-cancelar"
+                                                @click="toggleInputRespuesta(pregunta.preguntaId)">Cancelar
+                                            </button>
+                                            <button @click="publicarRespuesta(pregunta.preguntaId)"
+                                                class="btn-publicar">Publicar
+                                                Respuesta</button>
+                                        </div>
+                                    </div>
+                                    <button v-if="inputRespuesta !== pregunta.preguntaId" class="btn-responder" @click="toggleInputRespuesta(pregunta.preguntaId)"> Responder</button>
+                                    <div class="botonesPregunta">
+                                    <button v-if="pregunta.autorId === idUsuario && inputRespuesta !== pregunta.preguntaId"
+                                        @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar">
+                                        <font-awesome-icon :icon="['fas', 'trash-alt']" />
+                                    </button>
+                                </div>
+                                </div>
+
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -122,11 +157,29 @@ const faltaAlumnos = ref([]);
 
 const textoPregunta = ref('');
 
-const autor = '';
-
-const nuevaPregunta = ref('');
-
 const listadoPreguntas = ref([]);
+
+const textoRespuesta = ref('');
+
+const inputRespuesta = ref('');
+
+const mostrarRespuestas = ref({});
+
+const toggleRespuestas = (id) => {
+    if (mostrarRespuestas.value === null) {
+        mostrarRespuestas.value = {};
+    }
+    mostrarRespuestas.value[id] = !mostrarRespuestas.value[id];
+};
+
+const toggleInputRespuesta = (id) => {
+    if (inputRespuesta.value === id) {
+        inputRespuesta.value = '';
+    } else {
+        inputRespuesta.value = id;
+    }
+};
+
 
 const toggleDetallesFaltas = () => {
     mostrarDetallesFaltas.value = !mostrarDetallesFaltas.value;
@@ -146,6 +199,7 @@ const closePopUp = (event) => {
         mostrarDetallesFaltas.value = false;
     }
 }
+
 
 const asignatura = ref({
     nombre: 'Nombre Ejemplo',
@@ -231,11 +285,21 @@ function determinarRuta(id, rol) {
 
 async function publicarPregunta() {
 
+    //validacion
+    if (textoPregunta.value === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Debes escribir una pregunta',
+            timer: 1200
+        });
+        return;
+    }
+
     const nuevaPregunta = {
         texto: textoPregunta.value,
         autor: userStore.user._id,
     }
-
 
     await axios.post('http://localhost:8080/pregunta', {
         texto: nuevaPregunta.texto,
@@ -282,6 +346,39 @@ async function recuperarPreguntas() {
         .catch(error => {
             console.error(error);
         });
+}
+
+async function publicarRespuesta(preguntaId) {
+
+    //validacion
+    if (textoRespuesta.value === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Debes escribir una respuesta',
+            timer: 1200
+        });
+        return;
+    }
+
+    const nuevaRespuesta = {
+        texto: textoRespuesta.value,
+        autorRespuesta: userStore.user._id,
+        preguntaId: preguntaId
+    }
+
+    const preguntaIndex = listadoPreguntas.value.findIndex(pregunta => pregunta.preguntaId === preguntaId);
+    if (preguntaIndex !== -1) {
+        if (!listadoPreguntas.value[preguntaIndex].respuestas) {
+            listadoPreguntas.value[preguntaIndex].respuestas = [];
+        }
+        listadoPreguntas.value[preguntaIndex].respuestas.push(nuevaRespuesta);
+    }
+
+    console.log(listadoPreguntas.value[preguntaIndex].respuestas);
+
+    mostrarRespuestas.value[preguntaId] = true;
+    textoRespuesta.value = '';
 }
 
 
@@ -536,12 +633,13 @@ input[type="text"] {
 
 .tituloPregunta {
     font-weight: bold;
-    margin-top: 5px;
 }
 
 .autorPregunta {
     font-style: italic;
     margin-bottom: 0;
+    margin-top: 0;
+    font-size: 0.8rem;
 }
 
 .btn-responder {
@@ -552,14 +650,51 @@ input[type="text"] {
     cursor: pointer;
     font-size: 12px;
     padding: 5px;
+    margin: 0;
+    margin-right: 5px;
+    margin-left: auto;
+    display:flex;
+    align-items: end;
+}
+
+.btn-cancelar {
+    background-color: var(--gray-hover-color);
+    margin: 0;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    padding: 5px;
+}
+
+.btn-cancelar:hover {
+    background-color: var(--border-color)
+}
+
+.btn-publicar-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-publicar {
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    margin-right: 0;
 }
 
 .pregunta-responder {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    margin-left: 8px;
 }
 
-.btn-eliminar{
+.btn-eliminar {
     background-color: red;
     color: var(--button-text-color);
     border: none;
@@ -567,10 +702,66 @@ input[type="text"] {
     cursor: pointer;
     font-size: 12px;
     padding: 5px;
+    margin: 0;
 }
 
-.btn-eliminar:hover{
+.btn-eliminar:hover {
     background-color: darkred;
+}
+
+.responderPregunta input {
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    border: 1px solid #cccccc7a;
+}
+
+.respuestas-container {
+    margin-top: 10px;
+}
+
+.respuesta {
+    background-color: var(--border-color);
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+}
+
+.textoRespuestas {
+    margin: 0;
+    margin-left: 10px;
+}
+
+.autorRespuesta {
+    font-style: italic;
+    margin-bottom: 8px;
+    margin-top: 0;
+    font-size: 0.8rem;
+}
+
+.responderPregunta {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.btn-mostrarRespuestas {
+    background-color: transparent;
+    color: var(--button-text-color);
+    text-decoration: underline;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+    margin: 0;
+}
+
+.btn-mostrarRespuestas:hover {
+    background-color: black;
+}
+
+.iconoRespuesta {
+    margin-right: 5px;
 }
 
 @media screen and (max-width: 768px) {
