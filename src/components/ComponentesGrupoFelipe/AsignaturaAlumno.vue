@@ -13,8 +13,10 @@
             <div class="sesiones">
 
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span class="session-title">{{ sesion.nombre }}</span>
-                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}</p>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span
+                            class="session-title">{{ sesion.nombre }}</span>
+                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}
+                        </p>
                         <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{ sesion.participantes ?
                             sesion.participantes.length : 0 }}</p>
                     </router-link>
@@ -24,18 +26,26 @@
 
             <div class="recursos">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book']" /> Recursos de la Asignatura</h3>
-                <ul>
-                    <li><a href="#">PDF de Estudio</a></li>
-                    <li><a href="#">Video de Clase</a></li>
-                    <li><a href="#">Enlace Externo</a></li>
-                </ul>
             </div>
 
-
             <div class="foro">
-                <h3 class="subtitulo"> <font-awesome-icon :icon="['far', 'comment-dots']" /> Foro de Preguntas</h3>
-                <p>Escribe tu pregunta aquí...</p>
-                <button @click="publicarPregunta">Publicar Pregunta</button>
+                <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
+                <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="textoPregunta">
+                <button @click="publicarPregunta" class="btn-pregunta">Publicar Pregunta</button>
+                <hr>
+                <h3><font-awesome-icon :icon="['fas', 'list-ul']" /> Preguntas Realizadas</h3>
+                <div class="preguntas">
+                    <div v-for="pregunta in listadoPreguntas" :key="pregunta" class="pregunta">
+                        <div class="pregunta-container">
+                            <p class="tituloPregunta">{{ pregunta.texto }}</p>
+                            <div class="pregunta-responder">
+                                <p class="autorPregunta">Realizada por: {{ pregunta.autor }}</p>
+
+                                <button class="btn-responder" @click="responderPregunta">Responder</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -43,17 +53,20 @@
         <div class="seccion2">
             <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
             <div class="faltas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas</h3>
-                <p>Cantidad de Faltas: {{faltaAlumnos.faltas}}</p>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas
+                </h3>
+                <p>Cantidad de Faltas: {{ faltaAlumnos.faltas }}</p>
                 <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
-                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de faltas</h1>
+                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de
+                        faltas</h1>
                     <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
-                        <p class="subtitle">Falta: <span>{{falta.falta}}</span></p>
-                        <p class="subtitle">Fecha: <span>{{falta.fecha}}</span></p>
-                        <p class="subtitle">Profesor: <span> {{falta.profesor}}</span></p>
-                        <p class="subtitle">Descripción: <span>{{falta.motivo}}</span></p>
+                        <p class="subtitle">Falta: <span>{{ falta.falta }}</span></p>
+                        <p class="subtitle">Fecha: <span>{{ falta.fecha }}</span></p>
+                        <p class="subtitle">Profesor: <span> {{ falta.profesor }}</span></p>
+                        <p class="subtitle">Descripción: <span>{{ falta.motivo }}</span></p>
                     </div>
-                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon :icon="['fas', 'circle-xmark']" /> Cerrar</button>
+                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon
+                            :icon="['fas', 'circle-xmark']" /> Cerrar</button>
                 </div>
                 <button @click="toggleDetallesFaltas">Ver Detalles</button>
             </div>
@@ -73,16 +86,6 @@
             <div v-if="showAviso" class="aviso">
                 Correo del profesor copiado al portapapeles!
             </div>
-            <button @click="mostrarPopup = true">Crear sesión</button>
-
-            <div v-if="mostrarPopup" class="popup">
-                <h2>Crear sesión</h2>
-                <label>Nombre de la sesión: <input v-model="nuevaSesion.nombre" type="text"></label>
-                <label>Descripción: <input v-model="nuevaSesion.descripcion" type="text"></label>
-                <button @click="enviarFormulario">Crear</button>
-                <button @click="mostrarPopup = false">Cancelar</button>
-            </div>
-
             <div class="participantes">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h3>
                 <div class="team-members">
@@ -113,6 +116,14 @@ const mostrarDetallesFaltas = ref(false);
 
 const faltaAlumnos = ref([]);
 
+const textoPregunta = ref('');
+
+const autor = '';
+
+const nuevaPregunta = ref('');
+
+const listadoPreguntas = ref([]);
+
 const toggleDetallesFaltas = () => {
     mostrarDetallesFaltas.value = !mostrarDetallesFaltas.value;
 
@@ -127,9 +138,9 @@ const toggleDetallesFaltas = () => {
 };
 
 const closePopUp = (event) => {
-  if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value){
-    mostrarDetallesFaltas.value = false;
-  }
+    if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value) {
+        mostrarDetallesFaltas.value = false;
+    }
 }
 
 const asignatura = ref({
@@ -145,15 +156,15 @@ const sesiones = ref([]);
 const showAviso = ref(false);
 
 const contactarProfesor = async () => {
-  try {
-    await navigator.clipboard.writeText(asignatura.value.email);
-    showAviso.value = true;
-    setTimeout(() => {
-      showAviso.value = false;
-    }, 2000); // Ocultar el aviso después de 2 segundos
-  } catch (err) {
-    console.error('Error al copiar el correo: ', err);
-  }
+    try {
+        await navigator.clipboard.writeText(asignatura.value.email);
+        showAviso.value = true;
+        setTimeout(() => {
+            showAviso.value = false;
+        }, 2000); // Ocultar el aviso después de 2 segundos
+    } catch (err) {
+        console.error('Error al copiar el correo: ', err);
+    }
 };
 
 function recuperarSesiones(id) {
@@ -166,15 +177,11 @@ function recuperarSesiones(id) {
         });
 }
 
-const publicarPregunta = () => {
-    alert('Pregunta Publicada');
-};
 
 async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
         .then(async response => {
             asignatura.value = response.data;
-            console.log("asignatura: ", asignatura);
             recuperarProfesor(response.data.profesorId);
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);
@@ -200,7 +207,7 @@ async function recuperarFaltas(id) {
         .then(response => {
             if (response.data.length === 0) {
                 faltaAlumnos.value.faltas = 0;
-            }else{
+            } else {
                 faltaAlumnos.value = response.data;
             }
             return response.data;
@@ -218,9 +225,50 @@ function determinarRuta(id, rol) {
     }
 }
 
+async function publicarPregunta() {
+
+    const nuevaPregunta = {
+        texto: textoPregunta.value,
+        autor: userStore.user._id,
+    }
+
+    listadoPreguntas.value.push(nuevaPregunta);
+
+    await axios.post('http://localhost:8080/pregunta', {
+        texto: nuevaPregunta.texto,
+        autor: nuevaPregunta.autor,
+        asignaturaId: id
+    })
+        .then(response => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pregunta Publicada',
+                text: 'Tu pregunta ha sido publicada con éxito',
+                timer: 1200
+            });
+
+            textoPregunta.value = '';
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function recuperarPreguntas() {
+    await axios.get(`http://localhost:8080/preguntas/${id}`)
+        .then(response => {
+            listadoPreguntas.value = response.data;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+
 onMounted(async () => {
     recuperarAsignatura(id);
     recuperarFaltas(idUsuario);
+    recuperarPreguntas();
     window.addEventListener('click', closePopUp);
 });
 
@@ -228,51 +276,52 @@ onMounted(async () => {
 
 <style scoped>
 .aviso {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #4caf50;
-  color: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-.pop-up-detalles-faltas {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--container-background-color);
-  padding: 20px;
-  border: 1px solid #ccc;
-  z-index: 1000;
-  width: 50%;
-  border-radius: 12px;
-  max-height: 70%;
-  overflow-y: auto;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4caf50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
-.itemDetalleFaltas{
+.pop-up-detalles-faltas {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--container-background-color);
+    padding: 20px;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    width: 50%;
+    border-radius: 12px;
+    max-height: 70%;
+    overflow-y: auto;
+}
+
+.itemDetalleFaltas {
     margin-bottom: 10px;
     background-color: var(--gray-text-color);
     padding: 10px;
     border-radius: 5px;
 }
 
-.titleFaltas{
+.titleFaltas {
     font-size: 24px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 20px;
 }
 
-.subtitle{
+.subtitle {
     font-weight: bold;
 }
 
-.closeButton{
+.closeButton {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border: none;
@@ -286,13 +335,13 @@ onMounted(async () => {
 }
 
 .overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
 }
 
 .popup {
@@ -376,7 +425,7 @@ button:hover {
     background-color: var(--button-hover-background-color);
 }
 
-.session-title{
+.session-title {
     font-size: 17px;
     font-weight: bold;
 }
@@ -428,6 +477,7 @@ a {
 .team-members {
     margin-top: 10px;
     display: flex;
+    flex-wrap: wrap;
 }
 
 .team-member {
@@ -435,6 +485,58 @@ a {
     height: 24px;
     border-radius: 50%;
     margin-right: 5px;
+}
+
+input[type="text"] {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+.pregunta {
+    margin-bottom: 10px;
+}
+
+.btn-pregunta {
+    margin-bottom: 0.8rem;
+}
+
+.pregunta-container {
+    background-color: var(--gray-text-color);
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.tituloPregunta {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.autorPregunta {
+    font-style: italic;
+    margin-bottom: 0;
+}
+
+.btn-responder {
+    background-color: none;
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+}
+
+.pregunta-responder {
+    display: flex;
+    justify-content: space-between;
 }
 
 @media screen and (max-width: 768px) {

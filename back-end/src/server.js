@@ -211,6 +211,38 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
+app.post ('/pregunta', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const pregunta = req.body.texto
+    const autor = req.body.autor
+    // Agregar pregunta a arreglo de preguntas de la asignatura
+    const result = await collection.updateOne(
+      { _id: new ObjectId(req.body.asignaturaId) },
+      { $push: { preguntas: { texto: pregunta, autor: autor } } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.get('/preguntas/:asignaturaId', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const asignaturaId = req.params.asignaturaId
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) })
+    if (!asignatura) {
+      return res.status(404).json({ message: 'Asignatura no encontrada' })
+    }
+    res.send(asignatura.preguntas)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
 app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
   try {
     const database = client.db('construccion');
