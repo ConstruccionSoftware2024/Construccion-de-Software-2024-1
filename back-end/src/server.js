@@ -218,10 +218,10 @@ app.post ('/pregunta', async (req, res) => {
     const pregunta = req.body.texto
     const autor = req.body.autor
     const preguntaId = new ObjectId()
-    // Agregar pregunta a arreglo de preguntas de la asignatura
+
     const result = await collection.updateOne(
       { _id: new ObjectId(req.body.asignaturaId) },
-      { $push: { preguntas: { _id: preguntaId, texto: pregunta, autor: autor } } }
+      { $push: { preguntas: { _id: preguntaId, texto: pregunta, autor: autor, respuestas: [] } } }
     )
     res.send(result)
   } catch (error) {
@@ -236,24 +236,32 @@ app.get('/preguntas/:asignaturaId/', async (req, res) => {
     const asignaturaId = req.params.asignaturaId
     const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) })
 
-    const preguntas = asignatura.preguntas
-
-    // Buscar el autor de cada pregunta
-    const usersCollection = database.collection('users')
-    const preguntasConAutor = await Promise.all(preguntas.map(async (pregunta) => {
-      const autor = await usersCollection.findOne({ _id: new ObjectId(pregunta.autor) })
-      return {
-        texto: pregunta.texto,
-        autor: autor ? autor.firstName + " " +autor.lastName : 'Desconocido',
-        autorId: pregunta.autor,
-        preguntaId: pregunta._id
-      }
-    }))
-
     if (!asignatura) {
       return res.status(404).json({ message: 'Asignatura no encontrada' })
     }
-    res.send(preguntasConAutor)
+
+    const usersCollection = database.collection('users');
+    const preguntasConAutorYRespuestas = await Promise.all(asignatura.preguntas.map(async (pregunta) => {
+      const autor = await usersCollection.findOne({ _id: new ObjectId(pregunta.autor) });
+      const respuestasConAutor = await Promise.all(pregunta.respuestas.map(async (respuesta) => {
+        const autorRespuesta = await usersCollection.findOne({ _id: new ObjectId(respuesta.autor) });
+        return {
+          ...respuesta,
+          autor: autorRespuesta ? autorRespuesta.firstName + " " + autorRespuesta.lastName : 'Desconocido',
+          autorId: respuesta.autor,
+        };
+      }));
+      return {
+        texto: pregunta.texto,
+        autor: autor ? autor.firstName + " " + autor.lastName : 'Desconocido',
+        autorId: pregunta.autor,
+        preguntaId: pregunta._id,
+        respuestas: respuestasConAutor,
+      };
+    }));
+
+
+    res.send(preguntasConAutorYRespuestas)
   } catch (error) {
     res.status(500).send(error.message)
   }
@@ -270,6 +278,48 @@ app.delete('/pregunta/:asignaturaId/:preguntaId', async (req, res) => {
     const result = await collection.updateOne(
       { _id: new ObjectId(asignaturaId) },
       { $pull: { preguntas: { _id: new ObjectId(preguntaId) } } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
+
+app.post('/respuesta', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const respuesta = req.body.texto
+    const autor = req.body.autorRespuesta
+    const respuestaId = new ObjectId()
+    // Agregar respuesta a arreglo de respuestas de la pregunta
+    console.log(respuesta)
+    console.log(autor)
+    console.log(req.body.asignaturaId)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(req.body.asignaturaId), 'preguntas._id': new ObjectId(req.body.preguntaId) },
+      { $push: { 'preguntas.$.respuestas': { _id: respuestaId, texto: respuesta, autor: autor } } }
+    )
+    res.send()
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
+
+app.delete('/respuesta/:asignaturaId/:preguntaId/:respuestaId', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const asignaturaId = req.params.asignaturaId
+    const preguntaId = req.params.preguntaId
+    const respuestaId = req.params.respuestaId
+
+    // Eliminar respuesta del arreglo de respuestas de la pregunta
+    const result = await collection.updateOne(
+      { _id: new ObjectId(asignaturaId), 'preguntas._id': new ObjectId(preguntaId) },
+      { $pull: { 'preguntas.$.respuestas': { _id: new ObjectId(respuestaId) } } }
     )
     res.send(result)
   } catch (error) {

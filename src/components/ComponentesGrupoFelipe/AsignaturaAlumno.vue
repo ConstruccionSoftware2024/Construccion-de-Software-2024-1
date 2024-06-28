@@ -45,17 +45,20 @@
                             <button @click="toggleRespuestas(pregunta.preguntaId)" class="btn-mostrarRespuestas"
                                 v-if="pregunta.respuestas && pregunta.respuestas.length > 0">
                                 <font-awesome-icon class="iconoRespuesta" v-if="mostrarRespuestas[pregunta.preguntaId]"
-                                    :icon="['fas', 'eye-slash']"/>
-                                <font-awesome-icon class="iconoRespuesta" v-else :icon="['fas', 'eye']"/>{{
+                                    :icon="['fas', 'eye-slash']" />
+                                <font-awesome-icon class="iconoRespuesta" v-else :icon="['fas', 'eye']" />{{
                                     mostrarRespuestas[pregunta.preguntaId] ? 'Ocultar Respuestas' : 'Mostrar Respuestas' }}
                             </button>
                             <div class="respuestas">
                                 <div class="respuestas-container" v-if="mostrarRespuestas[pregunta.preguntaId]">
                                     <div v-for="respuesta in pregunta.respuestas" :key="respuesta.respuestaId"
                                         class="respuesta">
-                                        <p class="autorRespuesta">Autor:</p>
+                                        <p class="autorRespuesta">{{respuesta.autor}}</p>
                                         <p class="textoRespuestas">{{ respuesta.texto }}</p>
+                                        <button v-if="respuesta.autorId === idUsuario" @click="eliminarRespuesta(pregunta.preguntaId, respuesta._id)"
+                                        class="btn-eliminar-respuesta"><font-awesome-icon :icon="['fas', 'minus']" class="icon-btn-eliminar-respuesta"/></button>
                                     </div>
+
                                 </div>
 
                                 <div class="btn-responder">
@@ -71,13 +74,15 @@
                                                 Respuesta</button>
                                         </div>
                                     </div>
-                                    <button v-if="inputRespuesta !== pregunta.preguntaId" class="btn-responder" @click="toggleInputRespuesta(pregunta.preguntaId)"> Responder</button>
+                                    <button v-if="inputRespuesta !== pregunta.preguntaId" class="btn-responder"
+                                        @click="toggleInputRespuesta(pregunta.preguntaId)"> Responder</button>
                                     <div class="botonesPregunta">
-                                    <button v-if="pregunta.autorId === idUsuario && inputRespuesta !== pregunta.preguntaId"
-                                        @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar">
-                                        <font-awesome-icon :icon="['fas', 'trash-alt']" />
-                                    </button>
-                                </div>
+                                        <button
+                                            v-if="pregunta.autorId === idUsuario && inputRespuesta !== pregunta.preguntaId"
+                                            @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar">
+                                            <font-awesome-icon :icon="['fas', 'trash-alt']" />
+                                        </button>
+                                    </div>
                                 </div>
 
                             </div>
@@ -349,7 +354,6 @@ async function recuperarPreguntas() {
 }
 
 async function publicarRespuesta(preguntaId) {
-
     //validacion
     if (textoRespuesta.value === '') {
         Swal.fire({
@@ -364,7 +368,7 @@ async function publicarRespuesta(preguntaId) {
     const nuevaRespuesta = {
         texto: textoRespuesta.value,
         autorRespuesta: userStore.user._id,
-        preguntaId: preguntaId
+        preguntaId: preguntaId,
     }
 
     const preguntaIndex = listadoPreguntas.value.findIndex(pregunta => pregunta.preguntaId === preguntaId);
@@ -375,12 +379,35 @@ async function publicarRespuesta(preguntaId) {
         listadoPreguntas.value[preguntaIndex].respuestas.push(nuevaRespuesta);
     }
 
-    console.log(listadoPreguntas.value[preguntaIndex].respuestas);
+    // Enviar informacion a la base de datos
+    await axios.post('http://localhost:8080/respuesta', {
+        texto: nuevaRespuesta.texto,
+        autorRespuesta: nuevaRespuesta.autorRespuesta,
+        preguntaId: nuevaRespuesta.preguntaId,
+        asignaturaId: id
+    })
+        .then(response => {
+            textoRespuesta.value = '';
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+        recuperarPreguntas();
 
     mostrarRespuestas.value[preguntaId] = true;
     textoRespuesta.value = '';
 }
 
+async function eliminarRespuesta(preguntaId, respuestaId) {
+    await axios.delete(`http://localhost:8080/respuesta/${id}/${preguntaId}/${respuestaId}`)
+        .then(response => {
+            recuperarPreguntas();
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
 
 onMounted(async () => {
     recuperarAsignatura(id);
@@ -653,7 +680,7 @@ input[type="text"] {
     margin: 0;
     margin-right: 5px;
     margin-left: auto;
-    display:flex;
+    display: flex;
     align-items: end;
 }
 
@@ -724,6 +751,7 @@ input[type="text"] {
     padding: 5px;
     border-radius: 5px;
     margin-bottom: 8px;
+    position: relative;
 }
 
 .textoRespuestas {
@@ -763,6 +791,31 @@ input[type="text"] {
 .iconoRespuesta {
     margin-right: 5px;
 }
+
+
+.btn-eliminar-respuesta {
+    background-color: red;
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position:absolute;
+    margin:0;
+    right: 2px;
+    top: -5px;
+    font-size: 8px;
+    padding:5px;
+}
+
+.btn-eliminar-respuesta:hover {
+    background-color: darkred;
+}
+
+.icon-btn-eliminar-respuesta {
+    font-size: 8px;
+    margin: 0;
+}
+
 
 @media screen and (max-width: 768px) {
     .container {
