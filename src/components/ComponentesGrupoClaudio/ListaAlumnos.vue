@@ -30,10 +30,14 @@
             <tr v-if="alumnoSeleccionado === index">
               <td colspan="8">
                 <div class="detail-falta-container">
-                  <strong class="titulo">Asignaturas inscritas:</strong>
-                  <ul>
-                    <li v-for="asignatura in asignaturas" :key="asignatura._id">{{ asignatura.title }}</li>
-                  </ul>
+                  <div v-if="cargandoAsignaturas">
+                  </div>
+                  <div v-else>
+                    <strong class="titulo">Asignaturas inscritas:</strong>
+                    <ul>
+                      <li v-for="asignatura in asignaturas" :key="asignatura._id">{{ asignatura.title }}</li>
+                    </ul>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -55,7 +59,8 @@ export default {
       historial: [],
       matriculaABanear: '',
       alumnoSeleccionado: null,
-      asignaturas: []
+      asignaturas: [],
+      cargandoAsignaturas: false
     }
   },
   methods: {
@@ -72,16 +77,19 @@ export default {
       }
     },
     async obtenerAsignaturas(alumnoId) {
+      this.cargandoAsignaturas = true;
       try {
         const response = await axios.get(`http://localhost:8080/asignaturas/${alumnoId}`);
         this.asignaturas = response.data;
       } catch (error) {
         console.error('Failed to fetch asignaturas', error);
+      } finally {
+        this.cargandoAsignaturas = false;
       }
     },
     seleccionarAlumno(index) {
       this.alumnoSeleccionado = this.alumnoSeleccionado === index ? null : index;
-      if (this.alumnoSeleccionado !== null) {  
+      if (this.alumnoSeleccionado !== null) {
         this.obtenerAsignaturas(this.alumnos[this.alumnoSeleccionado]._id);
       }
     }
@@ -93,7 +101,6 @@ export default {
 </script>
 
 <style scoped>
-
 .titulo {
   font-weight: bold;
 }
