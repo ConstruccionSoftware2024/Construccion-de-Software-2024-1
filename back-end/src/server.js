@@ -217,10 +217,11 @@ app.post ('/pregunta', async (req, res) => {
     const collection = database.collection('asignaturas')
     const pregunta = req.body.texto
     const autor = req.body.autor
+    const preguntaId = new ObjectId()
     // Agregar pregunta a arreglo de preguntas de la asignatura
     const result = await collection.updateOne(
       { _id: new ObjectId(req.body.asignaturaId) },
-      { $push: { preguntas: { texto: pregunta, autor: autor } } }
+      { $push: { preguntas: { _id: preguntaId, texto: pregunta, autor: autor } } }
     )
     res.send(result)
   } catch (error) {
@@ -228,20 +229,54 @@ app.post ('/pregunta', async (req, res) => {
   }
 })
 
-app.get('/preguntas/:asignaturaId', async (req, res) => {
+app.get('/preguntas/:asignaturaId/', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('asignaturas')
     const asignaturaId = req.params.asignaturaId
     const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) })
+
+    const preguntas = asignatura.preguntas
+
+    // Buscar el autor de cada pregunta
+    const usersCollection = database.collection('users')
+    const preguntasConAutor = await Promise.all(preguntas.map(async (pregunta) => {
+      const autor = await usersCollection.findOne({ _id: new ObjectId(pregunta.autor) })
+      return {
+        texto: pregunta.texto,
+        autor: autor ? autor.firstName + " " +autor.lastName : 'Desconocido',
+        autorId: pregunta.autor,
+        preguntaId: pregunta._id
+      }
+    }))
+
     if (!asignatura) {
       return res.status(404).json({ message: 'Asignatura no encontrada' })
     }
-    res.send(asignatura.preguntas)
+    res.send(preguntasConAutor)
   } catch (error) {
     res.status(500).send(error.message)
   }
 })
+
+app.delete('/pregunta/:asignaturaId/:preguntaId', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const asignaturaId = req.params.asignaturaId
+    const preguntaId = req.params.preguntaId
+
+    // Eliminar pregunta del arreglo de preguntas de la asignatura
+    const result = await collection.updateOne(
+      { _id: new ObjectId(asignaturaId) },
+      { $pull: { preguntas: { _id: new ObjectId(preguntaId) } } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
 
 app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
   try {

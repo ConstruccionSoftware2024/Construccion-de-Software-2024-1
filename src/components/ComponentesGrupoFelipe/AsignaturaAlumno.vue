@@ -41,7 +41,11 @@
                             <div class="pregunta-responder">
                                 <p class="autorPregunta">Realizada por: {{ pregunta.autor }}</p>
 
-                                <button class="btn-responder" @click="responderPregunta">Responder</button>
+                                <div class="botonesPregunta">
+                                    <button class="btn-responder" @click="responderPregunta">Responder</button>
+                                <button v-if="pregunta.autorId === idUsuario" @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar"><font-awesome-icon
+                                    :icon="['fas', 'trash-alt']" /></button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -232,7 +236,6 @@ async function publicarPregunta() {
         autor: userStore.user._id,
     }
 
-    listadoPreguntas.value.push(nuevaPregunta);
 
     await axios.post('http://localhost:8080/pregunta', {
         texto: nuevaPregunta.texto,
@@ -248,6 +251,23 @@ async function publicarPregunta() {
             });
 
             textoPregunta.value = '';
+            recuperarPreguntas();
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function eliminarPregunta(preguntaId) {
+    await axios.delete(`http://localhost:8080/pregunta/${id}/${preguntaId}`)
+        .then(response => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pregunta Eliminada',
+                text: 'Tu pregunta ha sido eliminada con éxito',
+                timer: 1000
+            });
+            recuperarPreguntas();
         })
         .catch(error => {
             console.error(error);
@@ -537,6 +557,20 @@ input[type="text"] {
 .pregunta-responder {
     display: flex;
     justify-content: space-between;
+}
+
+.btn-eliminar{
+    background-color: red;
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+}
+
+.btn-eliminar:hover{
+    background-color: darkred;
 }
 
 @media screen and (max-width: 768px) {
