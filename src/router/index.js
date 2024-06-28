@@ -8,6 +8,7 @@ import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOp
 import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
 import VistaAlumno from '../views/VistasGrupoJoaquin/VistaAlumno.vue'
+import VistaEvaluacion from '../views/VistasGrupoFelipe/VistaEvaluacion.vue'
 import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
@@ -20,7 +21,10 @@ import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
 import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import VistaAlumno1 from '../views/VistasGrupoJoaquin/VistaAlumno1.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
+import Mensajes from '../views/VistasGrupoClaudio/Mensajes.vue'
+import Configuracion from '@/views/VistasGrupoClaudio/Configuracion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -62,11 +66,6 @@ const router = createRouter({
       component: HistorialEvaluaciones
     },
     {
-      path: '/crearevaluacion',
-      name: 'crearevaluacion',
-      component: CrearEvaluacion
-    },
-    {
       path: '/home',
       name: 'home',
       component: HomeView
@@ -97,7 +96,7 @@ const router = createRouter({
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
-      path: '/crear-evaluacion/:id',
+      path: '/crear-evaluacion/:sesionId',
       name: 'CrearEvaluacion',
       component: CrearEvaluacion
     },
@@ -112,7 +111,12 @@ const router = createRouter({
       component: VistaAlumno
     },
     {
-      path: '/faltaAlumnos',
+      path: '/vistaEvaluacion/:id',
+      name: 'VistaEvaluacion',
+      component: VistaEvaluacion
+    },
+    {
+      path: '/faltaAlumnos/:id',
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
@@ -130,6 +134,11 @@ const router = createRouter({
       path: '/vistaalumno',
       name: 'vista-alumno',
       component: VistaAlumno
+    },
+    {
+      path: '/vistaalumno1',
+      name: 'vista-alumno1',
+      component: VistaAlumno1
     },
     {
       path: '/perfil',
@@ -186,6 +195,16 @@ const router = createRouter({
       path: '/VerForo',
       name: 'VerForo',
       component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
+    {
+      path: '/mensajes',
+      name: 'mensajes',
+      component: Mensajes
+    },
+    {
+      path: '/configuracion',
+      name: 'configuracion',
+      component: Configuracion
     },
   ],
   scrollBehavior(to, from, savedPosition) {
