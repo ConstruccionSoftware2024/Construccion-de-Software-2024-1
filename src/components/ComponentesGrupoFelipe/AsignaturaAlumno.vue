@@ -674,7 +674,6 @@ input[type="text"] {
     color: var(--button-text-color);
     border: none;
     border-radius: 5px;
-    cursor: pointer;
     font-size: 12px;
     padding: 5px;
     margin: 0;
