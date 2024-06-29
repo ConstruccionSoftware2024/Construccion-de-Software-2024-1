@@ -8,7 +8,10 @@
                     <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/vistaProfesor/' + sesion._id"
                         class="session-item">
                         <div class="session-content">
-                            <p class="session-name"> {{ sesion.nombre }}</p>
+                            <div class="containerCancelada">
+                                <p class="session-name"> {{ sesion.nombre }}</p>
+                                <span v-if=sesion.cancelada class="etiquetaCancelada"> Cancelada</span>
+                            </div>
                             <p><i class="fa-solid fa-layer-group"></i> Descripción: {{ sesion.descripcion }}</p>
                             <p><i class="fa-solid fa-user-group"></i> Participantes: {{ sesion.participantes ?
                                 sesion.participantes.length : 0 }}</p>
@@ -42,8 +45,8 @@
                 <div class="section">
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
-                        <button class="btn">Contactar a un Alumno</button>
-                        <button class="btn">Reportar un Problema</button>
+                        <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
+                        <button class="btn" @click="goToContact">Reportar un Problema</button>
                     </div>
                 </div>
             </div>
@@ -55,37 +58,28 @@
                 <div class="add-falta">
                     <h2>Crear nueva sesión</h2>
                     <div class="input-group">
-                        <div class="input-middle" style="display: flex; justify-content: space-between;">
-                            <div style="flex: 1; margin-right: 10px;">
-                                <p class="text-form">Nombre de la sesión</p>
-                                <input required placeholder="Nombre de la sesión" type="text" id="nombre"
-                                    v-model="nuevaSesion.nombre">
-                            </div>
-                            <div style="flex: 1; margin-left: 10px;">
-                                <p class="text-form">Descripción</p>
-                                <input required placeholder="Descripción" type="text" id="descripcion"
-                                    v-model="nuevaSesion.descripcion">
-                            </div>
-                        </div>
+                        <input required placeholder="Nombre de la sesión" type="text" id="nombre"
+                            v-model="nuevaSesion.nombre">
+                        <textarea required placeholder="Descripción de la sesión" v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
                         </div>
                     </div>
-                    <button @click.prevent="enviarFormulario" class="saveButton"
-                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                    <button @click.prevent="enviarFormulario" class="btn btn-modal">Crear</button>
                 </div>
             </div>
         </div>
 
         <!-- Popup for adding resource -->
-        <div v-if="mostrarPopupRecurso" class="popup">
-
-            <h3>Añadir nuevo recurso</h3>
-            <input required placeholder="Nombre del recurso" type="text" v-model="nuevoRecurso.nombre">
-            <input required placeholder="Enlace del recurso" type="text" v-model="nuevoRecurso.enlace">
-            <input type="submit" class="btn" value="Añadir Recurso">
-            <button @click="mostrarPopupRecurso = false" class="btn-cerrar">Cerrar</button>
-
+        <div v-if="mostrarPopupRecurso" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="mostrarPopupRecurso = false">&times;</span>
+                <h3>Añadir nuevo recurso</h3>
+                <input required placeholder="Título del recurso" type="text" v-model="nuevoRecurso.titulo">
+                <textarea required placeholder="Descripción del recurso" v-model="nuevoRecurso.descripcion"></textarea>
+                <input required type="file" @change="onFileChange">
+                <button @click="enviarRecurso" class="btn btn-modal">Añadir Recurso</button>
+            </div>
         </div>
     </div>
 </template>
@@ -95,6 +89,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { showText } from 'pdf-lib';
+import Swal from 'sweetalert2';
 
 export default {
     data() {
@@ -104,8 +100,9 @@ export default {
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
-                asignatura: ''
+                asignatura: '',
             },
+            showError: false,
         }
     },
     setup() {
@@ -117,9 +114,10 @@ export default {
         const mostrarPopup = ref(false)
         const mostrarPopupRecurso = ref(false)
         const nuevaPregunta = ref('')
+        const isSesionCancelled = ref(false)
         const nuevoRecurso = reactive({
             nombre: '',
-            enlace: ''
+            enlace: '',
         })
         const nuevaTarea = reactive({
             nombre: '',
@@ -137,9 +135,14 @@ export default {
         const cargarRecursos = async () => {
         }
         const goToFaltas = () => {
-            router.push('/faltaAlumnos');
+            router.push(`/faltaAlumnos/${asignaturaId}`);
         };
-
+        const goToListaAlumnos = () => {
+            router.push('/lista-alumnos');
+        };
+        const goToContact = () => {
+            router.push('/contact');
+        };
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
 
@@ -185,6 +188,10 @@ export default {
             sesiones,
             publicarPregunta,
             goToFaltas,
+            goToListaAlumnos,
+            goToContact,
+            //onFileChange,
+            enviarRecurso
         }
     },
     methods: {
@@ -213,6 +220,7 @@ export default {
         },
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                console.log(this.nuevaSesion.nombre+" "+this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }
@@ -240,9 +248,14 @@ export default {
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
 
                     console.log('Sesión creada con ID:', sessionId);
-
+                    
                     this.fetchProjects();
                     this.mostrarPopup = false;
+                    Swal.fire({
+                    title: 'Sesion creada correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                    });
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)
                 }
@@ -259,6 +272,15 @@ export default {
 
 
 <style scoped>
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.close:hover {
+    color: var(--button-background-color);
+}
+
 input[type="text"] {
     font-size: 16px;
     border-radius: 5px;
@@ -386,6 +408,11 @@ button.btn {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-left: 5px;
+}
+
+.btn-modal {
+    float: right;
 }
 
 button.btn:hover {
@@ -429,73 +456,57 @@ h2 {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-
 }
 
 .modal-content {
-    background-color: #e9e9e9;
     background-color: var(--container-background-color);
     padding: 2rem;
-    width: 65%;
-    min-height: 35%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    width: 80%;
+    max-width: 500px;
     position: relative;
 }
 
-.modal-content h2 {
-    text-align: center;
+.modal-content h3 {
     margin-bottom: 1rem;
-
 }
 
-.modal-content input[type="text"],
-.modal-content input[type="date"],
+.modal-content input,
 .modal-content textarea {
-    font-size: 16px;
-    border-radius: 5px;
-    border: none;
-    padding: 0.5rem;
     width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-    margin-bottom: 1rem;
+    padding: 0.5rem;
     background-color: var(--input-background-color);
-    color: var(--text-color);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
 }
 
 .modal-content textarea {
-    max-height: 550px;
-    min-height: 50px;
-    max-width: 385px;
-    min-width: 200px;
-    width: 385px;
-    height: 118px;
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
 }
 
-.modal-content input[type="text"]:focus,
-.modal-content input[type="date"]:focus,
-.modal-content textarea:focus {
-    box-shadow: 0 0 0 2px var(--button-background-color);
-    outline: none;
-}
-
-.saveButton {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    background-color: #08cccc;
+.etiquetaCancelada {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: rgb(160, 45, 45);
+    border-radius: 6px;
     color: white;
-    border: none;
-    height: 2.5rem;
-    width: 9rem;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
+    margin-right: 15px;
 }
 
-.saveButton:hover {
-    background-color: var(--button-hover-background-color);
-    border: var(--border-color);
-    color: black;
+.containerCancelada {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
 }
 </style>

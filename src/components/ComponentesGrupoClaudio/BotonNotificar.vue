@@ -1,5 +1,5 @@
 <template>
-    <button class="btn" @click="toggleModal()">Notificar</button>
+    <button v-if=!ocultado class="btn" @click="toggleModal()">Notificar</button>
     <div v-if="showModal" class="modal">
         <div class="modal-content">
             <h2>Notificar al Estudiante {{ alumno.firstName }} {{ alumno.lastName }}</h2>
@@ -32,6 +32,7 @@ import { useUserStore } from '../../../back-end/src/store'
 export default {
     props: {
         participante: Object,
+        ocultar: Boolean,
         session: String
     },
     setup(props) {
@@ -40,14 +41,15 @@ export default {
         const remitenteId = userStore.user._id
 
         let alumno = ref(props.participante)
+        let ocultado = ref(props.ocultar)
         let sesion = ref(props.session)
-
         let showModal = ref(false)
         let showAlerta = ref(false)
         let showMensaje = ref(false)
         let mensaje = ref('')
 
         const toggleModal = () => {
+            console.log('AYUDAME:s', props.ocultar)
             showModal.value = !showModal.value
         }
 
@@ -146,6 +148,7 @@ export default {
             showAlerta,
             showMensaje,
             mensaje,
+            ocultado,
         }
     }
 }
