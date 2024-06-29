@@ -8,7 +8,8 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -63,7 +64,7 @@
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
-                                class="fas fa-eye"></i></button>
+                                    class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
                             style="font-size: 20px;">
@@ -150,7 +151,10 @@ import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { time } from 'xpress/lib/string';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Accede a tu clave API como una variable de entorno
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     setup() {
         const route = useRoute();
@@ -469,7 +473,7 @@ export default {
         async viewProcesses(userId) {
             console.log("ID de la sesión: " + this.sessionId);
             const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
-
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             if (!selectedStudent) {
                 alert('Estudiante no encontrado');
                 return;
@@ -477,16 +481,24 @@ export default {
 
             try {
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const prompt = `Dada la lista de procesos: ${response.data}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales y describe que hace cada proceso, ademas debes mostrar los procesos sin el .exe del final. Clasifica a los usuarios con si tienes 3 o mas procesos "malos" clasificalo como "Usuario peligroso", si tiene menos de 3 pero mas de 0 es "Usuario moderado" y si tiene 0 es "Usuario ideal"`;
+                const result = await model.generateContent(prompt);
+                const response2 = result.response;
+                const text = response2.text(); // Ajusta esto basado en la estructura de la respuesta
+                /*// Escribir el texto a un archivo
+                await writeFile('respuesta.txt', text);*/
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: response.data
+                    apps: text
                 };
-                console.log("procesos: " + response.data);
+                console.log("procesos: " + text);
                 this.showModal = true;
             } catch (error) {
                 console.error('Error al obtener los procesos del estudiante:', error);
+                console.error(`Error generando contenido: ${e}`);
                 alert('Error al obtener los procesos del estudiante');
             }
+
         },
         createSession() {
             console.log(this.idRuta);
@@ -519,7 +531,7 @@ export default {
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
-            
+
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -539,7 +551,7 @@ export default {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-                
+
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
@@ -591,14 +603,14 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
-                
+
                 return memberIdsAsString;
 
             } catch (error) {
                 console.error(error);
                 return [];
             }
-        },
+        }
     },
     computed: {
         // Filtra los usuarios basándose en el campo de búsqueda
