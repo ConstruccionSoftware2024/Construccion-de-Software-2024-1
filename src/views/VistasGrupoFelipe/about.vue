@@ -2,11 +2,11 @@
 
     <body>
         <section id="home">
-            <div class="home-left" style="text-align: center;">
+            <div class="home-left scroll-reveal" style="text-align: center;">
                 <img src="@/assets/logo.svg" alt="">
                 <h2 class="text">Cheat Detector</h2>
             </div>
-            <div class="home-right">
+            <div class="home-right scroll-reveal">
                 <h2 class="home-heading"> Evita las copias en las evaluaciones</h2>
                 <p class="home-para">Con nuestra herramienta avanzada, puedes monitorear las actividades de los alumnos
                     durante las evaluaciones y asegurarte de que cada respuesta sea genuina.
@@ -16,7 +16,7 @@
         </section>
 
         <section id="goal">
-            <div class="goal-left">
+            <div class="goal-left scroll-reveal">
                 <h2>No pierdas tiempo en revisar de más</h2>
                 <p>Nuestro sistema de seguimiento histórico y gestión por alumno te proporciona un control total sobre
                     el proceso evaluativo.</p>
@@ -27,13 +27,13 @@
                 </ul>
                 <li><router-link to="/contact"><a href="" class="btn"> ¡Contactanos!</a></router-link></li>
             </div>
-            <div class="goal-right">
+            <div class="goal-right scroll-reveal">
                 <img src="./imagenes/laboratorio.jpg" alt="">
             </div>
         </section>
         <section id="our-Team">
             <h2>Nuestro equipo</h2>
-            <div class="teamContainer">
+            <div class="teamContainer scroll-reveal">
                 <div class="team-item">
                     <img src="./imagenes/joaquin.jpg" alt="" title="Discord: ascencio">
                     <h5 class="member-name">Joaquín Ascencio</h5>
@@ -71,9 +71,80 @@
 
 </template>
 <script>
-
+export default {
+    mounted() {
+        window.addEventListener('scroll', this.checkScroll);
+        this.checkScroll();
+    },
+    methods: {
+        checkScroll() {
+            const elements = document.querySelectorAll('.scroll-reveal');
+            elements.forEach((el) => {
+                const position = el.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                if (position - windowHeight <= 0) {
+                    el.classList.add('fadeInUp');
+                }
+            });
+        }
+    }
+}
 </script>
 <style scoped>
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scroll-reveal li {
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+.scroll-reveal li:nth-child(1) {
+    animation-delay: 0.5s;
+}
+
+.scroll-reveal li:nth-child(2) {
+    animation-delay: 1s;
+}
+
+.scroll-reveal li:nth-child(3) {
+    animation-delay: 1.5s;
+}
+
+.scroll-reveal li:nth-child(4) {
+    animation-delay: 2s;
+}
+
+
+.fadeInUp {
+    animation-name: fadeInUp;
+    animation-duration: 1s;
+    animation-fill-mode: both;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -231,7 +302,6 @@ a {
     color: rgb(43, 126, 199);
 }
 
-/* Our Goal */
 #goal {
     width: 80%;
     margin: 2rem auto;
@@ -262,8 +332,8 @@ a {
 
 .goal-left ul li::before {
     line-height: 1.5rem;
-    content: '✓';
-    color: red;
+    content: '●';
+    color: aqua;
 }
 
 .goal-right {
@@ -284,7 +354,7 @@ a {
     filter: drop-shadow(5px 6px 7px black);
 }
 
-/* Our Team */
+
 #our-Team {
     width: 80%;
     margin: 4rem auto 1rem;

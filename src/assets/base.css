@@ -41,7 +41,7 @@ body.dark-mode {
   --button-background-color: var(--button-background-color-dark);
   --button-hover-background-color: var(--button-hover-background-color-dark);
   --container-background-color: #2c2c2e;
-  --border-color: #343435;
+  --border-color: #666666;
   --table-button-color: #088181;
   --grey-hover-color: #858585;
   --gray-text-color: #3a3a3c;
