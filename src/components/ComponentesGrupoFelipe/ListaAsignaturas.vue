@@ -1,5 +1,6 @@
 <template>
     <div class="dashboard" id="app">
+        <Loader v-if="loading" />
         <div class="text-container">
             <h1 class="greeting">Hola {{ userStore.user.firstName }} {{ userStore.user.lastName }}!</h1>
             <p class="description">{{ welcomeMessage }}</p>
@@ -60,21 +61,26 @@
     </div>
 </template>
 
-
 <script>
 import axios from 'axios';
 import { computed, ref } from 'vue';
 import { useUserStore } from '../../../back-end/src/store.js';
+import { useLoaderStore } from '../../../back-end/src/store.js'; // Importa el store de loader
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
+import Loader from '../ComponentesGrupoFelipe/Loader.vue';
 
 const defaultImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
 
 export default {
+    components: {
+        Loader,
+    },
     setup() {
         const userStore = useUserStore();
+        const loaderStore = useLoaderStore(); // Usa el store de loader
         const storage = getStorage();
-        return { userStore, storage };
+        return { userStore, loaderStore, storage };
     },
     data() {
         return {
@@ -110,16 +116,22 @@ export default {
                 return '¡Bienvenido/a a tu perfil de profesor! Aquí puedes ver todas las asignaturas que estás impartiendo. Explora tus cursos y gestiona tus clases.';
             }
             return '';
+        },
+        loading() {
+            return this.loaderStore.loading; // Computed property para el estado de carga
         }
     },
     methods: {
         async fetchProjects() {
+            this.loaderStore.setLoading(true); // Activa el loader
             try {
                 const response = await axios.get('http://localhost:8080/asignaturas');
                 this.projects = response.data;
                 await this.fetchMemberImages();
             } catch (error) {
                 console.error('Error fetching projects:', error);
+            } finally {
+                this.loaderStore.setLoading(false); // Desactiva el loader
             }
         },
         async fetchMemberImages() {
@@ -147,6 +159,7 @@ export default {
             this.newProject.image = e.target.files[0];
         },
         async createNewProject() {
+            this.loaderStore.setLoading(true); // Activa el loader
             const formData = new FormData();
             formData.append('title', this.newProject.title);
             formData.append('description', this.newProject.description);
@@ -178,6 +191,8 @@ export default {
                 this.resetNewProject();
             } catch (error) {
                 console.error('Error creating project:', error);
+            } finally {
+                this.loaderStore.setLoading(false); // Desactiva el loader
             }
         },
         resetNewProject() {
@@ -196,9 +211,8 @@ export default {
 }
 </script>
 
-
-
 <style scoped>
+/* Añade tu CSS aquí */
 body {
     background-color: var(--background-color);
 }

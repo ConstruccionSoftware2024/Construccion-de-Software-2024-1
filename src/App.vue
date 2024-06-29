@@ -1,5 +1,6 @@
 <template>
-    <div id="app">
+    <div :class="themeClass" id="app">
+        <Loader v-if="loading" />
         <Navbar />
         <div class="main-content">
             <RouterView />
@@ -10,19 +11,22 @@
 
 <script setup>
 import { computed, watch, onMounted } from 'vue'
-import { useThemeStore } from '../back-end/src/store.js'
+import { useThemeStore, useLoaderStore } from '../back-end/src/store.js'
 import Navbar from './components/ComponentesGrupoJoaquin/navBar.vue'
 import Footer from './components/ComponentesGrupoJoaquin/Footer.vue'
+import Loader from './components/ComponentesGrupoFelipe/Loader.vue'
 import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router';
+
 const themeStore = useThemeStore();
+const loaderStore = useLoaderStore(); // Usa el store de loader
 const themeClass = computed(() => (themeStore.isDarkMode ? 'dark-mode' : 'light-mode'))
+const loading = computed(() => loaderStore.loading); // Estado de carga
 const router = useRouter();
 
 watch(themeClass, (newClass) => {
     document.body.className = newClass
 })
- 
 
 // Cambiar tema
 const toggleTheme = () => {
@@ -60,9 +64,9 @@ window.addEventListener('beforeunload', function (event) {
 }
 
 .main-content {
-  min-height: 90vh;
-  justify-content: center;
-  align-items: center;
+    min-height: 90vh;
+    justify-content: center;
+    align-items: center;
 }
 
 footer {

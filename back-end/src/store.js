@@ -1,6 +1,17 @@
 import { defineStore } from 'pinia'
 import Cookies from 'js-cookie'
 
+export const useLoaderStore = defineStore('loader', {
+  state: () => ({
+    loading: false,
+  }),
+  actions: {
+    setLoading(value) {
+      this.loading = value;
+    },
+  },
+});
+
 export const useThemeStore = defineStore('theme', {
   state: () => ({
     isDarkMode: (() => {
