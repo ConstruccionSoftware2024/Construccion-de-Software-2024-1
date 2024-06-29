@@ -25,8 +25,12 @@
                     </div>
                     <div class="card-footer">
                         <div class="team-members">
-                            <img v-for="member in project.members" :key="member" :src="member" alt="Team member"
-                                class="team-member">
+                            <template v-for="(member, index) in project.members.slice(0, 3)" :key="index">
+                                <img :src="memberImages[member] || defaultImage" alt="Team member" class="team-member">
+                            </template>
+                            <template v-if="project.members.length > 3">
+                                <div class="more-members">+{{ project.members.length - 3 }}</div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -56,12 +60,15 @@
     </div>
 </template>
 
+
 <script>
 import axios from 'axios';
 import { computed, ref } from 'vue';
 import { useUserStore } from '../../../back-end/src/store.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
+
+const defaultImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
 
 export default {
     setup() {
@@ -79,7 +86,8 @@ export default {
                 section: '',
                 image: null
             },
-            imageUrl: ''
+            imageUrl: '',
+            memberImages: {}
         }
     },
     computed: {
@@ -108,18 +116,30 @@ export default {
         async fetchProjects() {
             try {
                 const response = await axios.get('http://localhost:8080/asignaturas');
-                console.log('Response data:', response.data);
                 this.projects = response.data;
+                await this.fetchMemberImages();
             } catch (error) {
                 console.error('Error fetching projects:', error);
             }
         },
+        async fetchMemberImages() {
+            const memberIds = new Set(this.projects.flatMap(project => project.members));
+            const memberImagesPromises = Array.from(memberIds).map(async memberId => {
+                try {
+                    const response = await axios.get(`http://localhost:8080/user/${memberId}`);
+                    return { memberId, image: response.data.foto || defaultImage };
+                } catch (error) {
+                    return { memberId, image: defaultImage };
+                }
+            });
+
+            const memberImagesArray = await Promise.all(memberImagesPromises);
+            this.memberImages = Object.fromEntries(memberImagesArray.map(({ memberId, image }) => [memberId, image]));
+        },
         goToProject(id) {
-            console.log(this.userStore.user.role)
             if (this.userStore.user.role == 'alumno') {
                 this.$router.push(`/asignaturaAlumno/${id}`);
-            }
-            else if (this.userStore.user.role == 'profesor') {
+            } else if (this.userStore.user.role == 'profesor') {
                 this.$router.push(`/asignaturaProfesor/${id}`);
             }
         },
@@ -153,7 +173,6 @@ export default {
                     image: this.imageUrl
                 });
 
-                console.log('Project created:', response.data);
                 this.projects.push(response.data);
                 this.showModal = false;
                 this.resetNewProject();
@@ -175,7 +194,8 @@ export default {
         this.fetchProjects();
     }
 }
-</script>3
+</script>
+
 
 
 <style scoped>
@@ -357,6 +377,20 @@ body {
 
 .team-member:first-child {
     margin-left: 0;
+}
+
+.more-members {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-left: -8px;
+    border: 2px solid var(--border-color);
+    background-color: var(--input-background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-color);
 }
 
 .modal {

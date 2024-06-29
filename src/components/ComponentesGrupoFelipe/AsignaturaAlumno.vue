@@ -13,8 +13,10 @@
             <div class="sesiones">
 
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span class="session-title">{{ sesion.nombre }}</span>
-                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}</p>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span
+                            class="session-title">{{ sesion.nombre }}</span>
+                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}
+                        </p>
                         <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{ sesion.participantes ?
                             sesion.participantes.length : 0 }}</p>
                     </router-link>
@@ -43,17 +45,20 @@
         <div class="seccion2">
             <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
             <div class="faltas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas</h3>
-                <p>Cantidad de Faltas: {{faltaAlumnos.faltas}}</p>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas
+                </h3>
+                <p>Cantidad de Faltas: {{ faltaAlumnos.faltas }}</p>
                 <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
-                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de faltas</h1>
+                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de
+                        faltas</h1>
                     <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
-                        <p class="subtitle">Falta: <span>{{falta.falta}}</span></p>
-                        <p class="subtitle">Fecha: <span>{{falta.fecha}}</span></p>
-                        <p class="subtitle">Profesor: <span> {{falta.profesor}}</span></p>
-                        <p class="subtitle">Descripción: <span>{{falta.motivo}}</span></p>
+                        <p class="subtitle">Falta: <span>{{ falta.falta }}</span></p>
+                        <p class="subtitle">Fecha: <span>{{ falta.fecha }}</span></p>
+                        <p class="subtitle">Profesor: <span> {{ falta.profesor }}</span></p>
+                        <p class="subtitle">Descripción: <span>{{ falta.motivo }}</span></p>
                     </div>
-                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon :icon="['fas', 'circle-xmark']" /> Cerrar</button>
+                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon
+                            :icon="['fas', 'circle-xmark']" /> Cerrar</button>
                 </div>
                 <button @click="toggleDetallesFaltas">Ver Detalles</button>
             </div>
@@ -86,7 +91,7 @@
             <div class="participantes">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h3>
                 <div class="team-members">
-                    <img v-for="member in asignatura.members" :key="member" :src="member" alt="Team member"
+                    <img v-for="member in asignatura.members" :key="member.id" :src="member.foto" alt="Team member"
                         class="team-member">
                 </div>
             </div>
@@ -113,6 +118,8 @@ const mostrarDetallesFaltas = ref(false);
 
 const faltaAlumnos = ref([]);
 
+const defaultImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+
 const toggleDetallesFaltas = () => {
     mostrarDetallesFaltas.value = !mostrarDetallesFaltas.value;
 
@@ -127,9 +134,9 @@ const toggleDetallesFaltas = () => {
 };
 
 const closePopUp = (event) => {
-  if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value){
-    mostrarDetallesFaltas.value = false;
-  }
+    if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value) {
+        mostrarDetallesFaltas.value = false;
+    }
 }
 
 const asignatura = ref({
@@ -138,22 +145,22 @@ const asignatura = ref({
     email: 'ejemplo@utalca.cl',
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
-    members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
+    members: []
 });
 
 const sesiones = ref([]);
 const showAviso = ref(false);
 
 const contactarProfesor = async () => {
-  try {
-    await navigator.clipboard.writeText(asignatura.value.email);
-    showAviso.value = true;
-    setTimeout(() => {
-      showAviso.value = false;
-    }, 2000); // Ocultar el aviso después de 2 segundos
-  } catch (err) {
-    console.error('Error al copiar el correo: ', err);
-  }
+    try {
+        await navigator.clipboard.writeText(asignatura.value.email);
+        showAviso.value = true;
+        setTimeout(() => {
+            showAviso.value = false;
+        }, 2000); // Ocultar el aviso después de 2 segundos
+    } catch (err) {
+        console.error('Error al copiar el correo: ', err);
+    }
 };
 
 function recuperarSesiones(id) {
@@ -179,6 +186,7 @@ async function recuperarAsignatura(id) {
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);
             sesiones.value = sesionesResultados;
+            await recuperarFotosParticipantes();
         })
         .catch(error => {
             console.error(error);
@@ -195,12 +203,13 @@ async function recuperarProfesor(id) {
             console.error(error);
         });
 }
+
 async function recuperarFaltas(id) {
     await axios.get(`http://localhost:8080/faltas/${id}`)
         .then(response => {
             if (response.data.length === 0) {
                 faltaAlumnos.value.faltas = 0;
-            }else{
+            } else {
                 faltaAlumnos.value = response.data;
             }
             return response.data;
@@ -208,6 +217,28 @@ async function recuperarFaltas(id) {
         .catch(error => {
             console.error(error);
         });
+}
+
+async function recuperarFotosParticipantes() {
+    const memberIds = asignatura.value.members;
+    const membersWithPhotos = await Promise.all(
+        memberIds.map(async memberId => {
+            try {
+                const response = await axios.get(`http://localhost:8080/user/${memberId}`);
+                return {
+                    id: memberId,
+                    foto: response.data.foto || defaultImage
+                };
+            } catch (error) {
+                console.error(`Error al recuperar la foto del miembro ${memberId}`, error);
+                return {
+                    id: memberId,
+                    foto: defaultImage
+                };
+            }
+        })
+    );
+    asignatura.value.members = membersWithPhotos;
 }
 
 function determinarRuta(id, rol) {
@@ -223,56 +254,56 @@ onMounted(async () => {
     recuperarFaltas(idUsuario);
     window.addEventListener('click', closePopUp);
 });
-
 </script>
 
 <style scoped>
 .aviso {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #4caf50;
-  color: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-.pop-up-detalles-faltas {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--container-background-color);
-  padding: 20px;
-  border: 1px solid #ccc;
-  z-index: 1000;
-  width: 50%;
-  border-radius: 12px;
-  max-height: 70%;
-  overflow-y: auto;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4caf50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
-.itemDetalleFaltas{
+.pop-up-detalles-faltas {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--container-background-color);
+    padding: 20px;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    width: 50%;
+    border-radius: 12px;
+    max-height: 70%;
+    overflow-y: auto;
+}
+
+.itemDetalleFaltas {
     margin-bottom: 10px;
     background-color: var(--gray-text-color);
     padding: 10px;
     border-radius: 5px;
 }
 
-.titleFaltas{
+.titleFaltas {
     font-size: 24px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 20px;
 }
 
-.subtitle{
+.subtitle {
     font-weight: bold;
 }
 
-.closeButton{
+.closeButton {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border: none;
@@ -286,13 +317,13 @@ onMounted(async () => {
 }
 
 .overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
 }
 
 .popup {
@@ -376,7 +407,7 @@ button:hover {
     background-color: var(--button-hover-background-color);
 }
 
-.session-title{
+.session-title {
     font-size: 17px;
     font-weight: bold;
 }

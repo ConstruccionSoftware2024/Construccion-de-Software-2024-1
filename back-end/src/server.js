@@ -903,41 +903,54 @@ app.get('/sesion/:id', async (req, res) => {
   }
 })
 
-//obtener usuario especifico
 app.get('/user/:id', async (req, res) => {
   try {
-
-    const database = client.db('construccion')
-    const collection = database.collection('users')
-    const consulta = { _id: new ObjectId(req.params.id) }
-    const result = await collection.findOne(consulta)
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const result = await collection.findOne(consulta);
     if (result) {
-      res.send(result)
+      res.send(result);
     } else {
-      res.status(404).send('user not found')
+      res.status(404).send('Usuario no encontrado');
     }
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
+});
 
-// Actualizar datos usuario especifico
+// Ruta para actualizar un usuario por ID
 app.post('/user/:id', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('users')
-    const consulta = { _id: new ObjectId(req.params.id) }
-    const result = await collection.updateOne(consulta, { $set: req.body })
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const userId = new ObjectId(req.params.id);
+    const updateData = req.body;
+
+    // Obtener los datos actuales del usuario
+    const user = await collection.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).send('Usuario no encontrado');
+    }
+
+    // Combinar los datos antiguos con los nuevos
+    const updatedUser = { ...user, ...updateData };
+
+    // Actualizar el usuario en la base de datos
+    const result = await collection.updateOne(
+      { _id: userId },
+      { $set: updatedUser }
+    );
+
     if (result.modifiedCount === 1) {
-      res.send(result)
+      res.status(200).send('Usuario actualizado correctamente');
     } else {
-      res.status(404).send('Ususaio no encontrado')
+      res.status(404).send('Usuario no encontrado');
     }
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-}
-)
+});
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario
