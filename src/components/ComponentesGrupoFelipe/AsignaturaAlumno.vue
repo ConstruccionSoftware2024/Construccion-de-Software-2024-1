@@ -1,96 +1,104 @@
 <template>
     <div class="container">
-
-        <div class="seccion1">
-
-            <div class="containerTitle">
-                <h1 class="title">Asignatura: {{ asignatura.title }}</h1>
-                <p>Profesor: {{ asignatura.profesor }}</p>
-                <p>Descripción: {{ asignatura.description }}</p>
-                <hr>
-            </div>
-            <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Sesiones</h3>
-            <div class="sesiones">
-
-                <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span class="session-title">{{ sesion.nombre }}</span>
-                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}</p>
-                        <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{ sesion.participantes ?
-                            sesion.participantes.length : 0 }}</p>
-                    </router-link>
-
-                </div>
-            </div>
-
-            <div class="recursos">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book']" /> Recursos de la Asignatura</h3>
-                <ul>
-                    <li><a href="#">PDF de Estudio</a></li>
-                    <li><a href="#">Video de Clase</a></li>
-                    <li><a href="#">Enlace Externo</a></li>
-                </ul>
-            </div>
-
-
-            <div class="foro">
-                <h3 class="subtitulo"> <font-awesome-icon :icon="['far', 'comment-dots']" /> Foro de Preguntas</h3>
-                <p>Escribe tu pregunta aquí...</p>
-                <button @click="publicarPregunta">Publicar Pregunta</button>
-            </div>
-
+        <h1>{{ asignatura.title }} - {{ asignatura.section }}</h1>
+        <div class="section">
+            <p class="profesor">Docente: {{ asignatura.profesor }}</p>
+            <p class="profesor">Descripción: {{ asignatura.description }}</p>
         </div>
+        <div class="content">
+            <div class="left-column">
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Sesiones</h2>
 
-        <div class="seccion2">
-            <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
-            <div class="faltas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas</h3>
-                <p>Cantidad de Faltas: {{faltaAlumnos.faltas}}</p>
-                <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
-                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de faltas</h1>
-                    <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
-                        <p class="subtitle">Falta: <span>{{falta.falta}}</span></p>
-                        <p class="subtitle">Fecha: <span>{{falta.fecha}}</span></p>
-                        <p class="subtitle">Profesor: <span> {{falta.profesor}}</span></p>
-                        <p class="subtitle">Descripción: <span>{{falta.motivo}}</span></p>
+                    <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
+                        <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="session-item">
+                            <div class="session-content">
+                                <p class="session-name"> {{ sesion.nombre }}</p>
+                                <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{
+                                    sesion.descripcion
+                                    }}
+                                </p>
+                                <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{
+                                    sesion.participantes ?
+                                        sesion.participantes.length : 0 }}</p>
+                            </div>
+                        </router-link>
+
                     </div>
-                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon :icon="['fas', 'circle-xmark']" /> Cerrar</button>
                 </div>
-                <button @click="toggleDetallesFaltas">Ver Detalles</button>
-            </div>
-
-            <div class="fechas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book-bookmark']" /> Tareas y Exámenes</h3>
-                <p>Próxima Tarea: [Fecha]</p>
-                <p>Próximo Examen: [Fecha]</p>
-                <button>Ver Calendario</button>
-            </div>
-
-            <div class="acciones">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h3>
-                <button @click="contactarProfesor">Contactar al Profesor</button>
-                <button>Reportar un Problema</button>
-            </div>
-            <div v-if="showAviso" class="aviso">
-                Correo del profesor copiado al portapapeles!
-            </div>
-            <button @click="mostrarPopup = true">Crear sesión</button>
-
-            <div v-if="mostrarPopup" class="popup">
-                <h2>Crear sesión</h2>
-                <label>Nombre de la sesión: <input v-model="nuevaSesion.nombre" type="text"></label>
-                <label>Descripción: <input v-model="nuevaSesion.descripcion" type="text"></label>
-                <button @click="enviarFormulario">Crear</button>
-                <button @click="mostrarPopup = false">Cancelar</button>
-            </div>
-
-            <div class="participantes">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h3>
-                <div class="team-members">
-                    <img v-for="member in asignatura.members" :key="member" :src="member" alt="Team member"
-                        class="team-member">
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'book']" /> Recursos de la Asignatura
+                    </h2>
+                    <ul>
+                        <li><a href="#" class="linkRecursos">PDF de Estudio</a></li>
+                        <li><a href="#" class="linkRecursos">Video de Clase</a></li>
+                        <li><a href="#" class="linkRecursos">Enlace Externo</a></li>
+                    </ul>
                 </div>
+
+
+                <div class="section">
+                    <h2> <font-awesome-icon :icon="['far', 'comment-dots']" /> Foro de Preguntas
+                    </h2>
+                    <input type="text" placeholder="Escribe tu pregunta aquí...">
+                    <button class="btn" @click="publicarPregunta">Publicar Pregunta</button>
+                </div>
+
             </div>
 
+            <div class="right-column">
+                <div class="section">
+                    <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
+                    <div class="faltas">
+                        <h2><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de
+                            Faltas
+                        </h2>
+                        <p>Cantidad de Faltas: {{ faltaAlumnos.faltas }}</p>
+                        <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
+                            <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" />
+                                Detalle de
+                                faltas</h1>
+                            <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
+                                <p class="subtitle">Falta: <span>{{ falta.falta }}</span></p>
+                                <p class="subtitle">Fecha: <span>{{ falta.fecha }}</span></p>
+                                <p class="subtitle">Profesor: <span> {{ falta.profesor }}</span></p>
+                                <p class="subtitle">Descripción: <span>{{ falta.motivo }}</span></p>
+                            </div>
+                            <button class="closeButton btn" @click="toggleDetallesFaltas"><font-awesome-icon
+                                    :icon="['fas', 'circle-xmark']" /> Cerrar</button>
+                        </div>
+                        <button class="btn" @click="toggleDetallesFaltas">Ver Detalles</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'book-bookmark']" /> Tareas y Exámenes
+                    </h2>
+                    <p>Próxima Tarea: [Fecha]</p>
+                    <p>Próximo Examen: [Fecha]</p>
+                    <button class="btn">Ver Calendario</button>
+                </div>
+
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h2>
+                    <div class="button-container">
+                        <button class="btn" @click="contactarProfesor">Contactar al Profesor</button>
+                        <button class="btn">Reportar un Problema</button>
+                    </div>
+                </div>
+                <div v-if="showAviso" class="aviso">
+                    Correo del profesor copiado al portapapeles!
+                </div>
+
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h2>
+                    <div class="team-members">
+                        <img v-for="member in asignatura.members" :key="member" :src="member" alt="Team member"
+                            class="team-member">
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 </template>
@@ -127,9 +135,9 @@ const toggleDetallesFaltas = () => {
 };
 
 const closePopUp = (event) => {
-  if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value){
-    mostrarDetallesFaltas.value = false;
-  }
+    if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value) {
+        mostrarDetallesFaltas.value = false;
+    }
 }
 
 const asignatura = ref({
@@ -145,15 +153,15 @@ const sesiones = ref([]);
 const showAviso = ref(false);
 
 const contactarProfesor = async () => {
-  try {
-    await navigator.clipboard.writeText(asignatura.value.email);
-    showAviso.value = true;
-    setTimeout(() => {
-      showAviso.value = false;
-    }, 2000); // Ocultar el aviso después de 2 segundos
-  } catch (err) {
-    console.error('Error al copiar el correo: ', err);
-  }
+    try {
+        await navigator.clipboard.writeText(asignatura.value.email);
+        showAviso.value = true;
+        setTimeout(() => {
+            showAviso.value = false;
+        }, 2000); // Ocultar el aviso después de 2 segundos
+    } catch (err) {
+        console.error('Error al copiar el correo: ', err);
+    }
 };
 
 function recuperarSesiones(id) {
@@ -200,7 +208,7 @@ async function recuperarFaltas(id) {
         .then(response => {
             if (response.data.length === 0) {
                 faltaAlumnos.value.faltas = 0;
-            }else{
+            } else {
                 faltaAlumnos.value = response.data;
             }
             return response.data;
@@ -227,52 +235,143 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.aviso {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #4caf50;
-  color: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-.pop-up-detalles-faltas {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--container-background-color);
-  padding: 20px;
-  border: 1px solid #ccc;
-  z-index: 1000;
-  width: 50%;
-  border-radius: 12px;
-  max-height: 70%;
-  overflow-y: auto;
+input[type="text"] {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
 }
 
-.itemDetalleFaltas{
+input[type="text"]:focus {
+    box-shadow: 0 0 0 2px var(--button-background-color);
+    outline: none;
+}
+
+.profesor {
+    font-size: 18px;
+    font-weight: bold;
+    top: 1rem;
+}
+
+.session-item {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.session-item:hover {
+    background-color: var(--gray-hover-color);
+}
+
+.session-name {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.session-content {
+    flex-direction: column;
+    padding: 0.2rem;
+    border-radius: 5px;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--gray-text-color);
+}
+
+.session-content:hover {
+    background-color: var(--gray-hover-color);
+    color: var(--text-color);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.linkRecursos:hover {
+    color: var(--button-hover-background-color);
+
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+h2 {
+    font-weight: bold;
+}
+
+.section {
+    background-color: var(--container-background-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.section:not(:last-child) {
+    margin-bottom: 1.7rem;
+}
+
+.content {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.aviso {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4caf50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.pop-up-detalles-faltas {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--container-background-color);
+    padding: 20px;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    width: 50%;
+    border-radius: 12px;
+    max-height: 70%;
+    overflow-y: auto;
+}
+
+.itemDetalleFaltas {
     margin-bottom: 10px;
     background-color: var(--gray-text-color);
     padding: 10px;
     border-radius: 5px;
 }
 
-.titleFaltas{
+.titleFaltas {
     font-size: 24px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 20px;
 }
 
-.subtitle{
+.subtitle {
     font-weight: bold;
 }
 
-.closeButton{
+.closeButton {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border: none;
@@ -286,13 +385,13 @@ onMounted(async () => {
 }
 
 .overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
 }
 
 .popup {
@@ -308,37 +407,34 @@ onMounted(async () => {
 }
 
 .container {
-    margin: 40px 10%;
-    padding: 20px;
     display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    width: 70%;
+    margin: auto;
     justify-content: space-between;
+    margin-bottom: 3rem;
+    margin-top: 0.5rem;
 }
 
 .containerTitle {
     margin-bottom: 20px;
 }
 
-.title {
-    font-size: 24px;
-    margin: 0;
-    font-weight: bold;
+
+
+.left-column {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
 }
 
-.seccion1 {
-    padding: 20px;
-    width: 70%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: var(--container-background-color);
+.right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.seccion2 {
-    padding: 20px;
-    width: 26%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: var(--container-background-color);
-}
 
 .sesiones,
 .participantes,
@@ -360,23 +456,97 @@ onMounted(async () => {
     margin-bottom: 5px;
 }
 
-button {
-    padding: 10px;
-    margin-top: 10px;
-    margin-right: 10px;
+button.btn {
     background-color: var(--button-background-color);
-    color: var(--button-text-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
+    transition: background-color 0.3s ease;
 }
 
-button:hover {
+.btn-modal {
+    float: right;
+}
+
+button.btn:hover {
     background-color: var(--button-hover-background-color);
+    color: black;
 }
 
-.session-title{
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+button.btn:hover {
+    background-color: var(--button-hover-background-color);
+    color: black;
+}
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+button.btn:hover {
+    background-color: var(--button-hover-background-color);
+    color: black;
+}
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.session-title {
     font-size: 17px;
     font-weight: bold;
 }
