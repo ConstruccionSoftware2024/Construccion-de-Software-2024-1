@@ -13,8 +13,10 @@
             <div class="sesiones">
 
                 <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span class="session-title">{{ sesion.nombre }}</span>
-                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}</p>
+                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span
+                            class="session-title">{{ sesion.nombre }}</span>
+                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}
+                        </p>
                         <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{ sesion.participantes ?
                             sesion.participantes.length : 0 }}</p>
                     </router-link>
@@ -43,17 +45,20 @@
         <div class="seccion2">
             <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
             <div class="faltas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas</h3>
-                <p>Cantidad de Faltas: {{faltaAlumnos.faltas}}</p>
+                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas
+                </h3>
+                <p>Cantidad de Faltas: {{ faltaAlumnos.faltas }}</p>
                 <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
-                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de faltas</h1>
+                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de
+                        faltas</h1>
                     <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
-                        <p class="subtitle">Falta: <span>{{falta.falta}}</span></p>
-                        <p class="subtitle">Fecha: <span>{{falta.fecha}}</span></p>
-                        <p class="subtitle">Profesor: <span> {{falta.profesor}}</span></p>
-                        <p class="subtitle">Descripción: <span>{{falta.motivo}}</span></p>
+                        <p class="subtitle">Falta: <span>{{ falta.falta }}</span></p>
+                        <p class="subtitle">Fecha: <span>{{ falta.fecha }}</span></p>
+                        <p class="subtitle">Profesor: <span> {{ falta.profesor }}</span></p>
+                        <p class="subtitle">Descripción: <span>{{ falta.motivo }}</span></p>
                     </div>
-                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon :icon="['fas', 'circle-xmark']" /> Cerrar</button>
+                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon
+                            :icon="['fas', 'circle-xmark']" /> Cerrar</button>
                 </div>
                 <button @click="toggleDetallesFaltas">Ver Detalles</button>
             </div>
@@ -68,8 +73,18 @@
             <div class="acciones">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h3>
                 <button @click="contactarProfesor">Contactar al Profesor</button>
-                <button>Reportar un Problema</button>
+                <button @click="mostrarReportar = true">Reportar un Problema</button>
             </div>
+
+            <div class="modal" v-if="mostrarReportar">
+                <div class="modal-content">
+                    <span class="close" @click="mostrarReportar = false">&times;</span>
+                    <h3>Reportar un problema</h3>
+                    <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
+                    <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
+                </div>
+            </div>
+
             <div v-if="showAviso" class="aviso">
                 Correo del profesor copiado al portapapeles!
             </div>
@@ -110,6 +125,7 @@ const rolUsuario = userStore.user.role;
 const idUsuario = userStore.user._id;
 
 const mostrarDetallesFaltas = ref(false);
+const mostrarReportar = ref(false);
 
 const faltaAlumnos = ref([]);
 
@@ -121,15 +137,17 @@ const toggleDetallesFaltas = () => {
             icon: 'error',
             title: 'Oops...',
             text: 'No hay faltas registradas',
-            timer: 1200
+            timer: 1200,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#08cccc'
         });
     }
 };
 
 const closePopUp = (event) => {
-  if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value){
-    mostrarDetallesFaltas.value = false;
-  }
+    if (!event.target.closest('.pop-up-detalles-faltas') && !event.target.closest('.faltas') && mostrarDetallesFaltas.value) {
+        mostrarDetallesFaltas.value = false;
+    }
 }
 
 const asignatura = ref({
@@ -141,19 +159,24 @@ const asignatura = ref({
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
 });
 
+const problemas = ref({
+    descripcion: '',
+    idUsuario: idUsuario
+});
+
 const sesiones = ref([]);
 const showAviso = ref(false);
 
 const contactarProfesor = async () => {
-  try {
-    await navigator.clipboard.writeText(asignatura.value.email);
-    showAviso.value = true;
-    setTimeout(() => {
-      showAviso.value = false;
-    }, 2000); // Ocultar el aviso después de 2 segundos
-  } catch (err) {
-    console.error('Error al copiar el correo: ', err);
-  }
+    try {
+        await navigator.clipboard.writeText(asignatura.value.email);
+        showAviso.value = true;
+        setTimeout(() => {
+            showAviso.value = false;
+        }, 2000); // Ocultar el aviso después de 2 segundos
+    } catch (err) {
+        console.error('Error al copiar el correo: ', err);
+    }
 };
 
 function recuperarSesiones(id) {
@@ -169,6 +192,37 @@ function recuperarSesiones(id) {
 const publicarPregunta = () => {
     alert('Pregunta Publicada');
 };
+
+async function enviarProblema() {
+
+    console.log('problemas:', problemas);
+
+    const problemaParaEnviar = {
+        descripcion: problemas.value.descripcion,
+        idUsuario: idUsuario // Asegúrate de que idUsuario esté definido
+    };
+
+    try {
+        // Envía el objeto problema a /publicarProblema
+        const respuesta = await axios.post('http://localhost:8080/publicarProblema', problemaParaEnviar);
+
+        if (respuesta.status === 200) {
+            // Resetea la descripción del problema y oculta el formulario de reporte
+            problemas.value.descripcion = '';
+            mostrarReportar.value = false;
+            Swal.fire({
+                title: 'Problema reportado correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#08cccc'
+            });
+        } else {
+            console.error('Error al enviar los datos:', respuesta.statusText)
+        }
+    } catch (error) {
+        console.error('Error en la petición fetch:', error)
+    }
+}
 
 async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
@@ -200,7 +254,7 @@ async function recuperarFaltas(id) {
         .then(response => {
             if (response.data.length === 0) {
                 faltaAlumnos.value.faltas = 0;
-            }else{
+            } else {
                 faltaAlumnos.value = response.data;
             }
             return response.data;
@@ -228,51 +282,52 @@ onMounted(async () => {
 
 <style scoped>
 .aviso {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #4caf50;
-  color: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-.pop-up-detalles-faltas {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--container-background-color);
-  padding: 20px;
-  border: 1px solid #ccc;
-  z-index: 1000;
-  width: 50%;
-  border-radius: 12px;
-  max-height: 70%;
-  overflow-y: auto;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4caf50;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
-.itemDetalleFaltas{
+.pop-up-detalles-faltas {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--container-background-color);
+    padding: 20px;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    width: 50%;
+    border-radius: 12px;
+    max-height: 70%;
+    overflow-y: auto;
+}
+
+.itemDetalleFaltas {
     margin-bottom: 10px;
     background-color: var(--gray-text-color);
     padding: 10px;
     border-radius: 5px;
 }
 
-.titleFaltas{
+.titleFaltas {
     font-size: 24px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 20px;
 }
 
-.subtitle{
+.subtitle {
     font-weight: bold;
 }
 
-.closeButton{
+.closeButton {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border: none;
@@ -286,13 +341,13 @@ onMounted(async () => {
 }
 
 .overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
 }
 
 .popup {
@@ -376,7 +431,7 @@ button:hover {
     background-color: var(--button-hover-background-color);
 }
 
-.session-title{
+.session-title {
     font-size: 17px;
     font-weight: bold;
 }
@@ -435,6 +490,62 @@ a {
     height: 24px;
     border-radius: 50%;
     margin-right: 5px;
+}
+
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.close:hover {
+    color: var(--button-background-color);
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--container-background-color);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+
+.modal-content h3 {
+    margin-bottom: 1rem;
+}
+
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--input-background-color);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
 }
 
 @media screen and (max-width: 768px) {
