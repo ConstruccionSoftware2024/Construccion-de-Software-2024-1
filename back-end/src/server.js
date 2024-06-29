@@ -185,7 +185,7 @@ app.post('/addFaltas/:id', async (req, res) => {
 
     const result = await collection.updateOne(
       { _id: id },
-      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 } }, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
       { upsert: true }
     );
 
@@ -729,15 +729,15 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
 
     if (!asignatura) {
       return res.send([]);
-    }else{
+    } else {
       const miembros = asignatura.members;
       res.send(miembros);
     }
 
-    
+
 
     //console.log("Miembros encontrados:", miembros);
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error interno del servidor' });
@@ -888,6 +888,7 @@ app.post('/banearExpulsar/:id', async (req, res) => {
     const bannedEmail = req.body.email;
     const userId = req.body.userId;
     const banear = req.body.banear;
+    const razonban = req.body.razonBan;
 
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
@@ -905,7 +906,12 @@ app.post('/banearExpulsar/:id', async (req, res) => {
         { $addToSet: { banlist: bannedEmail } }
       );
 
-      if (result.matchedCount == 1) {
+      const result2 = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $addToSet: { razonBAN: razonban } }
+      );
+
+      if (result.matchedCount == 1 && result2.matchedCount == 1) {
         resultMessage = 'Alumno baneado de la sesión';
       }
     }
