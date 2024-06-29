@@ -1,19 +1,30 @@
 <template>
     <div class="container">
-        <div v-for="(question, index) in questions" :key="index">
+        <div v-for="(question, qIndex) in questions" :key="qIndex">
             <p>{{ question.text }}</p>
-            <button @click="toggleCommentField(index)">Comentar</button>
-            <button @click="toggleComments(index)">Ver comentarios</button>
+            <button @click="toggleCommentField(qIndex)">Comentar</button>
+            <button @click="toggleComments(qIndex)">Ver comentarios</button>
             <div v-if="question.showCommentField">
                 <input type="text" v-model="question.newComment" />
-                <button @click="addComment(index)">Enviar</button>
+                <button @click="addComment(qIndex)">Enviar</button>
             </div>
             <div v-if="question.showComments">
                 <div v-if="question.comments.length === 0">
                     <p>No hay comentarios en esta pregunta</p>
                 </div>
-                <div v-else v-for="(comment, index) in question.comments" :key="index">
-                    <p>{{ comment }}</p>
+                <div v-else v-for="(comment, cIndex) in question.comments" :key="cIndex">
+                    <p>({{ comment.timestamp }}) {{ comment.user }}: {{ comment.text }}</p>
+                    <!-- Botón para responder a un comentario -->
+                    <button @click="toggleReplyField(qIndex, cIndex)">Responder</button>
+                    <!-- Campo para ingresar la respuesta -->
+                    <div v-if="comment.showReplyField">
+                        <input type="text" v-model="comment.newReply" />
+                        <button @click="addReply(qIndex, cIndex)">Enviar</button>
+                    </div>
+                    <!-- Mostrar respuestas -->
+                    <div v-for="(reply, rIndex) in comment.replies" :key="rIndex" style="margin-left: 20px;">
+                        <p>({{ reply.timestamp }}) {{ reply.user }}: {{ reply.text }}</p>
+                    </div>
                 </div>
             </div>
             <p v-if="question.successMessage">{{ question.successMessage }}</p>
@@ -63,13 +74,36 @@ export default {
         },
         addComment(questionIndex) {
             if (this.questions[questionIndex].newComment.trim() !== '') {
-                this.questions[questionIndex].comments.push(this.questions[questionIndex].newComment);
+                const newComment = {
+                    text: this.questions[questionIndex].newComment,
+                    user: "Usuario",
+                    timestamp: new Date().toLocaleString(),
+                    replies: []
+                };
+                this.questions[questionIndex].comments.push(newComment);
                 this.questions[questionIndex].newComment = '';
                 this.questions[questionIndex].showCommentField = false;
                 this.questions[questionIndex].successMessage = 'Comentario enviado exitosamente';
                 setTimeout(() => {
                     this.questions[questionIndex].successMessage = '';
                 }, 3000);
+            }
+        },
+        toggleReplyField(questionIndex, commentIndex) {
+            const comment = this.questions[questionIndex].comments[commentIndex];
+            comment.showReplyField = !comment.showReplyField;
+        },
+        addReply(questionIndex, commentIndex) {
+            const comment = this.questions[questionIndex].comments[commentIndex];
+            if (comment.newReply.trim() !== '') {
+                const newReply = {
+                    text: comment.newReply,
+                    user: "Usuario",
+                    timestamp: new Date().toLocaleString(),
+                };
+                comment.replies.push(newReply);
+                comment.newReply = '';
+                comment.showReplyField = false;
             }
         },
     },

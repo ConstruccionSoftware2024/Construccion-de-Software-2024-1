@@ -42,8 +42,8 @@
                 <div class="section">
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
-                        <button class="btn">Contactar a un Alumno</button>
-                        <button class="btn">Reportar un Problema</button>
+                        <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
+                        <button class="btn" @click="goToContact">Reportar un Problema</button>
                     </div>
                 </div>
             </div>
@@ -57,13 +57,12 @@
                     <div class="input-group">
                         <input required placeholder="Nombre de la sesión" type="text" id="nombre"
                             v-model="nuevaSesion.nombre">
-                        <textarea required placeholder="Descripción de la sesión"></textarea>
+                        <textarea required placeholder="Descripción de la sesión" v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
                         </div>
                     </div>
-                    <button @click.prevent="enviarFormulario" class="btn btn-modal"
-                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                    <button @click.prevent="enviarFormulario" class="btn btn-modal">Crear</button>
                 </div>
             </div>
         </div>
@@ -87,6 +86,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { showText } from 'pdf-lib';
+import Swal from 'sweetalert2';
 
 export default {
     data() {
@@ -98,6 +99,7 @@ export default {
                 descripcion: '',
                 asignatura: ''
             },
+            showError: false,
         }
     },
     setup() {
@@ -131,7 +133,12 @@ export default {
         const goToFaltas = () => {
             router.push(`/faltaAlumnos/${asignaturaId}`);
         };
-
+        const goToListaAlumnos = () => {
+            router.push('/lista-alumnos');
+        };
+        const goToContact = () => {
+            router.push('/contact');
+        };
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
 
@@ -177,6 +184,10 @@ export default {
             sesiones,
             publicarPregunta,
             goToFaltas,
+            goToListaAlumnos,
+            goToContact,
+            //onFileChange,
+            enviarRecurso
         }
     },
     methods: {
@@ -205,6 +216,7 @@ export default {
         },
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                console.log(this.nuevaSesion.nombre+" "+this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }
@@ -232,9 +244,14 @@ export default {
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
 
                     console.log('Sesión creada con ID:', sessionId);
-
+                    
                     this.fetchProjects();
                     this.mostrarPopup = false;
+                    Swal.fire({
+                    title: 'Sesion creada correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                    });
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)
                 }
