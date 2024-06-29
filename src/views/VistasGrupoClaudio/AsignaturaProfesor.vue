@@ -57,7 +57,8 @@
                     <div class="input-group">
                         <input required placeholder="Nombre de la sesión" type="text" id="nombre"
                             v-model="nuevaSesion.nombre">
-                        <textarea required placeholder="Descripción de la sesión" v-model="nuevaSesion.descripcion"></textarea>
+                        <textarea type="text" required placeholder="Descripción de la sesión"
+                            v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
                         </div>
@@ -141,34 +142,12 @@ export default {
         };
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
-
         }
-
         const enviarRecurso = async () => {
             console.log('Enviando recurso:')
         }
-        const cargarSesiones = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
-                asignatura.value = response.data;
-                if (asignatura.value.sesiones) {
-                    const promises = asignatura.value.sesiones.map(sesionId =>
-                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
-                    );
-
-                    const sesionResponses = await Promise.all(promises);
-
-                    sesiones.value = sesionResponses.map(response => response.data);
-
-                    console.log(sesiones);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        };
         onMounted(() => {
             cargarRecursos();
-            cargarSesiones();
         })
 
         return {
@@ -186,20 +165,28 @@ export default {
             goToFaltas,
             goToListaAlumnos,
             goToContact,
-            //onFileChange,
             enviarRecurso
         }
     },
     methods: {
-        recuperarSesiones() {
-            axios.get(`http://localhost:8080/sesion`)
-                .then(response => {
-                    this.sesiones = response.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
+        async cargarSesiones() {
+            try {
+                const response = await axios.get(`http://localhost:8080/asignatura/${this.$route.params.id}`);
+                this.asignatura = response.data;
+                if (this.asignatura.sesiones) {
+                    const promises = this.asignatura.sesiones.map(sesionId =>
+                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
+                    );
+
+                    const sesionResponses = await Promise.all(promises);
+
+                    this.sesiones = sesionResponses.map(response => response.data);
+                }
+            } catch (error) {
+                console.error(error);
+            }
         },
+
         publicarPregunta() {
             alert('Pregunta Publicada');
         },
@@ -216,42 +203,31 @@ export default {
         },
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
-                console.log(this.nuevaSesion.nombre+" "+this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }
             try {
-                // Obtiene la id de la asignatura de la URL
                 const asignaturaId = this.$route.params.id;
-
                 if (!asignaturaId) {
                     console.error('No se encontró la id de la asignatura');
                     return;
                 }
-
-                // Agrega la id de la asignatura al objeto nuevaSesion
                 this.nuevaSesion.asignatura = asignaturaId;
-                console.log('Datos a enviar:', this.nuevaSesion);
-
                 const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
 
                 if (respuesta.status === 200) {
                     this.nuevaSesion.nombre = '';
                     this.nuevaSesion.descripcion = '';
-                    // Obtiene la id de la sesión creada
                     const sessionId = respuesta.data._id;
-
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
-
-                    console.log('Sesión creada con ID:', sessionId);
-                    
                     this.fetchProjects();
                     this.mostrarPopup = false;
                     Swal.fire({
-                    title: 'Sesion creada correctamente',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar'
+                        title: 'Sesion creada correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
                     });
+                    await this.cargarSesiones();
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)
                 }
@@ -262,6 +238,7 @@ export default {
     },
     created() {
         this.fetchProjects();
+        this.cargarSesiones();
     }
 }
 </script>
@@ -314,6 +291,7 @@ h1 {
 
 h2 {
     font-weight: bold;
+    margin-bottom: 2rem;
 }
 
 .content {
@@ -429,10 +407,6 @@ button.btn-cerrar:hover {
     background-color: #ff1a1a;
 }
 
-h2 {
-    font-weight: bold;
-    margin-bottom: 2rem;
-}
 
 .button-container {
     display: flex;
