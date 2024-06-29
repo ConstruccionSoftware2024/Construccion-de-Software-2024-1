@@ -245,6 +245,7 @@ export default {
             nombreApp: '',
             LinkApp: '',
             nivelPeligro: '',
+            appPeligrosas: [],
         };
     },
 
@@ -278,13 +279,14 @@ export default {
 
         peligrosidadAplicaciones() {
             if (this.nombreApp && this.LinkApp) {
-                // Generar JSON
+
                 const aplicacionAgregada = {
                     nombreApp: this.nombreApp,
                     LinkApp: this.LinkApp,
                     nivelPeligro: this.nivelPeligro,
                 };
-                console.log(aplicacionAgregada);
+                // Agregar a la lista de aplicaciones peligrosas
+                this.appPeligrosas.push(aplicacionAgregada);
 
                 // Limpiar campos
                 this.nombreApp = '';
@@ -293,6 +295,7 @@ export default {
             } else {
                 alert('Por favor, complete ambos campos.');
             }
+            console.log('Array apps:', this.appPeligrosas);
         },
 
         assignAppsToStudents(students) {
