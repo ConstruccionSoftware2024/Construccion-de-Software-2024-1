@@ -481,24 +481,31 @@ export default {
 
             try {
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
-                const prompt = `Dada la lista de procesos: ${response.data}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales y describe que hace cada proceso, ademas debes mostrar los procesos sin el .exe del final. Clasifica a los usuarios con si tienes 3 o mas procesos "malos" clasificalo como "Usuario peligroso", si tiene menos de 3 pero mas de 0 es "Usuario moderado" y si tiene 0 es "Usuario ideal"`;
+                const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+
                 const result = await model.generateContent(prompt);
                 const response2 = result.response;
-                const text = response2.text(); // Ajusta esto basado en la estructura de la respuesta
-                /*// Escribir el texto a un archivo
-                await writeFile('respuesta.txt', text);*/
+                const text = response2.text();
+
+                // Convertir la lista separada por comas a un arreglo
+                const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                // Combinar nombres únicos
+                const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+
+                // Escribe los nombres de procesos únicos en un archivo
+                const fileText = uniqueProcessNamesWithCategories.join('\n');
+
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: text
+                    apps: uniqueProcessNamesWithCategories
                 };
-                console.log("procesos: " + text);
+                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
                 this.showModal = true;
             } catch (error) {
                 console.error('Error al obtener los procesos del estudiante:', error);
-                console.error(`Error generando contenido: ${e}`);
                 alert('Error al obtener los procesos del estudiante');
             }
-
         },
         createSession() {
             console.log(this.idRuta);

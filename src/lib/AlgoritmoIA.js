@@ -13,7 +13,7 @@ export async function generateTextFile() {
       console.error(`Error ejecutando tasklist: ${error}`);
       return;
     }
-
+    
     if (stderr) {
       console.error(`Error en stderr: ${stderr}`);
       return;
