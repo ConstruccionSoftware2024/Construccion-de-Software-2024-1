@@ -8,6 +8,7 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -61,8 +62,8 @@
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
-                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
-                                    class="fas fa-eye"></i></button>
+                            <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
+                                class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
                             style="font-size: 20px;">
@@ -80,7 +81,7 @@
                     selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
+                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
                     </li>
                 </ul>
                 <button class="closeButton" @click="closeModal">Cerrar</button>
@@ -144,14 +145,17 @@
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 import { onMounted, ref } from 'vue';
+import Swal from 'sweetalert2';
+import { time } from 'xpress/lib/string';
 
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
+        const router = useRouter();
         let nombreSesion = ref('');
         let isCancelada = ref(false);
         const obtenerDatosSesion = async () => {
@@ -192,6 +196,7 @@ export default {
             nombreSesion,
             cancelarSesion,
             isCancelada,
+            router
 
         };
     },
@@ -236,7 +241,9 @@ export default {
                 console.error('Error fetching session data:', error);
             }
         },*/
-
+        redirigirCrearEvaluacion() {
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
 
         assignAppsToStudents(students) {
             const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
@@ -459,9 +466,27 @@ export default {
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
         },
-        viewProcesses(student) {
-            this.selectedStudent = student;
-            this.showModal = true;
+        async viewProcesses(userId) {
+            console.log("ID de la sesión: " + this.sessionId);
+            const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
+
+            if (!selectedStudent) {
+                alert('Estudiante no encontrado');
+                return;
+            }
+
+            try {
+                const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                this.selectedStudent = {
+                    ...selectedStudent,
+                    apps: response.data
+                };
+                console.log("procesos: " + response.data);
+                this.showModal = true;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                alert('Error al obtener los procesos del estudiante');
+            }
         },
         createSession() {
             console.log(this.idRuta);
@@ -494,6 +519,7 @@ export default {
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
+            
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -513,12 +539,17 @@ export default {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-
+                
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
                 });
-                location.reload();
+                Swal.fire({
+                    title: 'Alumnos agregados correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+                this.fetchUsers();
                 console.log(response.data);
 
             } catch (error) {
@@ -560,6 +591,7 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
+                
                 return memberIdsAsString;
 
             } catch (error) {
