@@ -1,38 +1,75 @@
 import { defineStore } from 'pinia'
+import Cookies from 'js-cookie'
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
-    isDarkMode: JSON.parse(localStorage.getItem('isDarkMode')) || false
+    isDarkMode: (() => {
+      try {
+        const cookieValue = Cookies.get('isDarkMode')
+        return cookieValue ? JSON.parse(cookieValue) : false
+      } catch (error) {
+        console.error('Error parsing isDarkMode from cookies:', error)
+        return false
+      }
+    })()
   }),
   actions: {
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode
-      localStorage.setItem('isDarkMode', JSON.stringify(this.isDarkMode))
+      Cookies.set('isDarkMode', JSON.stringify(this.isDarkMode), { expires: 7 }) // 7 dias (durabilidad de las cookies)
     },
     setTheme(theme) {
       this.isDarkMode = theme === 'dark'
-      localStorage.setItem('isDarkMode', JSON.stringify(this.isDarkMode))
+      Cookies.set('isDarkMode', JSON.stringify(this.isDarkMode), { expires: 7 })
     }
   }
 })
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
-    isAuthenticated: JSON.parse(localStorage.getItem('isAuthenticated')) || false
+    user: (() => {
+      try {
+        const cookieValue = Cookies.get('user')
+        return cookieValue ? JSON.parse(cookieValue) : null
+      } catch (error) {
+        console.error('Error parsing user from cookies:', error)
+        return null
+      }
+    })(),
+    isAuthenticated: (() => {
+      try {
+        const cookieValue = Cookies.get('isAuthenticated')
+        return cookieValue ? JSON.parse(cookieValue) : false
+      } catch (error) {
+        console.error('Error parsing isAuthenticated from cookies:', error)
+        return false
+      }
+    })()
   }),
   actions: {
     setUser(user) {
       this.user = user
       this.isAuthenticated = true
-      localStorage.setItem('user', JSON.stringify(user))
-      localStorage.setItem('isAuthenticated', 'true')
+      Cookies.set('user', JSON.stringify(user), { expires: 7 })
+      Cookies.set('isAuthenticated', 'true', { expires: 7 })
     },
     logout() {
       this.user = null
       this.isAuthenticated = false
-      localStorage.removeItem('user')
-      localStorage.setItem('isAuthenticated', 'false')
+      Cookies.remove('user')
+      Cookies.set('isAuthenticated', 'false', { expires: 7 })
     }
   }
 })
+
+export const useSesionStore = defineStore('', {
+  state: () => ({
+    sesionId: JSON.parse(localStorage.getItem('sesion')) || null,
+  }),
+  actions: {
+    setSesion(sesion) {
+      this.sesionId = sesion
+      localStorage.setItem('sesion', JSON.stringify(this.sesionId))
+    },
+  }
+}) 

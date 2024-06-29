@@ -1,12 +1,13 @@
 import express from 'express'
 import cors from 'cors'
-import { MongoClient, ObjectId } from 'mongodb'
+import { Collection, MongoClient, ObjectId } from 'mongodb'
 import http from 'http'
 import dotenv from 'dotenv'
 import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+
 dotenv.config()
 
 // Configuración de la aplicación
@@ -23,6 +24,9 @@ const corsOptions = {
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }
+
+
+
 app.use(cors(corsOptions))
 app.use(express.json())
 // Conexión a la base de datos de MongoDB
@@ -51,6 +55,22 @@ app.get('/users', async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch users from database', error)
     res.status(500).send('Failed to fetch users from database')
+  }
+})
+
+app.get('/name/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('evaluaciones')
+    const evaluations = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    if (evaluations) {
+      res.send(evaluations);
+    } else {
+      res.status(404).send('Evaluation not found');
+    }
+  } catch (error) {
+    console.error('Failed to fetch evaluations from database', error)
+    res.status(500).send('Failed to fetch evaluations from database')
   }
 })
 
@@ -83,12 +103,109 @@ app.get('/asignatura/:id', async (req, res) => {
   }
 });
 
-app.get('/faltas', async (req, res) => {
+app.get('/asignaturas/:alumnoId', async (req, res) => {
+  try {
+    const alumnoId = new ObjectId(req.params.alumnoId);
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find({ members: { $in: [alumnoId] } }).toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
+app.get('/evaluacion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('evaluaciones');
+    const consulta = { sesionId: new ObjectId(req.params.id) };
+    const evaluaciones = await collection.find(consulta).toArray();
+    if (evaluaciones) {
+      res.send(evaluaciones);
+    } else {
+      res.status(404).send('Evaluacion no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.get('/faltas/', async (req, res) => {
+  try {
+    const db = client.db('construccion');
+    const userCollection = db.collection('users');
+    const faltasCollection = db.collection('faltas');
+
+    const usersData = await userCollection.find({}).toArray();
+
+    const usersWithFaltas = await Promise.all(usersData.map(async (user) => {
+      const userID = user._id.toString();
+      const userFaltas = await faltasCollection.findOne({ _id: userID });
+      return {
+        id: userID,
+        nombre: user.firstName,
+        apellidoPat: user.lastName,
+        apellidoMat: user.secondLastName,
+        rut: user.rut,
+        matricula: user.matricula,
+        correo: user.email,
+        campus: user.campus,
+        faltas: userFaltas ? userFaltas.faltas : 0,
+        detalleFaltas: userFaltas ? userFaltas.detalleFaltas : null
+      };
+    }));
+    res.send(usersWithFaltas);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error al recuperar los detalles de los usuarios" });
+  }
+});
+
+// Recuperar faltas especificas de un usuario
+app.get('/faltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const result = await collection.findOne({ _id: req.params.id });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+
+app.post('/addFaltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const id = req.params.id;
+    const newFalta = req.body;
+
+    const result = await collection.updateOne(
+      { _id: id },
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { upsert: true }
+    );
+
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+});
+
+// Cambiar estado de alumno (Peligroso / No Peligroso)
+app.post('/faltas/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { estado: req.body.estado } }
+    )
+    res.send(result)
   } catch (error) {
     res.status(500).send(error.message)
   }
@@ -120,46 +237,30 @@ app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
   }
 });
 
-app.post('/faltas-post', async (req, res) => {
+//Obtener campus
+app.get('/carreras/:campus', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const alumno = req.body
-    // Busca el alumno en la base de datos
-    const existingAlumno = await collection.findOne({ _id: alumno._id })
-
-    if (existingAlumno) {
-      // Si el alumno ya existe, actualiza detalleFaltas
-      const result = await collection.updateOne(
-        { _id: alumno._id },
-        { $push: { detalleFaltas: alumno.detalleFaltas[0] }, $inc: { faltas: 1 } }
-      )
-    } else {
-      // Si el alumno no existe, inserta el nuevo alumno
-      const result = await collection.insertOne(alumno)
-    }
-    res.status(200).send('Falta agregada correctamente')
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campus = req.params.campus;
+    const carrerasData = await collection.findOne({ campus: campus });
+    res.send(carrerasData ? carrerasData.carreras : []);
   } catch (error) {
-    console.error(error) // Imprime el error
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
+});
 
-// Cambiar estado de alumno (Peligroso / No Peligroso)
-app.post('/faltas/:id', async (req, res) => {
+//Obtener Carreras
+app.get('/campus', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const result = await collection.updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: { estado: req.body.estado } }
-    )
-    res.send(result)
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campusData = await collection.find({}).project({ campus: 1 }).toArray();
+    res.send(campusData);
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
-
+});
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -172,6 +273,24 @@ app.get('/sesion', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.get('/sesionAsignatura/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const database = client.db('construccion');
+    const asignaturaCollection = database.collection('asignaturas');
+
+    const asignatura = await asignaturaCollection.findOne({ sesiones: new ObjectId(id) });
+    if (!asignatura) {
+      return res.status(404).send('Asignatura not found');
+    }
+
+    res.send(asignatura.title);
+  } catch (error) {
+    console.error('Failed to fetch asignatura', error);
+    res.status(500).send('Failed to fetch asignatura');
+  }
+});
 
 // Obtener una sesión específica por ID
 const getParticipantDetails = async (participantIds, usersCollection) => {
@@ -214,6 +333,36 @@ app.get('/sessions/:id', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+app.post('/guardarEvaluacion', async (req, res) => {
+  const { evaluacion, sesionId } = req.body;
+
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('evaluaciones');
+
+    // Verifica que el sesionId es un ObjectId válido
+    let objectId;
+    try {
+      objectId = new ObjectId(sesionId);
+    } catch (error) {
+      return res.status(400).json({ success: false, message: 'Invalid session ID format', error: error.message });
+    }
+
+    // Inserta la evaluación en la colección de evaluaciones
+    const result = await collection.insertOne({
+      ...evaluacion,
+      sesionId: objectId
+    });
+
+    res.status(200).json({ success: true, result });
+  } catch (error) {
+    console.error('Error al guardar la evaluación:', error);
+    res.status(500).json({ success: false, message: 'Error al guardar la evaluación', error: error.message });
+  }
+});
+
+
 
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
@@ -569,6 +718,31 @@ app.post('/anadir_Usuario', async (req, res) => {
     res.status(500).send('Hubo un error al añadir los usuarios');
   }
 });
+app.get('/obtenerMiembrosAsignatura', async (req, res) => {
+  try {
+    const { asignaturaId } = req.query;
+    //console.log("asignaturaId recibido:", asignaturaId);
+
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
+
+    if (!asignatura) {
+      return res.send([]);
+    }else{
+      const miembros = asignatura.members;
+      res.send(miembros);
+    }
+
+    
+
+    //console.log("Miembros encontrados:", miembros);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error interno del servidor' });
+  }
+});
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
@@ -693,7 +867,7 @@ app.post('/sesion', async (req, res) => {
       creador: req.body.creador,
       participantes: [],
       banlist: [],
-
+      cancelada: false,
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
@@ -714,7 +888,6 @@ app.post('/banearExpulsar/:id', async (req, res) => {
     const bannedEmail = req.body.email;
     const userId = req.body.userId;
     const banear = req.body.banear;
-    console.log(sessionId, bannedEmail, userId, banear);
 
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
@@ -737,18 +910,60 @@ app.post('/banearExpulsar/:id', async (req, res) => {
       }
     }
 
-    const removeResult = await collection.updateOne(
+    else {
+      const removeResult = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $pull: { participantes: userId } }
+      );
+      if (removeResult.modifiedCount > 0) {
+        if (resultMessage) {
+          resultMessage += ' y expulsado de la lista de participantes.';
+        } else {
+          resultMessage = 'Alumno expulsado de la lista de participantes.';
+        }
+      }
+      else {
+        if (!resultMessage) {
+          return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+        }
+      }
+    }
+
+    res.json({ success: true, message: resultMessage });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/desbanear/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const unbannedEmail = req.body.email;
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    let resultMessage = '';
+    const addResult = await collection.updateOne(
       { _id: new ObjectId(sessionId) },
-      { $pull: { participantes: userId } }
+      { $pull: { banlist: unbannedEmail } }
     );
 
-    if (removeResult.modifiedCount > 0) {
+    if (addResult.modifiedCount > 0) {
       if (resultMessage) {
-        resultMessage += ' y expulsado de la lista de participantes.';
+        resultMessage += ' y agregado a la lista de participantes.';
       } else {
-        resultMessage = 'Alumno expulsado de la lista de participantes.';
+        resultMessage = 'Alumno expulsado de la lista de baneados.';
       }
-    } else {
+    }
+    else {
       if (!resultMessage) {
         return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
       }
@@ -761,7 +976,28 @@ app.post('/banearExpulsar/:id', async (req, res) => {
   }
 });
 
+app.get('/bannedusers/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const sessionCollection = database.collection('sesion');
+    const sessionId = { _id: new ObjectId(req.params.id) };
+    const session = await sessionCollection.findOne(sessionId);
 
+    if (!session) {
+      return res.status(404).send('Sesión no encontrada');
+    }
+    const banlist = session.banlist || [];
+    // Obtener la información completa de los participantes
+    //const participantes = await getParticipantDetails(session.participantes, usersCollection);
+
+    //session.participantes = participantes;
+
+    res.json(banlist);
+  } catch (error) {
+    console.error('Error fetching session data:', error);
+    res.status(500).send(error.message);
+  }
+});
 
 app.post('/agregarParticipante', async (req, res) => {
   try {
@@ -824,12 +1060,23 @@ app.post('/message', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('mensajes')
+
+    let sesionaGuardar = req.body.session
+
+    const collSesiones = database.collection('sesion')
+    const sesiones = await collSesiones.find({}).toArray()
+
+    //traemos la información de la sesion correspondiente
+    let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
+
     const newMessage = {
       destinatario: req.body.destinatario,
       mensaje: req.body.mensaje,
       remitente: req.body.remitente,
       visto: false,
-      alerta: ''
+      alerta: '',
+      //guardamos el nombre de la sesion
+      sesion: sesionCorrecta[0].nombre
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
@@ -901,32 +1148,6 @@ app.put('/message/:id', async (req, res) => {
   }
 })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Enviar email (página contacto)
 app.post('/send-email', async (req, res) => {
   let { fullName, email, mobile, msg } = req.body;
@@ -954,6 +1175,36 @@ app.post('/send-email', async (req, res) => {
     res.status(500).send('Hubo un error al enviar el correo electrónico');
   }
 });
+
+// Enviar email (página contacto alumno)
+app.post('/email-alumno', async (req, res) => {
+  let { fullName, email, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: `Mensaje de profesor ${fullName}`,
+    text: `Profesor: ${fullName}\nMensaje enviado a: ${email}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
+/* revisiar esta funcion de grupo joaquin*/
 
 // Guarda/actualiza los procesos en la base de datos
 app.post('/checkTabs', async (req, res) => {
@@ -1102,3 +1353,34 @@ app.get('/getTabs/:userId', (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+
+app.get('/configs', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('configuraciones')
+    const configs = await collection.find({}).toArray()
+    res.send(configs)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.put('/cancelarSesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, {
+      $set: { cancelada: true }
+    })
+    if (result.modifiedCount === 1) {
+      console.log('AAAAAAAAYUDA')
+      res.send(result)
+    } else {
+      res.status(404).send('Sesion no encontrada')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
