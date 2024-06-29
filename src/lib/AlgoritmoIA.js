@@ -5,7 +5,7 @@ import { writeFile } from 'fs/promises';
 // Accede a tu clave API como una variable de entorno
 const genAI = new GoogleGenerativeAI("AIzaSyBheR5f8PrwOnPRaY_CNlU8eZlccqSkre4");
 
-async function generateTextFile() {
+export async function generateTextFile() {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   exec('tasklist', async (error, stdout, stderr) => {
@@ -19,7 +19,7 @@ async function generateTextFile() {
       return;
     }
 
-    const prompt = `Dada la lista de procesos: ${stdout}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales.`;
+    const prompt = `Dada la lista de procesos: ${stdout}\nPor favor, clasifica las aplicaciones del usuario (no sistema) según su conveniencia al momento de estudiar. Debes clasificar entre 'bueno', 'malo' e 'intermedio', y siempre debe ser alguna de estas opciones, agrupa las que son iguales y describe que hace cada proceso, ademas debes mostrar los procesos sin el .exe del final.`;
 
     try {
       const result = await model.generateContent(prompt);
@@ -28,7 +28,6 @@ async function generateTextFile() {
 
       // Escribir el texto a un archivo
       await writeFile('respuesta.txt', text);
-      console.log('El archivo de texto ha sido creado y actualizado');
     } catch (e) {
       console.error(`Error generando contenido: ${e}`);
     }
