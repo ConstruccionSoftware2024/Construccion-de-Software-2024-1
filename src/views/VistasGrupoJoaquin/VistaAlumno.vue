@@ -33,14 +33,16 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR-->
+            <button @click="guardarHistorial">Guardar procesos</button>
+
+
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
-                    <thead>
-                        <tr>
+                    <thead v-if="tabs.length">
+                        <tr v-for="(tab, index) in tabs" :key="index">
                             <th>Hora</th>
-                            <th>URL</th>
+                            <th><a :href="tab.url" target="_blank">Url: {{ tab.url }}</a></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,16 +59,19 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
 import Chart from 'chart.js/auto';
+import { useUserStore } from '../../../back-end/src/store.js';
+import axios from 'axios';
 import { useRoute } from 'vue-router';
 
+
+
 export default {
-    mounted() {
-        if (this.$store.state.usuario.role == "profesor") {
-            this.$router.push('/listaAsignaturas')
-        }
-    },
+    /*  mounted() {
+          if (this.$store.state.usuario.role == "profesor") {
+              this.$router.push('/listaAsignaturas')
+          }
+      }, */
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
@@ -78,6 +83,7 @@ export default {
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
         const history = ref([]);
         const evaluations = ref([]);
+        const userId = ref('');
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -91,6 +97,10 @@ export default {
                     return '#FFFFFF';
             }
         });
+
+        const createSession = () => {
+            // Lógica para unirse a una sesión
+        };
 
         const fetchHistory = async () => {
             try {
@@ -112,21 +122,21 @@ export default {
                 });
         }
         const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
-
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling            
             setInterval(async () => {
-                await fetchHistory(); // Actualiza el historial cada intervalo
-            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
+                await fetchHistory(); // Actualiza el historial cada intervalo                 
+                await guardarHistorial(); // Guarda el historial cada intervalo             
+            }, 5000); // Intervalo de 30 segundos
         };
 
         const guardarHistorial = () => {
-            axios.post('http://localhost:8080/guardar-procesos')
-                .then(response => {
-                    //console.log('Historial guardado correctamente:', response.data);
-                })
-                .catch(error => {
-                    //console.error('Error al guardar el historial:', error);
-                });
+            const procesos = history.value.map(proceso => proceso.name);
+            //const procesosString = procesos.join(',');
+            const userStore = useUserStore();
+            const user = computed(() => userStore.user);
+            const userId = user.value._id;
+            axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
+            //window.alert('Procesos guardados en DB');
         };
 
         onMounted(() => {
@@ -191,7 +201,13 @@ export default {
                     }
                 }
             });
+
+
         });
+
+
+
+
 
         return {
             sessionId,
@@ -208,6 +224,52 @@ export default {
             guardarHistorial,
         };
     },
+    data() {
+        return {
+            tabs: []
+        };
+    },
+    created() {
+        this.fetchTabs(); // Fetch data when the component is created
+        setInterval(this.fetchTabs, 10000); // Fetch data every 10 seconds
+    },
+    methods: {
+        async fetchTabs() {
+            try {
+                const response = await axios.get('http://localhost:5151/tabs'); // Adjust the URL to your server endpoint
+                this.tabs = response.data; // Assuming the server responds with tab data in JSON format
+
+                // Extract URLs into a string array
+                const urls = this.tabs.map(tab => tab.url);
+                const urlsString = urls.join(', '); // Join URLs into a single string
+                console.log('URLs:', urlsString); // Print URLs as a single string to console
+
+                // Send data to server
+                this.sendDataToServer(urlsString);
+            } catch (error) {
+                console.error('Error al obtener los datos:', error);
+            }
+        },
+        async sendDataToServer(urlsString) {
+            const userStore = useUserStore();
+            const user = computed(() => userStore.user);
+
+            try {
+                // Primero, realiza una petición al servidor para verificar si los datos ya existen
+                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para verificar en el servidor
+                if (checkResponse.data.exists) {
+                    console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
+                    return; // Si los datos ya existen, no se hace nada más
+                }
+
+                // Si los datos no existen, procede a enviarlos al servidor
+                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para procesar en el servidor
+                console.log('Datos enviados al servidor correctamente:', processResponse.data);
+            } catch (error) {
+                console.error('Error al enviar los datos al servidor:', error);
+            }
+        }
+    }
 };
 </script>
 

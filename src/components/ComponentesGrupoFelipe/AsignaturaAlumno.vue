@@ -195,22 +195,6 @@ async function recuperarProfesor(id) {
             console.error(error);
         });
 }
-
-async function recuperarFaltas(id) {
-    await axios.get(`http://localhost:8080/faltas/${id}`)
-        .then(response => {
-            if (response.data.length === 0) {
-                faltaAlumnos.value.faltas = 0;
-            }else{
-                faltaAlumnos.value = response.data;
-            }
-            return response.data;
-        })
-        .catch(error => {
-            console.error(error);
-        });
-}
-
 async function recuperarFaltas(id) {
     await axios.get(`http://localhost:8080/faltas/${id}`)
         .then(response => {
