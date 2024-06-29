@@ -185,7 +185,7 @@ app.post('/addFaltas/:id', async (req, res) => {
 
     const result = await collection.updateOne(
       { _id: id },
-      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 } }, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
       { upsert: true }
     );
 
@@ -729,15 +729,15 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
 
     if (!asignatura) {
       return res.send([]);
-    }else{
+    } else {
       const miembros = asignatura.members;
       res.send(miembros);
     }
 
-    
+
 
     //console.log("Miembros encontrados:", miembros);
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error interno del servidor' });
@@ -1061,13 +1061,26 @@ app.post('/message', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('mensajes')
 
-    let sesionaGuardar = req.body.session
-
+    //traemos todas las sesiones
     const collSesiones = database.collection('sesion')
     const sesiones = await collSesiones.find({}).toArray()
 
     //traemos la información de la sesion correspondiente
     let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
+
+    // traemos los usuarios
+    const collUsers = database.collection('users')
+    const users = await collUsers.find({}).toArray()
+
+    let remitentenombre = users.filter(user => user._id == req.body.remitente)
+
+    let asignatura = [{ title: 'default' }]
+    // traemos las asignaturas
+    if (!sesionCorrecta.asignatura) {
+      const collAsignaturas = database.collection('asignaturas')
+      const asignaturas = await collAsignaturas.find({}).toArray()
+      asignatura = asignaturas.filter(assig => assig._id == sesionCorrecta[0].asignatura)
+    }
 
     const newMessage = {
       destinatario: req.body.destinatario,
@@ -1076,7 +1089,10 @@ app.post('/message', async (req, res) => {
       visto: false,
       alerta: '',
       //guardamos el nombre de la sesion
-      sesion: sesionCorrecta[0].nombre
+      sesion: sesionCorrecta[0].nombre,
+      fecha: new Date(),
+      asignatura: asignatura[0].title,
+      remitenteNombre: remitentenombre[0].firstName + ' ' + remitentenombre[0].lastName
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
