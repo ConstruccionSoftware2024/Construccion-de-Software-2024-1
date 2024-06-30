@@ -78,8 +78,15 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
+                <h3>Últimas URLs</h3>
+                <ul>
+                    <li v-for="url in selectedStudent.latestUrls" :key="url">
+                        <a :href="url" target="_blank">{{ url }}</a>
+                    </li>
+                </ul>
+                <h3>Procesos</h3>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
@@ -88,6 +95,7 @@
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -530,20 +538,34 @@ export default {
 
                 // Escribe los nombres de procesos únicos en un archivo
                 const fileText = uniqueProcessNamesWithCategories.join('\n');
+                
+                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
+                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                const lastEntry = urlsResponse.data;
+                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
+
+                // Hacer una solicitud para obtener los procesos para este userId
+                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const apps = processesResponse.data;
 
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: uniqueProcessNamesWithCategories
+                    latestUrls, // Asignar el array de URLs
+                    apps: uniqueProcessNamesWithCategories,
                 };
+                console.log("Última URLs: ", latestUrls);
                 console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
                 this.showModal = true;
 
                 return uniqueProcessNamesWithCategories;
             } catch (error) {
-                console.error('Error al obtener los procesos del estudiante:', error);
-                alert('Error al obtener los procesos del estudiante');
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
             }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },
