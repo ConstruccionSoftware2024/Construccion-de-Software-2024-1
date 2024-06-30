@@ -151,7 +151,10 @@ import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { time } from 'xpress/lib/string';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Accede a tu clave API como una variable de entorno
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     setup() {
         const route = useRoute();
@@ -507,7 +510,7 @@ export default {
         async viewProcesses(userId) {
             console.log("ID de la sesión: " + this.sessionId);
             const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
-
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             if (!selectedStudent) {
                 alert('Estudiante no encontrado');
                 return;
@@ -515,11 +518,26 @@ export default {
 
             try {
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+
+                const result = await model.generateContent(prompt);
+                const response2 = result.response;
+                const text = response2.text();
+
+                // Convertir la lista separada por comas a un arreglo
+                const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                // Combinar nombres únicos
+                const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+
+                // Escribe los nombres de procesos únicos en un archivo
+                const fileText = uniqueProcessNamesWithCategories.join('\n');
+
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: response.data
+                    apps: uniqueProcessNamesWithCategories
                 };
-                console.log("procesos: " + response.data);
+                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
                 this.showModal = true;
             } catch (error) {
                 console.error('Error al obtener los procesos del estudiante:', error);
@@ -636,7 +654,7 @@ export default {
                 console.error(error);
                 return [];
             }
-        },
+        }
     },
     computed: {
         // Filtra los usuarios basándose en el campo de búsqueda
