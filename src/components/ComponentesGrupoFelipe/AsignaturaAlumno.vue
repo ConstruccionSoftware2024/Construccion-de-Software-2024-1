@@ -62,7 +62,6 @@
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book-bookmark']" /> Tareas y Exámenes</h3>
                 <p>Próxima Tarea: [Fecha]</p>
                 <p>Próximo Examen: [Fecha]</p>
-                <button>Ver Calendario</button>
             </div>
 
             <div class="acciones">
