@@ -8,7 +8,9 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
+            <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -63,7 +65,7 @@
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
-                                class="fas fa-eye"></i></button>
+                                    class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
                             style="font-size: 20px;">
@@ -141,6 +143,31 @@
             </div>
         </section>
     </div>
+    <div class="modal__container_añadir">
+        <h2 class="modal__title_añadir">Agregar App Peligrosa</h2>
+        <form @submit.prevent="agregarAppPeligrosa" class="modal-form">
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Nombre de la Aplicación:</label>
+                <input v-model="nombreApp" type="text" class="input_añadir" placeholder="" required>
+            </div>
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Link de la Aplicación:</label>
+                <input v-model="LinkApp" type="text" class="input_añadir" placeholder="" required>
+            </div>
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Nivel de Peligro:</label>
+                <select v-model="nivelPeligro" id="nivelPeligro" class="input_añadir" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="alta">Alta</option>
+                </select>
+            </div>
+            <div class="button-container">
+                <a href="#" @click.prevent="peligrosidadAplicaciones" class="modal_close_añadir">Añadir</a>
+            </div>
+        </form>
+    </div>
 </template>
 <script>
 import Chart from 'chart.js/auto';
@@ -214,6 +241,11 @@ export default {
             users: [],
             asignaturas: [],
             searchQuery: '',
+            isModalVisible: false,
+            nombreApp: '',
+            LinkApp: '',
+            nivelPeligro: '',
+            appPeligrosas: [],
         };
     },
 
@@ -243,6 +275,27 @@ export default {
         },*/
         redirigirCrearEvaluacion() {
             this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
+
+        peligrosidadAplicaciones() {
+            if (this.nombreApp && this.LinkApp) {
+
+                const aplicacionAgregada = {
+                    nombreApp: this.nombreApp,
+                    LinkApp: this.LinkApp,
+                    nivelPeligro: this.nivelPeligro,
+                };
+                // Agregar a la lista de aplicaciones peligrosas
+                this.appPeligrosas.push(aplicacionAgregada);
+
+                // Limpiar campos
+                this.nombreApp = '';
+                this.LinkApp = '';
+                this.nivelPeligro = '';
+            } else {
+                alert('Por favor, complete ambos campos.');
+            }
+            console.log('Array apps:', this.appPeligrosas);
         },
 
         assignAppsToStudents(students) {
@@ -519,7 +572,7 @@ export default {
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
-            
+
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -539,7 +592,7 @@ export default {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-                
+
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
@@ -591,7 +644,7 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
-                
+
                 return memberIdsAsString;
 
             } catch (error) {
@@ -1197,5 +1250,24 @@ th {
 .claseNumeroSesion {
     font-size: medium;
     color: gray;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-container_añadir {
+    margin-bottom: 10px;
+    /* Ajusta el espacio entre los elementos si es necesario */
+}
+
+.button-container {
+    margin-top: 20px;
+    /* Espacio entre los campos y los botones */
+    display: flex;
+    justify-content: center;
 }
 </style>
