@@ -8,7 +8,8 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -63,7 +64,7 @@
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
-                                class="fas fa-eye"></i></button>
+                                    class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
                             style="font-size: 20px;">
@@ -347,7 +348,42 @@ export default {
                 return total + student.apps.filter(app => app.status === 'Peligro').length;
             }, 0);
         },
-        createCharts() {
+        async obtainAllProcesses() {
+            let matrixProcesses = [];
+            let processesMax = 0;
+            try {
+                for (const alumno of this.alumnos) {
+                    const response = await axios.get(`http://localhost:8080/obtenerProcesos/${alumno._id}`);
+                    matrixProcesses.push(response.data);
+                    if (response.data.length > processesMax) {
+                        processesMax = response.data.length;
+                    }
+                }
+
+                // Repeticiones de cada proceso
+                let processCount = {};
+                matrixProcesses.flat().forEach(process => {
+                    if (processCount[process]) {
+                        processCount[process]++;
+                    } else {
+                        processCount[process] = 1;
+                    }
+                });
+
+                // Crear matriz resultado con proceso y veces que se repite
+                let resultMatrix = [];
+                for (let process in processCount) {
+                    resultMatrix.push({ proceso: process, repeticiones: processCount[process] });
+                }
+                console.log(resultMatrix.length);
+                return resultMatrix;
+
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                return [];
+            }
+        },
+        async createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -394,8 +430,10 @@ export default {
                 return acc;
             }, {});
 
-            const appLabels = Object.keys(appUsage);
-            const appData = Object.values(appUsage);
+            const resultMatrix = await this.obtainAllProcesses();
+            const appLabels = resultMatrix.map(item => item.proceso);
+            const appData = resultMatrix.map(item => item.repeticiones);
+
 
             new Chart(appsCtx, {
                 type: 'bar',
@@ -519,7 +557,7 @@ export default {
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
-            
+
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -539,7 +577,7 @@ export default {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-                
+
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
@@ -591,7 +629,7 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
-                
+
                 return memberIdsAsString;
 
             } catch (error) {
