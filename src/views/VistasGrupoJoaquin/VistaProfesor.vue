@@ -1,10 +1,16 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
+        <div class="containerTitle">
+            <h1>{{ nombreSesion }}</h1>
+            <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
+        </div>
         <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button @click="otherOptions">Otras Opciones</button>
+            <!--  <button @click="createSession">Crear Sesión</button> -->
+            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
+            <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -35,24 +41,35 @@
                 </thead>
                 <tbody>
                     <tr v-for="alumno in alumnos" :key="alumno._id">
-                        <td>{{ alumno.matricula }}</td>
-                        <td>{{ alumno.firstName }}</td>
-                        <td>{{ alumno.lastName }}</td>
-                        <td>{{ alumno.secondLastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.matricula }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.firstName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.lastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.secondLastName }}
+                        </td>
                         <td
-                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
                             {{ alumno.status }}
                         </td>
-                        <td>
+                        <td v-if="!alumnosBaneados.includes(alumno.email)"
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
                             <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
                             <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
-                            <BotonNotificar :participante="alumno" />
-                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
+                            <BotonNotificar :participante="alumno" :session="sessionId" />
+                            <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
                                     class="fas fa-eye"></i></button>
+                        </td>
+                        <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
+                            style="font-size: 20px;">
+                            <b>Baneado</b>
+                            <button class="actionButton desban" @click="unbanStudent(alumno)">Desbanear</button>
                         </td>
                     </tr>
                 </tbody>
@@ -61,16 +78,24 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
+                <h3>Últimas URLs</h3>
+                <ul>
+                    <li v-for="url in selectedStudent.latestUrls" :key="url">
+                        <a :href="url" target="_blank">{{ url }}</a>
+                    </li>
+                </ul>
+                <h3>Procesos</h3>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
+                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
                     </li>
                 </ul>
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -79,15 +104,41 @@
                 <h2 class="modal__title_añadir">Añadir Alumno</h2>
                 <div class="wrap-check-58">
                     <div class="round">
+                        <div class="input-container_añadir">
+                            <input type="text" name="text" v-model="searchQuery" class="input_añadir"
+                                placeholder="Buscar por nombre...">
+                            <span class="icon_añadir">
+                                <svg width="19px" height="19px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path opacity="1" d="M14 5H20" stroke="#000" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path opacity="1" d="M14 8H17" stroke="#000" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path
+                                            d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2"
+                                            stroke="#000" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round"></path>
+                                        <path opacity="1" d="M22 22L20 20" stroke="#000" stroke-width="3.5"
+                                            stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </g>
+                                </svg>
+                            </span>
+                        </div>
                         <ul name="user" id="user" class="modal__select_añadir">
-                            <li v-for="user in users" :key="user._id" class="listar_alumnos">
-
-                                <input type="checkbox" v-model="user.selected" class="input_alumnos">
-
-                                <span class="dato_alumno">{{ user.matricula }}</span>
-                                <span class="dato_alumno">{{ user.firstName }}</span>
-                                <span class="dato_alumno">{{ user.lastName }}</span>
-
+                            <li v-for="user in filteredUsers" :key="user._id" class="listar_alumnos">
+                                <label class="container_check">
+                                    <input type="checkbox" v-model="user.selected">
+                                    <div class="checkmark_check">
+                                        <div class="input_alumnos">
+                                            <span class="dato_alumno">{{ user.matricula }}</span>
+                                            <span class="dato_alumno">{{ user.firstName }}</span>
+                                            <span class="dato_alumno">{{ user.lastName }}</span>
+                                        </div>
+                                    </div>
+                                </label>
                             </li>
                         </ul>
                     </div>
@@ -100,25 +151,69 @@
         </section>
     </div>
 </template>
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
+import { onMounted, ref } from 'vue';
+import Swal from 'sweetalert2';
+import { time } from 'xpress/lib/string';
+
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
-        return {
-            idRuta
+        const router = useRouter();
+        let nombreSesion = ref('');
+        let isCancelada = ref(false);
+        const obtenerDatosSesion = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/sessions/' + idRuta);
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    nombreSesion.value = datos.nombre;
+                    isCancelada.value = datos.cancelada;
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error);
+            }
+        };
+        const cancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/cancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    console.log("marcado como cancelado")
+                }
+                else {
+                    console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
         }
-    },
+        onMounted(obtenerDatosSesion)
+        return {
+            idRuta,
+            nombreSesion,
+            cancelarSesion,
+            isCancelada,
+            router
 
+        };
+    },
     data() {
 
         return {
             alumnos: [],
+            alumnosBaneados: [],
             session: {},
             totalDangerousApps: 0,
             lastActivity: '',
@@ -126,19 +221,17 @@ export default {
             selectedStudent: '',
             sessionId: this.idRuta,
             users: [],
+            asignaturas: [],
+            searchQuery: '',
         };
     },
 
-    /*  mounted() {
-         if (this.$store.state.usuario.role == "alumno") {
-             this.$router.push('/')
-         }
-     }, */
-
     created() {
+        this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
     },
+
     name: 'ProfesorPage',
     components: {
         BotonNotificar,
@@ -157,7 +250,40 @@ export default {
                 console.error('Error fetching session data:', error);
             }
         },*/
+        redirigirCrearEvaluacion() {
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
+
         assignAppsToStudents(students) {
+            const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
+            const warningApps = ['Slack', 'Skype', 'Zoom', "EpicGames", "Word", "Excel", "PowerPoint", "Paint", "Illustrator", "Photoshop", "Premiere", "Acrobat", "Ink"];
+            const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome', "PSeInt", "Spyder", "Eclipse", "NetBeans", "IntelliJ", "PyCharm", "VisualStudio", "CodeBlocks", "DevC++", "SublimeText", "Atom", "Notepad++", "Vim", "Emacs", "Nano", "Gedit", "pgAdmin", "GitBash"];
+            const statuses = ['Peligro', 'Advertencia', 'Normal'];
+            let statusIndex = 0;
+
+            return students.map((student) => {
+                const apps = [];
+                const status = statuses[statusIndex];
+
+                const appList = status === 'Peligro' ? dangerApps : (status === 'Advertencia' ? warningApps : normalApps);
+                const randomApps = this.shuffleArray(appList);
+
+                const numberOfApps = Math.floor(Math.random() * 2) + 2;
+                for (let i = 0; i < numberOfApps; i++) {
+                    apps.push({ name: randomApps[i], status });
+                }
+
+                statusIndex = (statusIndex + 1) % statuses.length;
+
+                return {
+                    ...student,
+                    apps,
+                    status,
+                };
+            });
+        },
+
+        /*assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
             const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome'];
@@ -186,7 +312,7 @@ export default {
                     status,
                 };
             });
-        },
+        },*/
         shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -328,11 +454,15 @@ export default {
         async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
-                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    if (!accion) {
+                        this.alumnos = this.alumnos.filter(al => al !== student)
+                    }
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
-                    if (!response.ok) {
-                        throw new Error('Error al actualizar la lista de participantes')
+                    if (response.status === 200) {
+                        await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                    } else {
+                        throw new Error('Error al actualizar la lista de participantes');
                     }
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -345,10 +475,43 @@ export default {
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
         },
-        viewProcesses(student) {
-            this.selectedStudent = student;
-            this.showModal = true;
+        async viewProcesses(userId) {
+            console.log("ID de la sesión: " + this.sessionId);
+            const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
+
+            if (!selectedStudent) {
+                alert('Estudiante no encontrado');
+                return;
+            }
+
+            try {
+                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
+                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                const lastEntry = urlsResponse.data;
+                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
+
+                // Hacer una solicitud para obtener los procesos para este userId
+                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const apps = processesResponse.data;
+
+                this.selectedStudent = {
+                    ...selectedStudent,
+                    latestUrls, // Asignar el array de URLs
+                    apps // Asignar los procesos
+                };
+
+                console.log("Última URLs: ", latestUrls);
+                console.log("Procesos: ", apps);
+
+                this.showModal = true;
+            } catch (error) {
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
+            }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },
@@ -358,28 +521,29 @@ export default {
         async mounted() {
             const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
             const sessionUsers = sessionResponse.data;
-
+            const asignatura = sessionUsers.asignatura;
             const participantesIds = sessionUsers.participantes;
-
+            console.log("--------->" + asignatura)
             const response = await axios.get('http://localhost:8080/users');
             const allUsers = response.data;
 
-            //console.log("participantes\n" + participantesIds)
-            axios.get('http://localhost:8080/users')
-                .then(response => {
-                    console.log("ID\n" + response.data.map(user => user._id));
-                    this.users = allUsers.filter(user => !participantesIds.includes(user._id));
-                    //console.log("a\n" + this.users.map(user => user._id));
-                })
-                .catch(error => {
-                    console.error(error);
-                });
+            const members = await this.AsignaturaMembers(asignatura);
+
+            this.users = allUsers.filter(user => {
+                const isMember = members.includes(user._id.toString());
+                const isNotParticipant = !participantesIds.includes(user._id.toString());
+                const isAlumno = user.role == 'alumno';
+                //console.log(`User ${user._id}: isMember=${isMember}, isNotParticipant=${isNotParticipant}, isAlumno=${isAlumno}`);
+                return isMember && isNotParticipant && isAlumno;
+            });
+
         },
         añadir() {
             const openModal = document.querySelector('.hero__cta');
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
+
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -398,33 +562,139 @@ export default {
         async anadir_Usuario() {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
-                console.log(selectedUsers.map(user => user._id));
+                //console.log(selectedUsers.map(user => user._id));
 
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
-                    sesion_id : this.sessionId
+                    sesion_id: this.sessionId
                 });
+                Swal.fire({
+                    title: 'Alumnos agregados correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+                this.fetchUsers();
                 console.log(response.data);
 
             } catch (error) {
                 console.error(error);
             }
         },
+        async alumnosbaneados() {
+            try {
+                const response = await axios.get('http://localhost:8080/bannedusers/' + this.sessionId);
 
-    }
+                this.alumnosBaneados = response.data
+                console.log(this.alumnosBaneados)
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        async unbanStudent(student) {
+            try {
+                const response = await axios.post('http://localhost:8080/desbanear/' + this.sessionId, { email: student.email });
+
+                if (response.status === 200) {
+                    await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                } else {
+                    throw new Error('Error al actualizar la lista de participantes');
+                }
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        async AsignaturaMembers(asignaturaId) {
+            try {
+                //console.log("-->" + asignaturaId);
+                const response = await axios.get('http://localhost:8080/obtenerMiembrosAsignatura', {
+                    params: {
+                        asignaturaId: asignaturaId
+                    }
+                });
+                //console.log("Members de la asignatura:", response.data);
+                const memberIdsAsString = response.data.map(member => member.toString());
+
+                return memberIdsAsString;
+
+            } catch (error) {
+                console.error(error);
+                return [];
+            }
+        },
+    },
+    computed: {
+        // Filtra los usuarios basándose en el campo de búsqueda
+        filteredUsers() {
+            return this.users.filter(user => {
+                const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                return fullName.includes(this.searchQuery.toLowerCase());
+            });
+        },
+    },
 };
 
 </script>
 
 <style scoped>
-.container_check {
-    display: flex;
+.input_alumnos {
+    padding-left: 30px;
+}
 
-    align-items: center;
+.round {
+    width: 150%;
+    margin-left: 10px;
+}
+
+.input-container_añadir {
+    width: 100%;
+    position: relative;
+    margin-left: -20%;
+}
+
+.icon_añadir {
+    position: absolute;
+    right: 10px;
+    top: calc(50% + 5px);
+    transform: translateY(calc(-50% - 5px));
+}
+
+.input_añadir {
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    transition: .2s linear;
+    border: 2.5px solid black;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+}
+
+.input_añadir:focus {
+    outline: none;
+    border: 0.5px solid black;
+    box-shadow: -5px -5px 0px black;
+}
+
+.input-container_añadir:hover>.icon_añadir {
+    animation: anim 1s linear infinite;
+}
+
+@keyframes anim {
+
+    0%,
+    100% {
+        transform: translateY(calc(-50% - 5px)) scale(1);
+    }
+
+    50% {
+        transform: translateY(calc(-50% - 5px)) scale(1.1);
+    }
 }
 
 .container_check {
-    display: flex;
     --input-focus: #2d8cf0;
     --input-out-of-focus: #ccc;
     --bg-color: #fff;
@@ -432,12 +702,12 @@ export default {
     --main-color: #323232;
     position: relative;
     cursor: pointer;
+
 }
 
 .container_check input {
     position: absolute;
     opacity: 0;
-    display: flex;
 }
 
 .checkmark_check {
@@ -445,12 +715,13 @@ export default {
     height: 30px;
     position: relative;
     top: 0;
-    left: -500;
+    left: 0;
     border: 2px solid var(--main-color);
     border-radius: 5px;
     box-shadow: 4px 4px var(--main-color);
     background-color: var(--input-out-of-focus);
     transition: all 0.3s;
+    margin-left: -5%;
 }
 
 .container_check input:checked~.checkmark_check {
@@ -464,13 +735,14 @@ export default {
     position: absolute;
     top: 2px;
     left: 8px;
+    display: none;
     border: solid var(--bg-color);
     border-width: 0 2.5px 2.5px 0;
     transform: rotate(45deg);
 }
 
 .container_check input:checked~.checkmark_check:after {
-    display: none;
+    display: block;
 }
 
 .botones_añadir {
@@ -485,8 +757,6 @@ export default {
     margin-top: 1%;
     list-style-type: none;
     font-size: 1.2rem;
-    text-align: left;
-
 }
 
 .hero__cta {
@@ -500,8 +770,15 @@ export default {
 }
 
 .hero__cta:hover {
-    background-color: #fff;
+    background-color: var(--container-background-color);
     color: #1e3c72;
+}
+
+.modal__select_añadir {
+    max-height: 220px;
+    overflow-y: auto;
+    width: 135%;
+    margin-left: -30%;
 }
 
 .modal_añadir {
@@ -529,14 +806,14 @@ export default {
 
 .modal__container_añadir {
     margin: auto;
-    width: 90%;
+    width: 100%;
     max-width: 600px;
     max-height: 90%;
-    background-color: #fff;
+    background-color: var(--container-background-color);
     border-radius: 6px;
-    padding: 3em 2.5em;
+    padding: 1em 1em;
     display: grid;
-    gap: 1em;
+    gap: 0.5em;
     place-items: center;
     grid-auto-columns: 100%;
     transform: var(--transform);
@@ -587,7 +864,14 @@ export default {
     max-width: 1200px;
 }
 
+.dashboard {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+}
+
 .dashboard button {
+    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -837,6 +1121,19 @@ th {
     background-color: var(--button-hover-background-color);
 }
 
+.row-red {
+    background-color: #E52B50;
+}
+
+.ban-text {
+    color: white;
+}
+
+.desban {
+    margin-left: 7vw;
+    background-color: #008000;
+}
+
 @media (max-width: 1200px) {
     .profesorPage {
         width: 90%;
@@ -912,5 +1209,17 @@ th {
         padding: 8px 16px;
         font-size: 0.9rem;
     }
+
+}
+
+.containerTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.claseNumeroSesion {
+    font-size: medium;
+    color: gray;
 }
 </style>
