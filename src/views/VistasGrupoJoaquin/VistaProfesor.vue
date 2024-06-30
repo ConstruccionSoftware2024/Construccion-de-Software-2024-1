@@ -1,10 +1,17 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:{{ sessionId }}</h1>
+        <div class="containerTitle">
+            <h1>{{ nombreSesion }}</h1>
+            <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
+        </div>
         <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button @click="otherOptions">Otras Opciones</button>
+            <!--  <button @click="createSession">Crear Sesión</button> -->
+            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
+            <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
+            <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -35,15 +42,21 @@
                 </thead>
                 <tbody>
                     <tr v-for="alumno in alumnos" :key="alumno._id">
-                        <td>{{ alumno.matricula }}</td>
-                        <td>{{ alumno.firstName }}</td>
-                        <td>{{ alumno.lastName }}</td>
-                        <td>{{ alumno.secondLastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.matricula }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.firstName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.lastName }}</td>
+                        <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
+                            {{ alumno.secondLastName }}
+                        </td>
                         <td
-                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
                             {{ alumno.status }}
                         </td>
-                        <td>
+                        <td v-if="!alumnosBaneados.includes(alumno.email)"
+                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
                             <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
@@ -51,8 +64,13 @@
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
-                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
+                            <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
                                     class="fas fa-eye"></i></button>
+                        </td>
+                        <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
+                            style="font-size: 20px;">
+                            <b>Baneado</b>
+                            <button class="actionButton desban" @click="unbanStudent(alumno)">Desbanear</button>
                         </td>
                     </tr>
                 </tbody>
@@ -65,7 +83,7 @@
                     selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
+                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
                     </li>
                 </ul>
                 <button class="closeButton" @click="closeModal">Cerrar</button>
@@ -125,26 +143,95 @@
             </div>
         </section>
     </div>
+    <div class="modal__container_añadir">
+        <h2 class="modal__title_añadir">Agregar App Peligrosa</h2>
+        <form @submit.prevent="agregarAppPeligrosa" class="modal-form">
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Nombre de la Aplicación:</label>
+                <input v-model="nombreApp" type="text" class="input_añadir" placeholder="" required>
+            </div>
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Link de la Aplicación:</label>
+                <input v-model="LinkApp" type="text" class="input_añadir" placeholder="" required>
+            </div>
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Nivel de Peligro:</label>
+                <select v-model="nivelPeligro" id="nivelPeligro" class="input_añadir" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="alta">Alta</option>
+                </select>
+            </div>
+            <div class="button-container">
+                <a href="#" @click.prevent="peligrosidadAplicaciones" class="modal_close_añadir">Añadir</a>
+            </div>
+        </form>
+    </div>
 </template>
-
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
+import { onMounted, ref } from 'vue';
+import Swal from 'sweetalert2';
+import { time } from 'xpress/lib/string';
+
 export default {
     setup() {
         const route = useRoute();
         const idRuta = route.params.id;
-        return {
-            idRuta
+        const router = useRouter();
+        let nombreSesion = ref('');
+        let isCancelada = ref(false);
+        const obtenerDatosSesion = async () => {
+            try {
+                const respuesta = await fetch('http://localhost:8080/sessions/' + idRuta);
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    nombreSesion.value = datos.nombre;
+                    isCancelada.value = datos.cancelada;
+                } else {
+                    console.error('Error al obtener los datos:', respuesta.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error);
+            }
+        };
+        const cancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/cancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    console.log("marcado como cancelado")
+                }
+                else {
+                    console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
         }
-    },
+        onMounted(obtenerDatosSesion)
+        return {
+            idRuta,
+            nombreSesion,
+            cancelarSesion,
+            isCancelada,
+            router
 
+        };
+    },
     data() {
 
         return {
             alumnos: [],
+            alumnosBaneados: [],
             session: {},
             totalDangerousApps: 0,
             lastActivity: '',
@@ -154,19 +241,20 @@ export default {
             users: [],
             asignaturas: [],
             searchQuery: '',
+            isModalVisible: false,
+            nombreApp: '',
+            LinkApp: '',
+            nivelPeligro: '',
+            appPeligrosas: [],
         };
     },
 
-    /*  mounted() {
-         if (this.$store.state.usuario.role == "alumno") {
-             this.$router.push('/')
-         }
-     }, */
-
     created() {
+        this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
     },
+
     name: 'ProfesorPage',
     components: {
         BotonNotificar,
@@ -185,7 +273,61 @@ export default {
                 console.error('Error fetching session data:', error);
             }
         },*/
+        redirigirCrearEvaluacion() {
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
+
+        peligrosidadAplicaciones() {
+            if (this.nombreApp && this.LinkApp) {
+
+                const aplicacionAgregada = {
+                    nombreApp: this.nombreApp,
+                    LinkApp: this.LinkApp,
+                    nivelPeligro: this.nivelPeligro,
+                };
+                // Agregar a la lista de aplicaciones peligrosas
+                this.appPeligrosas.push(aplicacionAgregada);
+
+                // Limpiar campos
+                this.nombreApp = '';
+                this.LinkApp = '';
+                this.nivelPeligro = '';
+            } else {
+                alert('Por favor, complete ambos campos.');
+            }
+            console.log('Array apps:', this.appPeligrosas);
+        },
+
         assignAppsToStudents(students) {
+            const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
+            const warningApps = ['Slack', 'Skype', 'Zoom', "EpicGames", "Word", "Excel", "PowerPoint", "Paint", "Illustrator", "Photoshop", "Premiere", "Acrobat", "Ink"];
+            const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome', "PSeInt", "Spyder", "Eclipse", "NetBeans", "IntelliJ", "PyCharm", "VisualStudio", "CodeBlocks", "DevC++", "SublimeText", "Atom", "Notepad++", "Vim", "Emacs", "Nano", "Gedit", "pgAdmin", "GitBash"];
+            const statuses = ['Peligro', 'Advertencia', 'Normal'];
+            let statusIndex = 0;
+
+            return students.map((student) => {
+                const apps = [];
+                const status = statuses[statusIndex];
+
+                const appList = status === 'Peligro' ? dangerApps : (status === 'Advertencia' ? warningApps : normalApps);
+                const randomApps = this.shuffleArray(appList);
+
+                const numberOfApps = Math.floor(Math.random() * 2) + 2;
+                for (let i = 0; i < numberOfApps; i++) {
+                    apps.push({ name: randomApps[i], status });
+                }
+
+                statusIndex = (statusIndex + 1) % statuses.length;
+
+                return {
+                    ...student,
+                    apps,
+                    status,
+                };
+            });
+        },
+
+        /*assignAppsToStudents(students) {
             const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
             const warningApps = ['Slack', 'Zoom', 'Skype'];
             const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome'];
@@ -214,7 +356,7 @@ export default {
                     status,
                 };
             });
-        },
+        },*/
         shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -356,11 +498,15 @@ export default {
         async banExpStudent(student, accion) {
             if (student.status === 'Peligro' || student.status === 'Advertencia') {
                 try {
-                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    if (!accion) {
+                        this.alumnos = this.alumnos.filter(al => al !== student)
+                    }
                     const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
-                    if (!response.ok) {
-                        throw new Error('Error al actualizar la lista de participantes')
+                    if (response.status === 200) {
+                        await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                    } else {
+                        throw new Error('Error al actualizar la lista de participantes');
                     }
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -373,9 +519,27 @@ export default {
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
         },
-        viewProcesses(student) {
-            this.selectedStudent = student;
-            this.showModal = true;
+        async viewProcesses(userId) {
+            console.log("ID de la sesión: " + this.sessionId);
+            const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
+
+            if (!selectedStudent) {
+                alert('Estudiante no encontrado');
+                return;
+            }
+
+            try {
+                const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                this.selectedStudent = {
+                    ...selectedStudent,
+                    apps: response.data
+                };
+                console.log("procesos: " + response.data);
+                this.showModal = true;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                alert('Error al obtener los procesos del estudiante');
+            }
         },
         createSession() {
             console.log(this.idRuta);
@@ -408,6 +572,7 @@ export default {
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
+
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -432,11 +597,41 @@ export default {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
                 });
-                location.reload();
+                Swal.fire({
+                    title: 'Alumnos agregados correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+                this.fetchUsers();
                 console.log(response.data);
 
             } catch (error) {
                 console.error(error);
+            }
+        },
+        async alumnosbaneados() {
+            try {
+                const response = await axios.get('http://localhost:8080/bannedusers/' + this.sessionId);
+
+                this.alumnosBaneados = response.data
+                console.log(this.alumnosBaneados)
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+        async unbanStudent(student) {
+            try {
+                const response = await axios.post('http://localhost:8080/desbanear/' + this.sessionId, { email: student.email });
+
+                if (response.status === 200) {
+                    await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                } else {
+                    throw new Error('Error al actualizar la lista de participantes');
+                }
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
             }
         },
         async AsignaturaMembers(asignaturaId) {
@@ -449,6 +644,7 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
+
                 return memberIdsAsString;
 
             } catch (error) {
@@ -697,7 +893,14 @@ export default {
     max-width: 1200px;
 }
 
+.dashboard {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+}
+
 .dashboard button {
+    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -947,6 +1150,19 @@ th {
     background-color: var(--button-hover-background-color);
 }
 
+.row-red {
+    background-color: #E52B50;
+}
+
+.ban-text {
+    color: white;
+}
+
+.desban {
+    margin-left: 7vw;
+    background-color: #008000;
+}
+
 @media (max-width: 1200px) {
     .profesorPage {
         width: 90%;
@@ -1022,5 +1238,36 @@ th {
         padding: 8px 16px;
         font-size: 0.9rem;
     }
+
+}
+
+.containerTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.claseNumeroSesion {
+    font-size: medium;
+    color: gray;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-container_añadir {
+    margin-bottom: 10px;
+    /* Ajusta el espacio entre los elementos si es necesario */
+}
+
+.button-container {
+    margin-top: 20px;
+    /* Espacio entre los campos y los botones */
+    display: flex;
+    justify-content: center;
 }
 </style>

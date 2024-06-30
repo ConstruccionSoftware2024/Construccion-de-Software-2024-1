@@ -1,0 +1,44 @@
+## Clasificación de Aplicaciones para Estudiar:
+
+**Bueno:**
+
+* **brave:** Navegador web. Es una herramienta esencial para la investigación, acceso a información y aprendizaje online. 
+* **Discord:** Plataforma de comunicación online. Útil para colaborar en proyectos, grupos de estudio y comunicación con compañeros.
+* **MongoDBCompass:** Herramienta de gestión de bases de datos NoSQL. Ideal para el estudio de bases de datos y desarrollo de aplicaciones.
+* **Code:** Editor de código de Visual Studio Code. Permite desarrollar y editar código en diferentes lenguajes de programación, útil para proyectos de programación y aprendizaje de tecnologías.
+* **gitkraken:** Herramienta gráfica para Git. Permite realizar un seguimiento del código, realizar versiones y colaborar en proyectos, ideal para el desarrollo de software y trabajo en equipo.
+* **SpotifyWidgetProvider:** Reproductor de música. Es útil para concentrarse, relajarse y ambientar el ambiente de estudio.
+* **Microsoft.SharePoint:** Servicio de colaboración de Microsoft. Facilita el trabajo en equipo y acceso a archivos en la nube.
+
+**Intermedio:**
+
+* **pg_ctl:**  Herramienta de gestión de PostgreSQL. Útil para el estudio de bases de datos relacionales.
+* **postgres:** Base de datos relacional. Permite almacenar y gestionar datos estructurados.
+* **node-spawn-server:** Servidor de Node.js. Útil para desarrollo de aplicaciones web y aprendizaje de JavaScript. 
+* **node:** Entorno de ejecución para JavaScript. Permite desarrollar aplicaciones y aprender JavaScript.
+* **esbuild:** Herramienta de empaquetado de código JavaScript. Útil para optimizar el rendimiento de las aplicaciones web.
+* **powershell:** Shell de comandos de Microsoft. Permite ejecutar comandos y scripts para automatizar tareas, útil para administradores de sistemas y desarrollo.
+* **cmd:** Consola de comandos de Windows. Permite ejecutar comandos y scripts para administrar el sistema.
+* **mspaint:** Editor de imágenes sencillo. Permite editar imágenes de forma básica.
+* **tasklist:** Muestra la lista de procesos activos en el sistema. Útil para analizar el uso de recursos y solucionar problemas.
+* **GameInputSvc:** Servicio de entrada de juegos. No tiene una utilidad directa para el estudio.
+
+**Malo:**
+
+* **AutoModeDetect:** Detectar la configuración de red. No es relevante para el estudio. 
+* **ipf_helper:**  Componente de Intel. No es relevante para el estudio.
+* **sihost:** Componente del sistema operativo. No es relevante para el estudio. 
+* **taskhostw:** Ejecutar tareas y aplicaciones. No es relevante para el estudio.
+* **LenovoNow.Task:** Programa de Lenovo. No es relevante para el estudio.
+* **WsToastNotification:** Notificaciones del sistema. No es relevante para el estudio.
+* **Discord.exe:** Comunicación en línea. Si bien es útil para la colaboración, puede ser una distracción durante el estudio.
+* **UserOOBEBroker.exe:**  Experiencia de usuario. No es relevante para el estudio.
+* **Video.UI.exe:**  Aplicación para videos. No es relevante para el estudio.
+* **DataExchangeHost.exe:** Componente del sistema operativo. No es relevante para el estudio.
+* **EABackgroundService.exe:** Servicio de fondo. No es relevante para el estudio.
+* **audiodg.exe:** Servicio de audio. No es relevante para el estudio.
+* **WmiPrvSE.exe:**  Servicio de administración de Windows. No es relevante para el estudio.
+
+**Nota:**
+
+La clasificación se basa en la función principal de las aplicaciones y su posible impacto en el proceso de estudio. Algunas aplicaciones pueden ser útiles en determinados casos, pero en general, su impacto en la productividad del estudio es mínimo o incluso negativo. 
