@@ -76,25 +76,28 @@
             </table>
         </div>
         <div v-if="showModal" class="modal" @click.self="closeModal">
-            <div class="modal-content">
-                <span class="close" @click="closeModal">&times;</span>
-                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
-                    selectedStudent.secondLastName }}</h2>
-                <h3>Últimas URLs</h3>
-                <ul>
-                    <li v-for="url in selectedStudent.latestUrls" :key="url">
-                        <a :href="url" target="_blank">{{ url }}</a>
-                    </li>
-                </ul>
-                <h3>Procesos</h3>
-                <ul>
-                    <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
-                    </li>
-                </ul>
-                <button class="closeButton" @click="closeModal">Cerrar</button>
-            </div>
+    <div class="modal-content">
+        <span class="close" @click="closeModal">&times;</span>
+        <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{ selectedStudent.secondLastName }}</h2>
+        <h3>Últimas URLs</h3>
+        <div class="scrollable-content">
+            <ul>
+                <li v-for="url in selectedStudent.latestUrls" :key="url">
+                    <a :href="url" target="_blank">{{ url }}</a>
+                </li>
+            </ul>
         </div>
+        <h3>Ultimos Procesos</h3>
+        <div class="scrollable-content">
+            <ul>
+                <li v-for="app in selectedStudent.apps" :key="app.name">
+                    <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
+                </li>
+            </ul>
+        </div>
+        <button class="closeButton" @click="closeModal">Cerrar</button>
+    </div>
+</div>
 
     </div>
     <div>
@@ -1222,4 +1225,108 @@ th {
     font-size: medium;
     color: gray;
 }
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 15px; 
+    width: 80%;
+    max-height: 80%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: black;
+}
+
+.scrollable-content {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 10px;
+    border: 3px solid black;
+    border-radius: 15px;
+    background-color: white;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: -10px;
+
+}
+
+li {
+    margin: 5px 0;
+    padding-right: 0px;
+    border-bottom: 1px solid black; 
+}
+
+.closeButton {
+    display: block;
+    margin: 20px auto 0 auto;
+    padding: 10px 20px;
+    background: #06bfbf;
+    color: black;
+    border: none;
+    border-radius: 200px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+.closeButton:hover {
+    transform: scale(1.1);
+}
+
+.closeButton:focus {
+    outline: none;
+}
+
+.scrollable-content::-webkit-scrollbar {
+    width: 12px; 
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+    background: black;
+    border-radius: 15px; 
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+    background: #06bfbf;
+    border-radius: 15px;
+    border: 3px solid black; 
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: #3ecece; 
+}
+
+.scrollable-content a {
+    color: #3399ff; 
+    text-decoration: none;
+}
+
+.scrollable-content a:hover {
+    text-decoration: underline;
+}
+
+
 </style>
