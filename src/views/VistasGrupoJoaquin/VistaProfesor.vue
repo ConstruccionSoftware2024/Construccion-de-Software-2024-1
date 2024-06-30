@@ -76,28 +76,29 @@
             </table>
         </div>
         <div v-if="showModal" class="modal" @click.self="closeModal">
-    <div class="modal-content">
-        <span class="close" @click="closeModal">&times;</span>
-        <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{ selectedStudent.secondLastName }}</h2>
-        <h3>Últimas URLs</h3>
-        <div class="scrollable-content">
-            <ul>
-                <li v-for="url in selectedStudent.latestUrls" :key="url">
-                    <a :href="url" target="_blank">{{ url }}</a>
-                </li>
-            </ul>
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                    selectedStudent.secondLastName }}</h2>
+                <h3>Últimas URLs</h3>
+                <div class="scrollable-content">
+                    <ul>
+                        <li v-for="url in selectedStudent.latestUrls" :key="url">
+                            <a :href="url" target="_blank">{{ url }}</a>
+                        </li>
+                    </ul>
+                </div>
+                <h3>Ultimos Procesos</h3>
+                <div class="scrollable-content">
+                    <ul>
+                        <li v-for="app in selectedStudent.apps" :key="app.name">
+                            <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
+                        </li>
+                    </ul>
+                </div>
+                <button class="closeButton" @click="closeModal">Cerrar</button>
+            </div>
         </div>
-        <h3>Ultimos Procesos</h3>
-        <div class="scrollable-content">
-            <ul>
-                <li v-for="app in selectedStudent.apps" :key="app.name">
-                    <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
-                </li>
-            </ul>
-        </div>
-        <button class="closeButton" @click="closeModal">Cerrar</button>
-    </div>
-</div>
 
     </div>
     <div>
@@ -488,24 +489,37 @@ export default {
             }
 
             try {
-                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
-                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
-                const lastEntry = urlsResponse.data;
-                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
+                let latestUrls = [];
+                let apps = [];
 
-                // Hacer una solicitud para obtener los procesos para este userId
-                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
-                const apps = processesResponse.data;
+                // Intentar obtener las URLs
+                try {
+                    const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                    const lastEntry = urlsResponse.data;
+                    latestUrls = lastEntry.urls ? lastEntry.urls.split(',') : [];
+                } catch (error) {
+                    this.latestUrls = ['No se encontraron URLs para este estudiante'];
+                    console.log('No se encontraron URLs para este estudiante');
+                }
+
+                // Intentar obtener los procesos
+                try {
+                    const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                    apps = processesResponse.data;
+                } catch (error) {
+                    console.log('No se encontraron procesos para este estudiante');
+                }
 
                 this.selectedStudent = {
                     ...selectedStudent,
-                    latestUrls, // Asignar el array de URLs
-                    apps // Asignar los procesos
+                    latestUrls,
+                    apps
                 };
 
-                console.log("Última URLs: ", latestUrls);
+                console.log("Últimas URLs: ", latestUrls);
                 console.log("Procesos: ", apps);
 
+                // Siempre mostrar el modal, incluso si no hay datos
                 this.showModal = true;
             } catch (error) {
                 console.error('Error al obtener datos del estudiante:', error);
@@ -1225,6 +1239,7 @@ th {
     font-size: medium;
     color: gray;
 }
+
 .modal {
     display: flex;
     justify-content: center;
@@ -1241,7 +1256,7 @@ th {
 .modal-content {
     background: white;
     padding: 20px;
-    border-radius: 15px; 
+    border-radius: 15px;
     width: 80%;
     max-height: 80%;
     overflow-y: auto;
@@ -1277,7 +1292,7 @@ ul {
 li {
     margin: 5px 0;
     padding-right: 0px;
-    border-bottom: 1px solid black; 
+    border-bottom: 1px solid black;
 }
 
 .closeButton {
@@ -1301,32 +1316,30 @@ li {
 }
 
 .scrollable-content::-webkit-scrollbar {
-    width: 12px; 
+    width: 12px;
 }
 
 .scrollable-content::-webkit-scrollbar-track {
     background: black;
-    border-radius: 15px; 
+    border-radius: 15px;
 }
 
 .scrollable-content::-webkit-scrollbar-thumb {
     background: #06bfbf;
     border-radius: 15px;
-    border: 3px solid black; 
+    border: 3px solid black;
 }
 
 .scrollable-content::-webkit-scrollbar-thumb:hover {
-    background: #3ecece; 
+    background: #3ecece;
 }
 
 .scrollable-content a {
-    color: #3399ff; 
+    color: #3399ff;
     text-decoration: none;
 }
 
 .scrollable-content a:hover {
     text-decoration: underline;
 }
-
-
 </style>
