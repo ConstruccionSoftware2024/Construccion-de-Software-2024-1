@@ -354,10 +354,21 @@ export default {
         async obtainAllProcesses() {
             let matrixProcesses = [];
             let processesMax = 0;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             try {
                 for (const alumno of this.alumnos) {
                     const response = await axios.get(`http://localhost:8080/obtenerProcesos/${alumno._id}`);
-                    matrixProcesses.push(response.data);
+                    const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                    const result = await model.generateContent(prompt);
+                    const response2 = result.response;
+                    const text = response2.text();
+
+                    // Convertir la lista separada por comas a un arreglo
+                    const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                    // Combinar nombres únicos
+                    const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+                    matrixProcesses.push(uniqueProcessNamesWithCategories);
                     if (response.data.length > processesMax) {
                         processesMax = response.data.length;
                     }
@@ -378,9 +389,7 @@ export default {
                 for (let process in processCount) {
                     resultMatrix.push({ proceso: process, repeticiones: processCount[process] });
                 }
-                console.log(resultMatrix.length);
                 return resultMatrix;
-
             } catch (error) {
                 console.error('Error al obtener los procesos del estudiante:', error);
                 return [];
@@ -421,17 +430,6 @@ export default {
                     onClick: this.handleChartClick,
                 },
             });
-
-            const appUsage = this.alumnos.reduce((acc, student) => {
-                student.apps.forEach(app => {
-                    if (acc[app.name]) {
-                        acc[app.name]++;
-                    } else {
-                        acc[app.name] = 1;
-                    }
-                });
-                return acc;
-            }, {});
 
             const resultMatrix = await this.obtainAllProcesses();
             const appLabels = resultMatrix.map(item => item.proceso);
@@ -539,6 +537,8 @@ export default {
                 };
                 console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
                 this.showModal = true;
+
+                return uniqueProcessNamesWithCategories;
             } catch (error) {
                 console.error('Error al obtener los procesos del estudiante:', error);
                 alert('Error al obtener los procesos del estudiante');
