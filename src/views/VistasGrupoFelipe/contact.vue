@@ -1,50 +1,56 @@
 <template>
 
     <body>
-        <div class="ffbox">
-            <div class="ffbox1">
-                <h1 class="gfg">Contactanos</h1>
-                <form @submit.prevent="sendEmail">
-                    <label for="fullName">
-                        <i class="fa fa-solid fa-user" style="margin: 2px;">
-                        </i> Nombre completo:
-                    </label>
-                    <input type="text" id="fullName" name="fullName" required>
 
-                    <label for="email">
-                        <i class="fa fa-solid fa-envelope" style="margin: 2px;">
-                        </i>
-                        Correo electrónico:
+        <div class="header">
+            <div class="overlay"></div>
+            <div class="ffbox">
+                <div class="ffbox1">
 
-                    </label>
-                    <input type="email" id="email" name="email" required>
+                    <h1 class="gfg">Contactanos</h1>
 
-                    <label for="mobile">
-                        <i class=" fa fa-solid fa-phone" style="margin: 2px;">
-                        </i>
-                        Número de teléfono:
-                    </label>
-                    <input type="tel" id="mobile" name="mobile" required>
+                    <form @submit.prevent="sendEmail">
+                        <label for="fullName">
+                            <i class="fa fa-solid fa-user" style="margin: 2px;">
+                            </i> Nombre completo
+                        </label>
+                        <input type="text" id="fullName" name="fullName" required>
 
-                    <label for="msg">
-                        <i class=" fa fa-solid fa-comment" style="margin: 2px;">
-                        </i>
-                        Tu mensaje:
-                    </label>
-                    <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
+                        <label for="email">
+                            <i class="fa fa-solid fa-envelope" style="margin: 2px;">
+                            </i>
+                            Correo electrónico
+
+                        </label>
+                        <input type="email" id="email" name="email" required>
+
+                        <label for="mobile">
+                            <i class=" fa fa-solid fa-phone" style="margin: 2px;">
+                            </i>
+                            Número de teléfono
+                        </label>
+                        <input type="tel" id="mobile" name="mobile" required>
+
+                        <label for="msg">
+                            <i class=" fa fa-solid fa-comment" style="margin: 2px;">
+                            </i>
+                            Tu mensaje
+                        </label>
+                        <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
 
 
-                    <button type="submit">
-                        Enviar
-                    </button>
-                </form>
-            </div>
-            <div class="map-div">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3268.167287242063!2d-71.2319813242423!3d-35.002517272813975!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x966456519058edeb%3A0x47f5033883ff4b74!2sUniversidad%20de%20Talca%20Campus%20Curic%C3%B3!5e0!3m2!1ses-419!2scl!4v1718059102020!5m2!1ses-419!2scl"
-                    width="370" height="95%" allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
+                        <button type="submit">
+                            Enviar
+                        </button>
+                    </form>
+                </div>
+                <div class="map-div">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3268.167287242063!2d-71.2319813242423!3d-35.002517272813975!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x966456519058edeb%3A0x47f5033883ff4b74!2sUniversidad%20de%20Talca%20Campus%20Curic%C3%B3!5e0!3m2!1ses-419!2scl!4v1718059102020!5m2!1ses-419!2scl"
+                        width="370" height="95%" allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
             </div>
         </div>
     </body>
@@ -75,14 +81,35 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
 body {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    padding: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
+    background-color: var(--background-color);
 }
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.header {
+    position: relative;
+    width: 100%;
+    height: 95vh;
+    background-image: url('@/assets/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
 
 .ffbox {
     display: flex;
@@ -95,6 +122,7 @@ body {
     border-radius: 10px;
     flex-wrap: wrap;
     color: white;
+    z-index: 2;
 }
 
 .ffbox1 {

@@ -1,34 +1,40 @@
 <template>
 
     <body>
-        <div class="ffbox">
-            <div class="ffbox1">
-                <h1 class="gfg">Contacto Alumno, Profesor: {{ userStore.user.firstName }} {{ userStore.user.lastName }}
-                </h1>
-                <form @submit.prevent="sendEmail">
+        <div class="header">
+            <div class="overlay"></div>
+            <div class="ffbox">
+                <div class="ffbox1">
+                    <h1 class="gfg">Contacto Alumno, Profesor {{ userStore.user.firstName }} {{ userStore.user.lastName
+                        }}
+                    </h1>
+                    <form @submit.prevent="sendEmail">
 
-                    <label for="student">
-                        <i class="fa fa-solid fa-user" style="margin: 2px;">
-                        </i>
-                        Alumno:
-                    </label>
-                    <select id="student" v-model="selectedStudent" @change="updateEmail">
-                        <option v-for="student in students" :value="student.email">
-                            {{ student.firstName }} {{ student.lastName }} - {{ student.email }}
-                        </option>
-                    </select>
+                        <label for="student">
+                            <i class="fa fa-solid fa-user" style="margin: 2px;">
+                            </i>
+                            Alumno
+                        </label>
+                        <select id="student" v-model="selectedStudent" @change="updateEmail">
 
-                    <label for="msg">
-                        <i class=" fa fa-solid fa-comment" style="margin: 2px;">
-                        </i>
-                        Tu mensaje:
-                    </label>
-                    <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
+                            <option value="" disabled>Selecciona un alumno</option>
+                            <option v-for="student in students" :value="student.email">
+                                {{ student.firstName }} {{ student.lastName }} - {{ student.email }}
+                            </option>
+                        </select>
 
-                    <button type="submit">
-                        Enviar
-                    </button>
-                </form>
+                        <label for="msg">
+                            <i class=" fa fa-solid fa-comment" style="margin: 2px;">
+                            </i>
+                            Tu mensaje
+                        </label>
+                        <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
+
+                        <button type="submit">
+                            Enviar
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </body>
@@ -88,13 +94,32 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
 body {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    padding: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
+    background-color: var(--background-color);
+}
+
+.header {
+    position: relative;
+    width: 100%;
+    height: 95vh;
+    background-image: url('@/assets/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
     justify-content: center;
-    min-height: 100vh;
+    align-items: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
 }
 
 .ffbox {
@@ -108,6 +133,7 @@ body {
     border-radius: 10px;
     flex-wrap: wrap;
     color: white;
+    z-index: 2;
 }
 
 .ffbox1 {
