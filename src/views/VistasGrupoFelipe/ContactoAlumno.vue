@@ -3,7 +3,8 @@
     <body>
         <div class="ffbox">
             <div class="ffbox1">
-                <h1 class="gfg">Contacto Alumno</h1>
+                <h1 class="gfg">Contacto Alumno, Profesor: {{ userStore.user.firstName }} {{ userStore.user.lastName }}
+                </h1>
                 <form @submit.prevent="sendEmail">
 
                     <label for="student">
@@ -13,7 +14,7 @@
                     </label>
                     <select id="student" v-model="selectedStudent" @change="updateEmail">
                         <option v-for="student in students" :value="student.email">
-                            {{ student.username }}
+                            {{ student.firstName }} {{ student.lastName }} - {{ student.email }}
                         </option>
                     </select>
 
@@ -35,12 +36,20 @@
 
 <script>
 import axios from 'axios';
+import { useUserStore } from '../../../back-end/src/store.js'
 export default {
+    setup() {
+        const userStore = useUserStore();
+        return { userStore }
+    },
     data() {
         return {
             students: [],
             selectedStudent: '',
-            email: ''
+            email: '',
+            alumno: '',
+            nombreProfesor: useUserStore().user.firstName + ' ' + useUserStore().user.lastName,
+            correoProfesor: useUserStore().user.email
         };
     },
     async created() {
@@ -53,11 +62,16 @@ export default {
     },
     methods: {
         updateEmail() {
-            this.email = this.selectedStudent;
+            const student = this.students.find(s => s.email === this.selectedStudent);
+
+            if (student) {
+                this.email = student.email;
+                this.alumno = student.firstName + ' ' + student.lastName;
+            }
         },
         async sendEmail(event) {
-            const data = { email: this.email, msg: event.target.msg.value };
-            console.log(data); // Imprime los datos que se enviarán
+            const data = { alumno: this.alumno, email: this.email, msg: event.target.msg.value, profesor: this.nombreProfesor, correoProfesor: this.correoProfesor };
+            console.log(data);
             try {
                 await axios.post('http://localhost:8080/email-alumno', data);
                 alert('Correo electrónico enviado correctamente');

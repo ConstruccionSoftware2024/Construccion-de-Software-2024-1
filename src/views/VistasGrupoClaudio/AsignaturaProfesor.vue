@@ -57,7 +57,8 @@
                     <div class="input-group">
                         <input required placeholder="Nombre de la sesión" type="text" id="nombre"
                             v-model="nuevaSesion.nombre">
-                        <textarea required placeholder="Descripción de la sesión" v-model="nuevaSesion.descripcion"></textarea>
+                        <textarea required placeholder="Descripción de la sesión"
+                            v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
                         </div>
@@ -134,7 +135,7 @@ export default {
             router.push(`/faltaAlumnos/${asignaturaId}`);
         };
         const goToListaAlumnos = () => {
-            router.push('/lista-alumnos');
+            router.push('/contactoAlumno');
         };
         const goToContact = () => {
             router.push('/contact');
@@ -216,7 +217,7 @@ export default {
         },
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
-                console.log(this.nuevaSesion.nombre+" "+this.nuevaSesion.descripcion);
+                console.log(this.nuevaSesion.nombre + " " + this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }
@@ -244,13 +245,13 @@ export default {
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
 
                     console.log('Sesión creada con ID:', sessionId);
-                    
+
                     this.fetchProjects();
                     this.mostrarPopup = false;
                     Swal.fire({
-                    title: 'Sesion creada correctamente',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar'
+                        title: 'Sesion creada correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
                     });
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)

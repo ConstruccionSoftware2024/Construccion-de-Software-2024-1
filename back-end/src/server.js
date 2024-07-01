@@ -185,7 +185,7 @@ app.post('/addFaltas/:id', async (req, res) => {
 
     const result = await collection.updateOne(
       { _id: id },
-      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 } }, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
       { upsert: true }
     );
 
@@ -211,7 +211,7 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
-app.post ('/pregunta', async (req, res) => {
+app.post('/pregunta', async (req, res) => {
   try {
     const database = client.db('construccion')
     const collection = database.collection('asignaturas')
@@ -846,15 +846,15 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
 
     if (!asignatura) {
       return res.send([]);
-    }else{
+    } else {
       const miembros = asignatura.members;
       res.send(miembros);
     }
 
-    
+
 
     //console.log("Miembros encontrados:", miembros);
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error interno del servidor' });
@@ -1295,7 +1295,7 @@ app.post('/send-email', async (req, res) => {
 
 // Enviar email (página contacto alumno)
 app.post('/email-alumno', async (req, res) => {
-  let { fullName, email, msg } = req.body;
+  let { profesor, email, msg, correoProfesor, alumno } = req.body;
 
   let transporter = nodemailer.createTransport({
     service: 'outlook',
@@ -1308,8 +1308,8 @@ app.post('/email-alumno', async (req, res) => {
   let mailOptions = {
     from: 'pruebas.construccion2024@outlook.com',
     to: email,
-    subject: `Mensaje de profesor ${fullName}`,
-    text: `Profesor: ${fullName}\nMensaje enviado a: ${email}\nMensaje: ${msg}`
+    subject: `[Cheat Detector] Mensaje de profesor ${profesor}`,
+    text: `Mensaje enviado a: ${email}\nEstimado ${alumno}:\n${msg}\nAtentamente, profesor ${profesor}\n ${correoProfesor}\n`
   };
 
   try {
