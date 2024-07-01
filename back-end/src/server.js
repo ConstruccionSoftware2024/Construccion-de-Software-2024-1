@@ -1501,3 +1501,16 @@ app.put('/cancelarSesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.post('/publicarProblema', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const problemas = database.collection('problemas')
+    const problema = { descripcion: req.body.descripcion, usuarioId: req.body.idUsuario }
+    const result = await problemas.insertOne(problema)
+    res.send(result)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send(error.message)
+  }
+})

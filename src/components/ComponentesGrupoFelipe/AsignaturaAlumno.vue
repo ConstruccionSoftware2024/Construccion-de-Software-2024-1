@@ -125,8 +125,18 @@
             <div class="acciones">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h3>
                 <button @click="contactarProfesor">Contactar al Profesor</button>
-                <button>Reportar un Problema</button>
+                <button @click="mostrarReportar = true">Reportar un Problema</button>
             </div>
+
+            <div class="modal" v-if="mostrarReportar">
+                <div class="modal-content">
+                    <span class="close" @click="mostrarReportar = false">&times;</span>
+                    <h3>Reportar un problema</h3>
+                    <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
+                    <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
+                </div>
+            </div>
+
             <div v-if="showAviso" class="aviso">
                 Correo del profesor copiado al portapapeles!
             </div>
@@ -157,6 +167,7 @@ const rolUsuario = userStore.user.role;
 const idUsuario = userStore.user._id;
 
 const mostrarDetallesFaltas = ref(false);
+const mostrarReportar = ref(false);
 
 const faltaAlumnos = ref([]);
 
@@ -194,7 +205,9 @@ const toggleDetallesFaltas = () => {
             icon: 'error',
             title: 'Oops...',
             text: 'No hay faltas registradas',
-            timer: 1200
+            timer: 1200,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#08cccc'
         });
     }
 };
@@ -213,6 +226,11 @@ const asignatura = ref({
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
+});
+
+const problemas = ref({
+    descripcion: '',
+    idUsuario: idUsuario
 });
 
 const sesiones = ref([]);
@@ -240,6 +258,37 @@ function recuperarSesiones(id) {
         });
 }
 
+
+async function enviarProblema() {
+
+    console.log('problemas:', problemas);
+
+    const problemaParaEnviar = {
+        descripcion: problemas.value.descripcion,
+        idUsuario: idUsuario // Asegúrate de que idUsuario esté definido
+    };
+
+    try {
+        // Envía el objeto problema a /publicarProblema
+        const respuesta = await axios.post('http://localhost:8080/publicarProblema', problemaParaEnviar);
+
+        if (respuesta.status === 200) {
+            // Resetea la descripción del problema y oculta el formulario de reporte
+            problemas.value.descripcion = '';
+            mostrarReportar.value = false;
+            Swal.fire({
+                title: 'Problema reportado correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#08cccc'
+            });
+        } else {
+            console.error('Error al enviar los datos:', respuesta.statusText)
+        }
+    } catch (error) {
+        console.error('Error en la petición fetch:', error)
+    }
+}
 
 async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
@@ -631,6 +680,62 @@ a {
     margin-right: 5px;
 }
 
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.close:hover {
+    color: var(--button-background-color);
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--container-background-color);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+
+.modal-content h3 {
+    margin-bottom: 1rem;
+}
+
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--input-background-color);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
+}
+
 input[type="text"] {
     font-size: 16px;
     border-radius: 5px;
@@ -814,8 +919,6 @@ input[type="text"] {
     font-size: 8px;
     margin: 0;
 }
-
-
 @media screen and (max-width: 768px) {
     .container {
         flex-direction: column;
