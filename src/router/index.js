@@ -21,7 +21,10 @@ import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
 import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
 import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
 import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import VistaAlumno1 from '../views/VistasGrupoJoaquin/VistaAlumno1.vue'
 import { useThemeStore, useUserStore } from '/back-end/src/store.js';
+import Mensajes from '../views/VistasGrupoClaudio/Mensajes.vue'
+import Configuracion from '@/views/VistasGrupoClaudio/Configuracion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -133,6 +136,11 @@ const router = createRouter({
       component: VistaAlumno
     },
     {
+      path: '/vistaalumno1',
+      name: 'vista-alumno1',
+      component: VistaAlumno1
+    },
+    {
       path: '/perfil',
       name: 'perfil',
       component: ProfileView
@@ -188,6 +196,16 @@ const router = createRouter({
       name: 'VerForo',
       component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
     },
+    {
+      path: '/mensajes',
+      name: 'mensajes',
+      component: Mensajes
+    },
+    {
+      path: '/configuracion',
+      name: 'configuracion',
+      component: Configuracion
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     return { top: 0 }
@@ -205,7 +223,5 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
-
-
 
 export default router;

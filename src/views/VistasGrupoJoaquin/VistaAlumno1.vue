@@ -1,50 +1,31 @@
 <template>
     <div class="alumno-page">
         <main>
-            <h1>Sesion id: {{ sessionId }}</h1>
+            <div class="session-info box-shadow">
+                <h2>Sesion id: <input v-model="sessionId" /></h2>
+                <button @click="createSession">Unirse a Sesión</button>
+            </div>
             <div class="danger-level box-shadow" :style="{ backgroundColor: dangerColor }">
-                    <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
-                    <p>{{ dangerMessage }}</p>
-                </div>
-
-            <div class="mainContainer">
-                    <div class="chartContainer box-shadow">
-                        <canvas id="statusChart"></canvas>
-                    </div>
-                    <div class="chartDataContainer box-shadow">
-                        <h3>Datos del Gráfico</h3>
-                        <p>Aplicaciones totales: {{ totalApps }}</p>
-                        <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
-                        <p>Última Actividad: {{ lastActivity }}</p>
-                        <canvas id="appsChart"></canvas>
-                    </div>
+                <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
+                <p>{{ dangerMessage }}</p>
             </div>
-
-            <div class="evaluations box-shadow">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Evaluaciones</h3>
-                <div class="listaEvaluaciones">
-                    <div class="sesionesItem" v-for="eva in evaluations" :key="eva.id">
-                        <div v-if="new Date() <= new Date(eva.fechaCierre)">
-                            <router-link :to="'/vistaEvaluacion/'+eva._id" class="navLink">
-                                <span class="session-title">{{ eva.nombre }}</span><br>
-                                <span class="session-dates">({{ formatFecha(eva.fechaApertura) }} - {{ formatFecha(eva.fechaCierre) }})</span>
-                            </router-link>
-                        </div>
-                        <div v-else class="navLink_disabled">
-                            <span class="session-title">{{ eva.nombre }}</span><br>
-                            <span class="session-dates">({{ formatFecha(eva.fechaApertura) }} - {{ formatFecha(eva.fechaCierre) }})</span>
-                        </div>
-                    </div>
+            <div class="charts">
+                <div class="chart-container box-shadow">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-info box-shadow">
+                    <h3>Datos del Gráfico</h3>
+                    <p>Aplicaciones totales: {{ totalApps }}</p>
+                    <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
+                    <p>Última Actividad: {{ lastActivity }}</p>
+                    <canvas id="appsChart"></canvas>
                 </div>
             </div>
-
             <div class="history box-shadow">
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-            <button @click="guardarHistorial">Guardar procesos</button>
-
-
+                <!--<button @click="guardarHistorial">Guardar procesos</button> LA FUNCIÓN EN EL SERVER.JS DE ESTA FUNCION ESTÁ MAL IMPLEMENTADA REVISAR-->
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
@@ -62,37 +43,36 @@
                     </tbody>
                 </table>
             </div>
+            <div class="response-data box-shadow">
+                <h3>Datos de Respuesta</h3>
+                <pre v-if="responseData">{{ responseData }}</pre>
+                <p v-else>Cargando datos...</p>
+            </div>
         </main>
     </div>
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import axios from 'axios';
 import Chart from 'chart.js/auto';
 import { useUserStore } from '../../../back-end/src/store.js';
-import axios from 'axios';
-import { useRoute } from 'vue-router';
-
-
 
 export default {
-    /*  mounted() {
-          if (this.$store.state.usuario.role == "profesor") {
-              this.$router.push('/listaAsignaturas')
-          }
-      }, */
+    mounted() {
+        if (this.$store.state.usuario.role === "profesor") {
+            this.$router.push('/listaAsignaturas');
+        }
+    },
     setup() {
-        const route = useRoute();
-        const idRuta = route.params.id;
-        const sessionId = idRuta;
+        const sessionId = ref('');
         const totalApps = ref(0);
         const dangerousApps = ref(0);
         const lastActivity = ref('');
         const dangerLevel = ref('Normal');
         const dangerMessage = ref('El estudiante ha abierto algunas aplicaciones peligrosas.');
         const history = ref([]);
-        const evaluations = ref([]);
-        const userId = ref('');
+        const responseData = ref('');
 
         const dangerColor = computed(() => {
             switch (dangerLevel.value) {
@@ -118,40 +98,51 @@ export default {
                     return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
                 });
             } catch (error) {
-                //console.error('Error fetching history:', error);
+                console.error('Error fetching history:', error);
             }
         };
-        async function recuperarEvaluaciones(id) {
-            await axios.get(`http://localhost:8080/evaluacion/${id}`)
-                .then(async response => {
-                    evaluations.value = response.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        }
+
         const startPolling = () => {
-            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling            
+            fetchHistory(); // Llama a fetchHistory inmediatamente al iniciar el polling
             setInterval(async () => {
-                await fetchHistory(); // Actualiza el historial cada intervalo                 
-                await guardarHistorial(); // Guarda el historial cada intervalo             
-            }, 5000); // Intervalo de 30 segundos
+                await fetchHistory(); // Actualiza el historial cada intervalo
+            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
         };
 
         const guardarHistorial = () => {
-            const procesos = history.value.map(proceso => proceso.name);
-            //const procesosString = procesos.join(',');
-            const userStore = useUserStore();
-            const user = computed(() => userStore.user);
-            const userId = user.value._id;
-            axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
-            //window.alert('Procesos guardados en DB');
+            axios.post('http://localhost:8080/guardar-procesos')
+                .then(response => {
+                    console.log('Historial guardado correctamente:', response.data);
+                })
+                .catch(error => {
+                    console.error('Error al guardar el historial:', error);
+                });
+        };
+
+        const fetchResponseData = async () => {
+            try {
+                const response = await fetch('http://localhost:5173/respuesta.txt');
+                if (!response.ok) {
+                    throw new Error('La respuesta de la red no fue satisfactoria');
+                }
+                responseData.value = await response.text();
+            } catch (error) {
+                console.error('Error en la solicitud fetch:', error);
+                responseData.value = 'Error al cargar datos';
+            }
+        };
+
+        const startResponsePolling = () => {
+            fetchResponseData(); // Llama a fetchResponseData inmediatamente al iniciar el polling
+            setInterval(async () => {
+                await fetchResponseData(); // Actualiza los datos cada intervalo
+            }, 10000); // Intervalo de 10 segundos (ajusta según tus necesidades)
         };
 
         onMounted(() => {
             startPolling();
             fetchHistory();
-            recuperarEvaluaciones(idRuta);
+            startResponsePolling();
 
             const statusChartCtx = document.getElementById('statusChart').getContext('2d');
             new Chart(statusChartCtx, {
@@ -188,7 +179,7 @@ export default {
                         {
                             label: 'Uso de Aplicaciones en tu sesión',
                             data: [3, 15, 4, 5, 2, 1, 3, 2, 1],
-                            backgroundColor: '#08cccc',
+                            backgroundColor: '#00BFFF',
                         },
                     ],
                 },
@@ -210,13 +201,7 @@ export default {
                     }
                 }
             });
-
-
         });
-
-
-
-
 
         return {
             sessionId,
@@ -227,8 +212,8 @@ export default {
             dangerMessage,
             dangerColor,
             history,
-            idRuta,
-            evaluations,
+            responseData,
+            createSession,
             downloadLink: '/public/Downloads/Procesos-exe.exe',
             guardarHistorial,
         };
@@ -259,10 +244,6 @@ export default {
                 console.error('Error al obtener los datos:', error);
             }
         },
-        formatFecha(fecha) {
-            const opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return new Date(fecha).toLocaleDateString('es-ES', opciones);
-        },
         async sendDataToServer(urlsString) {
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
@@ -288,12 +269,7 @@ export default {
 
 <style scoped>
 .alumno-page {
-    padding: 2rem;
-    margin: 20px auto;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    width: 80%;
-    max-width: 1200px;
+    font-family: Arial, sans-serif;
 }
 
 header h1 {
@@ -312,7 +288,7 @@ nav ul li {
 }
 
 nav ul li a {
-    color: var(--text-color);
+    color: white;
     text-decoration: none;
 }
 
@@ -330,8 +306,8 @@ nav ul li a {
 button {
     margin: 10px;
     padding: 10px 20px;
-    background-color: var(--button-hover-background-color);
-    color: var(--text-color);
+    background-color: #4bb6b8;
+    color: white;
     border: none;
     cursor: pointer;
 }
@@ -344,73 +320,30 @@ button {
     text-align: center;
 }
 
-.navLink_disabled{
-    text-decoration: none;
-    color: var(--text-color-disabled);
-    display: block;
-    padding: 10px 10px;
-    border-radius: 5px;
-    background-color: var(--background-color-disabled);
-    margin-bottom: 0.5rem;
-    cursor: not-allowed;
-}
-
-.mainContainer {
+.charts {
     display: flex;
     justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
 }
 
-.chartContainer, .chartDataContainer {
-    width: calc(50% - 10px);
+.chart-container {
+    width: 500px;
+    flex: 1;
+    margin: 0 20px;
     padding: 20px;
-    background-color: var(--container-background-color);
+    background: white;
     border-radius: 10px;
-    height: auto;
-    min-height: 300px;
-    padding: 10px;
-    border-radius: 10px;
-    text-align: center;
 }
 
-.chartContainer {
+.chart-info {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-}
-
-.chartContainer canvas {
-    width: 100%;
-    height: auto;
-    max-width: 400px;
-    max-height: 400px;
-}
-
-.chartDataContainer {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    justify-content: center;
+    width: 500px;
+    flex: 1;
     padding: 20px;
-}
-
-.chartDataContainer .charts {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    margin-top: 40px;
-}
-
-.chartDataContainer .charts canvas {
-    width: 100%;
-    height: auto;
-    max-height: 200px;
-}
-
-.chartDataContainer p {
-    margin: 10px 0;
+    background: white;
+    border-radius: 10px;
 }
 
 .box-shadow {
@@ -421,36 +354,8 @@ button {
     margin-bottom: 50px;
     margin-top: 20px;
     padding: 20px;
-    background-color: var(--container-background-color);
+    background: white;
     border-radius: 10px;
-}
-
-.evaluations {
-    margin-bottom: 20px;
-    margin-top: 20px;
-    padding: 20px;
-    background-color: var(--container-background-color);
-    border-radius: 10px;
-}
-
-.listaEvaluaciones{
-    margin-bottom: 20px;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.navLink {
-    text-decoration: none;
-    color: var(--text-color);
-    display: block;
-    padding: 10px 10px;
-    border-radius: 5px;
-    background-color: var(--gray-text-color);
-    margin-bottom: 0.5rem;
-}
-
-.navLink:hover {
-    background-color: var(--gray-hover-color);
 }
 
 .history table {
@@ -465,85 +370,21 @@ button {
 }
 
 .history th {
-    background-color: var(--container-background-color);
+    background-color: #f2f2f2;
     text-align: left;
 }
 
-
-@media (max-width: 1200px) {
-    .alumno-page {
-        width: 90%;
-    }
-
-    .mainContainer {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .chartContainer,
-    .chartDataContainer {
-        width: 100%;
-        height: auto;
-    }
-
-    .chartDataContainer .charts {
-        margin-top: 20px;
-    }
+.response-data {
+    margin-top: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
 }
 
-@media (max-width: 768px) {
-    .dashboard {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .dashboard button {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    .bottomContainer {
-        overflow-x: auto;
-    }
-
-    table {
-        width: 100%;
-    }
-
-    th,
-    td {
-        padding: 8px;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .alumno-page {
-        padding: 1rem;
-    }
-
-    h1,
-    h2 {
-        font-size: 1.5rem;
-    }
-
-    .dashboard button {
-        font-size: 0.9rem;
-    }
-
-    th,
-    td {
-        font-size: 0.7rem;
-    }
-
-    .modal-content {
-        width: 95%;
-        padding: 10px;
-    }
-
-    .closeButton {
-        padding: 8px 16px;
-        font-size: 0.9rem;
-    }
+pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 </style>

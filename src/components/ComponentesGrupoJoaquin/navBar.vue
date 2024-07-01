@@ -15,12 +15,14 @@
 
           <template v-if="isAuthenticated && user && user.role === 'profesor'">
             <RouterLink to="/listaAsignaturas" class="navLink" @click.native="closeMenu">Asignaturas</RouterLink>
-            <RouterLink to="/faltaAlumnos" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
+            <RouterLink to="/lista-alumnos" class="navLink" @click.native="closeMenu">Alumnos</RouterLink>
           </template>
 
           <RouterLink to="/about" class="navLink" @click.native="closeMenu">Nosotros</RouterLink>
           <RouterLink to="/contact" class="navLink" @click.native="closeMenu">Contacto</RouterLink>
 
+          <font-awesome-icon icon="envelope" class="msg" @click="goMessages" />
+          
           <template v-if="isAuthenticated && (user && user.role === 'alumno' || user.role === 'profesor')">
             <template v-if="isOpen">
               <RouterLink to="/notificaciones" class="navLink" @click.native="closeMenu">Notificaciones
@@ -47,7 +49,6 @@
             </div>
           </template>
 
-          
           <template v-else>
             <button class="loginButton" @click="goLogin">
               <div class="sign"><i class="fa-solid fa-right-to-bracket" id="icon"></i></div>
@@ -98,6 +99,10 @@ const goLogin = () => {
 const goProfile = () => {
   router.push('/perfil')
   closeMenu()
+}
+
+const goMessages = () => {
+  router.push('/mensajes')
 }
 
 const toggleMenu = () => {
@@ -336,7 +341,7 @@ onUnmounted(() => {
   transform: translate(2px, 2px);
 }
 
-#icon {
+#icon{
   display: flex;
   justify-content: center;
   align-items: center;
@@ -344,6 +349,15 @@ onUnmounted(() => {
   width: 17px;
   height: 17px;
   line-height: 17px;
+}
+
+.msg {
+  cursor: pointer;
+  font-size: 21px;
+}
+
+.msg:hover {
+  color: #08cccc;
 }
 
 .hamburger {

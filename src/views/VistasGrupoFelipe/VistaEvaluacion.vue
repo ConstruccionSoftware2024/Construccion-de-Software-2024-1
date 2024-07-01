@@ -5,15 +5,15 @@
       <p class="titulo">{{descripcionEvaluacion}}</p>
     </div>
       <div class="listaEvaluaciones" >
-        <div v-for="(ask, index) in preguntas" :key="ask.texto" class="evaluations box-shadow">
+        <div @change="guardarRespuesta(index, $event.target.value)" v-for="(ask, index) in preguntas" :key="ask.texto" class="evaluations box-shadow">
           <p>{{ index + 1 }}. {{ ask.texto }}</p>  
           <img :src="ask.imagen" alt="Imagen de pregunta" class="img-pregunta">   
-          <div v-for="opcion in ask.opciones" :key="opcion.texto" class="opcion">
-            <input type="radio" :name="ask.texto" :value="opcion" :id="opcion.texto">
+          <div v-for="opcion in ask.opciones" :key="opcion" class="opcion">
+            <input type="radio" :name="ask.texto" :value="opcion" :id="opcion">
             <label :for="opcion">{{ opcion }}</label>
           </div>
-          <button class="boton-centrado">Responder</button>
         </div>
+        <button class="boton-centrado" @click="verificarRespuestas">Terminar evaluación</button>
       </div>
   </div>
   
@@ -32,12 +32,32 @@ export default {
         fechaTermino: '',
         preguntas: [],
         opciones: [],
+        respuestas: [] // aqui se guardan las respuestas del alumno, falta el método para enviarlas a la BD
     };
   },
   mounted() {
     this.obtenerDatosEvaluacion();
   },
   methods: {
+    guardarRespuesta(indicePregunta, respuestaUsuario) {
+      const indiceExistente = this.respuestas.findIndex(respuesta => respuesta.indicePregunta === indicePregunta);
+      if (indiceExistente !== -1) {
+        this.respuestas[indiceExistente].respuesta = respuestaUsuario;
+        console.log(this.respuestas);
+      } else {
+        this.respuestas.push({ indicePregunta, respuesta: respuestaUsuario });
+        console.log(this.respuestas);
+      }
+    },
+    verificarRespuestas() {
+      const todasRespondidas = this.respuestas.length === this.preguntas.length;
+      if (!todasRespondidas) {
+        alert('Por favor, responde todas las preguntas antes de terminar la evaluación.');
+      } else {
+
+        console.log('Evaluación completada');
+      }
+    },
     async obtenerDatosEvaluacion() {
         const route = useRoute();
         const id = route.params.id;

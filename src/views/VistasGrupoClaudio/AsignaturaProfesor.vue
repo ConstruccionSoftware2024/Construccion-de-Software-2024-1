@@ -42,10 +42,19 @@
                 <div class="section">
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
-                        <button class="btn">Contactar a un Alumno</button>
-                        <button class="btn">Reportar un Problema</button>
+                        <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
+                        <button class="btn" @click="mostrarReportar = true">Reportar un Problema</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="modal" v-if="mostrarReportar">
+            <div class="modal-content">
+                <span class="close" @click="mostrarReportar = false">&times;</span>
+                <h3>Reportar un problema</h3>
+                <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
+                <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
             </div>
         </div>
 
@@ -57,13 +66,12 @@
                     <div class="input-group">
                         <input required placeholder="Nombre de la sesión" type="text" id="nombre"
                             v-model="nuevaSesion.nombre">
-                        <textarea required placeholder="Descripción de la sesión"></textarea>
+                        <textarea required placeholder="Descripción de la sesión" v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
                         </div>
                     </div>
-                    <button @click.prevent="enviarFormulario" class="btn btn-modal"
-                        :disabled="!nuevaSesion.nombre || !nuevaSesion.descripcion">Crear</button>
+                    <button @click.prevent="enviarFormulario" class="btn btn-modal">Crear</button>
                 </div>
             </div>
         </div>
@@ -86,18 +94,30 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../../../back-end/src/store.js';
 import axios from 'axios'
+import { showText } from 'pdf-lib';
+import Swal from 'sweetalert2';
+
+const userStore = useUserStore();
+const idUsuario = userStore.user._id;
 
 export default {
     data() {
         return {
             sesiones: [],
             mostrarPopup: false,
+            mostrarReportar: false,
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
                 asignatura: ''
             },
+            problemas: {
+                descripcion: '',
+                idUsuario: idUsuario
+            },
+            showError: false,
         }
     },
     setup() {
@@ -107,6 +127,7 @@ export default {
         const asignaturaId = route.params.id
         const asignatura = ref('Nombre Ejemplo')
         const mostrarPopup = ref(false)
+        const mostrarReportar = ref(false)
         const mostrarPopupRecurso = ref(false)
         const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
@@ -131,10 +152,14 @@ export default {
         const goToFaltas = () => {
             router.push(`/faltaAlumnos/${asignaturaId}`);
         };
-
+        const goToListaAlumnos = () => {
+            router.push('/lista-alumnos');
+        };
+        const goToContact = () => {
+            router.push('/contact');
+        };
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
-
         }
 
         const enviarRecurso = async () => {
@@ -167,6 +192,7 @@ export default {
         return {
             asignatura,
             mostrarPopup,
+            mostrarReportar,
             mostrarPopupRecurso,
             nuevaPregunta,
             nuevoRecurso,
@@ -177,6 +203,10 @@ export default {
             sesiones,
             publicarPregunta,
             goToFaltas,
+            goToListaAlumnos,
+            goToContact,
+            //onFileChange,
+            enviarRecurso
         }
     },
     methods: {
@@ -203,8 +233,36 @@ export default {
         goToProject(id) {
             this.$router.push(`/asignatura/${id}`);
         },
+
+        async enviarProblema() { 
+            if (!this.problemas.descripcion) {
+                console.log(this.problemas.descripcion);
+                return;
+            }
+
+            try {
+                const respuesta = await axios.post('http://localhost:8080/publicarProblema', this.problemas);
+
+                if (respuesta.status === 200) {
+                    this.problemas.descripcion = '';
+                    this.mostrarReportar = false;
+                    Swal.fire({
+                        title: 'Problema reportado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#08cccc'
+                    });
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                console.log(this.nuevaSesion.nombre+" "+this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }
@@ -232,9 +290,14 @@ export default {
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
 
                     console.log('Sesión creada con ID:', sessionId);
-
+                    
                     this.fetchProjects();
                     this.mostrarPopup = false;
+                    Swal.fire({
+                    title: 'Sesion creada correctamente',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                    });
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)
                 }
@@ -251,6 +314,7 @@ export default {
 
 
 <style scoped>
+
 .close {
     cursor: pointer;
     float: right;
