@@ -78,8 +78,15 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
+                <h3>Últimas URLs</h3>
+                <ul>
+                    <li v-for="url in selectedStudent.latestUrls" :key="url">
+                        <a :href="url" target="_blank">{{ url }}</a>
+                    </li>
+                </ul>
+                <h3>Procesos</h3>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
@@ -88,6 +95,7 @@
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -515,6 +523,7 @@ export default {
             }
 
             try {
+
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
                 const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
 
@@ -536,14 +545,18 @@ export default {
                     apps: uniqueProcessNamesWithCategories
                 };
                 console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
+
                 this.showModal = true;
 
                 return uniqueProcessNamesWithCategories;
             } catch (error) {
-                console.error('Error al obtener los procesos del estudiante:', error);
-                alert('Error al obtener los procesos del estudiante');
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
             }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },
