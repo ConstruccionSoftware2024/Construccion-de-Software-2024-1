@@ -4,24 +4,9 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
 <template>
   <div class="container">
     <div class="search-bar">
-      <input
-        class="search-input"
-        type="text"
-        v-model="searchName"
-        placeholder="Buscar por nombre"
-      />
-      <input
-        class="search-input"
-        type="text"
-        v-model="searchLastName"
-        placeholder="Buscar por apellido"
-      />
-      <input
-        class="search-input"
-        type="text"
-        v-model="searchEmail"
-        placeholder="Buscar por email"
-      />
+      <input class="search-input" type="text" v-model="searchName" placeholder="Buscar por nombre" />
+      <input class="search-input" type="text" v-model="searchLastName" placeholder="Buscar por apellido" />
+      <input class="search-input" type="text" v-model="searchEmail" placeholder="Buscar por email" />
       <input class="search-input" type="text" v-model="searchRut" placeholder="Buscar por RUT" />
     </div>
 
@@ -44,15 +29,12 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
             <td>{{ student.lastName }}</td>
             <td>{{ student.email }}</td>
             <td>{{ student.rut }}</td>
-            <td @click="student.showDetalleFaltas = !student.showDetalleFaltas">
+            <td>
               {{ student.faltas }}
             </td>
 
             <td class="detalle-container">
-              <button
-                class="button-detalle"
-                @click="student.showDetalleFaltas = !student.showDetalleFaltas"
-              >
+              <button class="button-detalle" @click="student.showDetalleFaltas = !student.showDetalleFaltas">
                 {{ student.showDetalleFaltas ? 'Ocultar' : 'Mostrar' }}
               </button>
 
@@ -74,11 +56,7 @@ mostrarme las faltas de cada alumno y clasificarlos como “peligrosos” o “n
               </div>
             </td>
             <td>
-              <select
-                v-model="student.estado"
-                class="selector-peligro"
-                @change="updateStudentStatus(student)"
-              >
+              <select v-model="student.estado" class="selector-peligro" @change="updateStudentStatus(student)">
                 <option class="opcion-peligro">No peligroso</option>
                 <option class="opcion-peligro">Peligroso</option>
               </select>
@@ -113,7 +91,7 @@ const filteredStudents = computed(() => {
 
 const updateStudentStatus = async (student) => {
   try {
-    await axios.post(`http://localhost:8080/faltas/${student.id}`, {
+    await axios.post(`http://localhost:8080/faltas/${student._id}`, {
       estado: student.estado
     });
   } catch (error) {
@@ -198,11 +176,6 @@ onMounted(async () => {
 
 .styled-table tbody tr.selected-row {
   background-color: #f8f4e7;
-}
-
-.styled-table tbody tr:hover {
-  background-color: #f1f1f1;
-  cursor: pointer;
 }
 
 .detalle-table {

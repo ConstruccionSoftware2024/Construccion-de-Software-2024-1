@@ -21,9 +21,24 @@
             </div>
           </div>
           <div class="options">
-            <a href="#" class="forgotPassword">Olvidaste la contraseña?</a>
+            <a href="#" class="forgotPassword" @click.prevent="showResetPassword">Olvidaste la contraseña?</a>
           </div>
           <button type="submit" class="loginButton" @click.prevent="login">Iniciar Sesión</button>
+        </form>
+        <form v-else-if="isResetPassword">
+          <div class="inputGroup">
+            <div class="inputWrapper">
+              <i class="fas fa-at"></i>
+              <input type="email" id="email" v-model="email" placeholder="Ingresa tu email" required />
+            </div>
+          </div>
+          <div class="inputGroup" v-if="showCodeInput">
+            <div class="inputWrapper">
+              <i class="fas fa-key"></i>
+              <input type="text" id="resetCode" v-model="resetCode" placeholder="Ingresa tu código" required />
+            </div>
+          </div>
+          <button class="loginButton" @click.prevent="submitResetPassword">Enviar</button>
         </form>
         <form v-else key="register">
           <div class="formGrid">
@@ -82,14 +97,21 @@
               <label for="campus">Campus</label>
               <div class="inputWrapper">
                 <i class="fas fa-university"></i>
-                <input type="text" id="campus" v-model="campus" placeholder="Ingresa tu campus" required />
+                <select id="campus" v-model="campus" @change="fetchCarreras" required>
+                  <option value="" disabled selected>Seleccionar campus</option>
+                  <option v-for="campus in campusOptions" :key="campus._id" :value="campus.campus">{{ campus.campus }}
+                  </option>
+                </select>
               </div>
             </div>
             <div class="inputGroup">
               <label for="major">Carrera</label>
               <div class="inputWrapper">
                 <i class="fas fa-graduation-cap"></i>
-                <input type="text" id="major" v-model="major" placeholder="Ingresa tu carrera" required />
+                <select id="major" v-model="major" :disabled="!isCampusSelected" required>
+                  <option value="" disabled selected>Seleccionar carrera</option>
+                  <option v-for="carrera in carreraOptions" :key="carrera" :value="carrera">{{ carrera }}</option>
+                </select>
               </div>
             </div>
             <div class="inputGroup">
@@ -146,13 +168,25 @@ export default {
       major: '',
       rut: '',
       matricula: '',
+      role: '',
+      resetCode: '',
       passwordVisible: false,
+      campusOptions: [],
+      carreraOptions: [],
       isLogin: true,
+      isResetPassword: false,
+      showCodeInput: false,
       showPopup: false,
       errorMessage: ''
     }
   },
+  created() {
+    this.fetchCampus();
+  },
   computed: {
+    isCampusSelected() {
+      return this.campus !== '';
+    },
     passwordFieldType() {
       return this.passwordVisible ? 'text' : 'password'
     },
@@ -161,6 +195,26 @@ export default {
     }
   },
   methods: {
+    async fetchCampus() {
+      try {
+        const response = await axios.get('http://localhost:8080/campus');
+        this.campusOptions = response.data;
+      } catch (error) {
+        console.error('Error al obtener campus:', error);
+      }
+    },
+    async fetchCarreras() {
+      if (this.campus) {
+        try {
+          const response = await axios.get(`http://localhost:8080/carreras/${this.campus}`);
+          this.carreraOptions = response.data;
+        } catch (error) {
+          console.error('Error al obtener carreras:', error);
+        }
+      } else {
+        this.carreraOptions = []; // Resetear opciones de carrera si no hay campus seleccionado
+      }
+    },
     showError(message) {
       this.errorMessage = message;
       this.showPopup = true;
@@ -169,7 +223,26 @@ export default {
       const regex = /(^[a-zA-Z0-9_.+-]+@(alumnos\.)?utalca\.cl$)/;
       return regex.test(this.email);
     },
+    validaRut(rutCompleto) {
+      rutCompleto = rutCompleto.replace("‐", "-");
+      if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test(rutCompleto))
+        return false;
+      let tmp = rutCompleto.split('-');
+      let digv = tmp[1];
+      let rut = tmp[0];
+      if (digv == 'K') digv = 'k';
+
+      return (this.dv(rut) == digv);
+    },
+    dv(T) {
+      let M = 0, S = 1;
+      for (; T; T = Math.floor(T / 10))
+        S = (S + T % 10 * (9 - M++ % 6)) % 11;
+      return S ? S - 1 : 'k';
+    },
     async login() {
+      console.log('email:', this.email);
+      console.log('password:', this.password);
       try {
         const response = await axios.post('http://localhost:8080/login', {
           email: this.email,
@@ -177,10 +250,11 @@ export default {
         });
 
         if (response.data.success) {
+          this.$store.state.usuario = response.data.user
           const userStore = useUserStore();
           userStore.setUser(response.data.user);  // Almacenar los datos del usuario
           console.log('user:', response.data.user);
-          this.$router.push('/about');  // Cambiar '/about' por la ruta de la página a la que se redirigirá al iniciar sesión
+          this.$router.push('/'); // Cambiar '/modulosAlum' por la ruta de la página a la que se redirigirá al iniciar sesión
         } else {
           this.showError('Correo electrónico o contraseña incorrectos');
         }
@@ -188,13 +262,60 @@ export default {
         console.error(error);
       }
     },
+    showResetPassword() {
+      this.isResetPassword = true;
+      this.isLogin = false;
+    },
+    async submitResetPassword() {
+      if (!this.showCodeInput) {
+        if (this.email) {
+          try {
+            const response = await axios.post('http://localhost:8080/resetPassword', { email: this.email });
+            if (response) {
+              this.showError('Revisa tu correo electrónico para las instrucciones de restablecimiento de contraseña.');
+              this.showCodeInput = true;
+            } else {
+              this.showError('No se pudo enviar el correo de restablecimiento de contraseña.');
+            }
+          } catch (error) {
+            console.error(error);
+            this.showError('Error al intentar restablecer la contraseña.');
+          }
+        }
+      } else {
+        if (this.resetCode) {
+          try {
+            const response1 = await axios.post('http://localhost:8080/verifyResetCode', {
+              email: this.email,
+              code: this.resetCode,
+            });
+            if (response1.data.success) {
+              this.showError('Código verificado correctamente. Por favor, establece tu nueva contraseña.');
+              const response = await axios.post('http://localhost:8080/loginInsta', {
+                email: response1.data.email
+              });
+              this.email = response.data.email2;
+              this.password = response.data.password;
+              this.login();
+            } else {
+              this.showError('Código incorrecto. Por favor, inténtalo de nuevo.');
+            }
+          } catch (error) {
+            console.error('Error al verificar el código:', error);
+            this.showError('Ocurrió un error al verificar el código. Por favor, inténtalo de nuevo más tarde.');
+          }
+        }
+      }
+    },
     async register() {
       try {
-
         const checkEmailResponse = await axios.post('http://localhost:8080/checkEmail', {
           email: this.email
         });
-
+        if (!this.validaRut(this.rut)) {
+          this.showError('El RUT no es válido.');
+          return;
+        }
         if (checkEmailResponse.data.exists) {
           this.showError('El correo electrónico ya está en uso. Por favor, use un correo electrónico diferente.');
           return;
@@ -213,12 +334,13 @@ export default {
           secondLastName: this.secondLastName,
           rut: this.rut,
           matricula: this.matricula,
+          role: 'alumno',
           campus: this.campus,
           major: this.major,
         });
         if (response.data.success) {
           const userStore = useUserStore();
-          userStore.setUser(response.data.user);  // Almacenar los datos del usuario
+          userStore.setUser(response.data.user);
           this.email = '';
           this.username = '';
           this.password = '';
@@ -242,6 +364,7 @@ export default {
     },
     toggleForm() {
       this.isLogin = !this.isLogin
+      this.isResetPassword = false
     }
   }
 }
@@ -250,6 +373,27 @@ export default {
 <style scoped>
 * {
   box-sizing: border-box;
+}
+
+select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--button-background-color);
+}
+
+.recovery {
+  width: 400px;
 }
 
 .error-popup {

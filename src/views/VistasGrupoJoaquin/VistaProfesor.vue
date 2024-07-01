@@ -1,23 +1,28 @@
 <template>
     <div class="profesorPage">
-        <h1>Sesion id:1</h1>
-        <div class="dashboard">
-            <button @click="createSession">Crear Sesión</button>
-            <button @click="otherOptions">Otras Opciones</button>
-        </div>
+        <h1>Sesion id: {{ sessionId }}</h1>
+        <strong>Asignatura: {{ asignatura }}</strong>
         <div class="mainContainer">
             <div class="chartContainer">
                 <canvas id="studentsPieChart"></canvas>
-                <div class="legend">
-                </div>
+                <div class="legend"></div>
             </div>
             <div class="chartDataContainer">
                 <h2>Datos del Gráfico</h2>
-                <p><strong>Total de Estudiantes:</strong> {{ students.length }}</p>
+                <p><strong>Total de Estudiantes:</strong> {{ alumnos.length }}</p>
                 <p><strong>Aplicaciones Peligrosas Abiertas:</strong> {{ totalDangerousApps }}</p>
                 <p><strong>Última Actividad:</strong> {{ lastActivity }}</p>
                 <div class="charts">
                     <canvas id="appsBarChart"></canvas>
+                </div>
+                <div class="menuContainer">
+                    <h2>Herramientas del docente</h2>
+                    <button @click="toggleMenu" class="menuButton">Opciones</button>
+                    <div v-if="menuOpen" class="dropdownMenu">
+                        <button @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+                        <button @click="añadir(); menuOpen = false">Añadir Alumno</button>
+                        <button @click="otherOptions(); menuOpen = false">Otras Opciones</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -25,27 +30,31 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
                         <th>Matrícula</th>
+                        <th>Nombre</th>
+                        <th>Apellido Paterno</th>
+                        <th>Apellido Materno</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="student in students" :key="student.matricula"
-                        :class="{ peligro: student.status === 'Peligro', advertencia: student.status === 'Advertencia' }">
-                        <td>{{ student.nombre }}</td>
-                        <td>{{ student.apellido }}</td>
-                        <td>{{ student.matricula }}</td>
+                    <tr v-for="alumno in alumnos" :key="alumno._id">
+                        <td>{{ alumno.matricula }}</td>
+                        <td>{{ alumno.firstName }}</td>
+                        <td>{{ alumno.lastName }}</td>
+                        <td>{{ alumno.secondLastName }}</td>
                         <td
-                            :class="{ 'peligro-text': student.status === 'Peligro', 'advertencia-text': student.status === 'Advertencia' }">
-                            {{ student.status }}</td>
+                            :class="{ 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            {{ alumno.status }}
+                        </td>
                         <td>
-                            <button class="actionButton ban" @click="banStudent(student)">Banear</button>
-                            <button class="actionButton expel" @click="expelStudent(student)">Expulsar</button>
-                            <button class="actionButton notify" @click="notifyStudent(student)">Notificar</button>
-                            <button class="actionButton view" @click="viewProcesses(student)"><i
+                            <button class="actionButton ban" @click="banExpStudent(alumno, true)"
+                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
+                            <button class="actionButton expel" @click="banExpStudent(alumno, false)"
+                                :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
+                            <BotonNotificar :participante="alumno" />
+                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
                     </tr>
@@ -55,7 +64,8 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.nombre }}</h2>
+                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                    selectedStudent.secondLastName }}</h2>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app.name }} - {{ app.status }}
@@ -65,49 +75,197 @@
             </div>
         </div>
     </div>
+    <div>
+        <section class="modal_añadir">
+            <div class="modal__container_añadir">
+                <div class="modal__header">
+                    <h2 class="modal__title_añadir">Añadir Alumno</h2>
+                    <span class="modal__counter">{{ selectedUsersCount }} / {{ users.length }} seleccionados</span>
+                </div>
+                <input type="text" class="modal__search" placeholder="Buscar alumnos..." v-model="searchTerm" />
+                <div class="modal__content">
+                    <ul name="user" id="user" class="modal__select_añadir">
+                        <li v-for="user in paginatedUsers" :key="user._id" class="listar_alumnos">
+                            <input type="checkbox" v-model="user.selected" class="input_alumnos">
+                            <span class="dato_alumno">{{ user.matricula }}</span>
+                            <span class="dato_alumno">{{ user.firstName }}</span>
+                            <span class="dato_alumno">{{ user.lastName }}</span>
+                        </li>
+                    </ul>
+                    <div class="pagination">
+                        <button @click="prevPage" :disabled="currentPage === 1">Anterior</button>
+                        <span>{{ currentPage }} / {{ totalPages }}</span>
+                        <button @click="nextPage" :disabled="currentPage === totalPages">Siguiente</button>
+                    </div>
+                </div>
+                <div class="botones_añadir">
+                    <button @click.prevent="cerrarModal" class="modal__close_añadir">Cancelar</button>
+                    <button @click.prevent="anadir_Usuario" class="modal_close_añadir">Guardar</button>
+                </div>
+            </div>
+        </section>
+    </div>
 </template>
 
+
 <script>
-import { ref, onMounted } from 'vue';
 import Chart from 'chart.js/auto';
+import axios from 'axios';
+import { useRoute, useRouter } from 'vue-router';
+import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.vue';
 
 export default {
-    name: 'ProfesorPage',
     setup() {
-        const students = ref([
-            { nombre: 'Alumno 1', apellido: 'Apellido 1', matricula: '12345', status: 'Peligro', apps: [{ name: 'Discord', status: 'danger' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Abrió Discord', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 2', apellido: 'Apellido 2', matricula: '12346', status: 'Normal', apps: [{ name: 'Word', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Escribió un documento', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 3', apellido: 'Apellido 3', matricula: '12347', status: 'Advertencia', apps: [{ name: 'Slack', status: 'warning' }, { name: 'Excel', status: 'normal' }], recentActivity: ['Usó Slack', 'Editó una hoja de cálculo'] },
-            { nombre: 'Alumno 4', apellido: 'Apellido 4', matricula: '12348', status: 'Normal', apps: [{ name: 'PowerPoint', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Creó una presentación', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 5', apellido: 'Apellido 5', matricula: '12349', status: 'Peligro', apps: [{ name: 'Teams', status: 'danger' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Usó Teams', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 6', apellido: 'Apellido 6', matricula: '12350', status: 'Normal', apps: [{ name: 'Word', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Escribió un documento', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 7', apellido: 'Apellido 7', matricula: '12351', status: 'Advertencia', apps: [{ name: 'Zoom', status: 'warning' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Usó Zoom', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 8', apellido: 'Apellido 8', matricula: '12352', status: 'Normal', apps: [{ name: 'Excel', status: 'normal' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Editó una hoja de cálculo', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 9', apellido: 'Apellido 9', matricula: '12353', status: 'Advertencia', apps: [{ name: 'Skype', status: 'warning' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Usó Skype', 'Visitó un sitio web'] },
-            { nombre: 'Alumno 10', apellido: 'Apellido 10', matricula: '12354', status: 'Peligro', apps: [{ name: 'Discord', status: 'danger' }, { name: 'Chrome', status: 'normal' }], recentActivity: ['Abrió Discord', 'Visitó un sitio web'] },
-        ]);
+        const route = useRoute();
+        const router = useRouter();
+        const idRuta = route.params.id;
+        const sesionId = route.params.sesionId;
+        return {
+            idRuta,
+            router
+        }
+    },
 
-        const totalDangerousApps = ref(students.value.reduce((total, student) => {
-            return total + student.apps.filter(app => app.status === 'danger').length;
-        }, 0));
-
-        const lastActivity = ref(students.value.map(student => student.recentActivity).flat().pop());
-
-        const filteredStudents = ref([]);
-        const showModal = ref(false);
-        const selectedStudent = ref(null);
-
-        const handleChartClick = (event, elements) => {
-            if (elements.length) {
-                const chart = elements[0].element.$context.raw;
-                const index = elements[0].index;
-                const label = chart.data.labels[index];
-                filteredStudents.value = students.value.filter(student => student.status === label);
-                showModal.value = true;
-            }
+    data() {
+        return {
+            alumnos: [],
+            session: {},
+            asignatura: '',
+            totalDangerousApps: 0,
+            lastActivity: '',
+            showModal: false,
+            selectedStudent: '',
+            sessionId: this.idRuta,
+            users: [],
+            currentPage: 1,
+            itemsPerPage: 10,
+            searchTerm: '',
+            menuOpen: false
         };
+    },
 
-        const createCharts = () => {
+    created() {
+        this.fetchUsers();
+        this.encontrarAsignatura();
+        this.mounted();
+    },
+
+    name: 'ProfesorPage',
+    components: {
+        BotonNotificar,
+    },
+
+    computed: {
+        totalPages() {
+            return Math.ceil(this.filteredUsers.length / this.itemsPerPage);
+        },
+        paginatedUsers() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.filteredUsers.slice(start, end);
+        },
+        filteredUsers() {
+            return this.users.filter(user => {
+                const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                return fullName.includes(this.searchTerm.toLowerCase()) || user.matricula.includes(this.searchTerm);
+            });
+        },
+        selectedUsersCount() {
+            return this.users.filter(user => user.selected).length;
+        }
+    },
+
+    methods: {
+        toggleMenu() {
+            this.menuOpen = !this.menuOpen;
+        },
+
+        closeMenu() {
+            this.menuOpen = false;
+        },
+
+        assignAppsToStudents(students) {
+            const dangerApps = ['Discord', 'ChatGPT', 'Steam'];
+            const warningApps = ['Slack', 'Zoom', 'Skype'];
+            const normalApps = ['Word', 'Excel', 'PowerPoint', 'Chrome'];
+
+            return students.map((student, index) => {
+                const apps = [];
+                let status = 'Normal';
+
+                if (index % 3 === 0) {
+                    status = 'Peligro';
+                } else if (index % 3 === 1) {
+                    status = 'Advertencia';
+                }
+
+                const appList = status === 'Peligro' ? dangerApps : (status === 'Advertencia' ? warningApps : normalApps);
+                const randomApps = this.shuffleArray(appList);
+
+                const numberOfApps = Math.floor(Math.random() * 2) + 2;
+                for (let i = 0; i < numberOfApps; i++) {
+                    apps.push({ name: randomApps[i], status });
+                }
+
+                return {
+                    ...student,
+                    apps,
+                    status,
+                };
+            });
+        },
+
+        shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        },
+
+        async fetchUsers() {
+            try {
+                const response = await axios.get('http://localhost:8080/users');
+                const participantes = response.data;
+
+                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+                const sessionUsers = sessionResponse.data;
+
+                const participantesIds = sessionUsers.participantes;
+
+                const studentsWithApps = this.assignAppsToStudents(participantes).filter(user =>
+                    participantesIds.includes(user._id)
+                );
+
+                this.alumnos = studentsWithApps;
+                this.totalDangerousApps = studentsWithApps.reduce((total, student) => {
+                    return total + student.apps.filter(app => app.status === 'Peligro').length;
+                }, 0);
+                this.lastActivity = new Date().toLocaleString();
+                this.createCharts();
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        },
+
+        async encontrarAsignatura() {
+            try {
+                console.log(this.sessionId);
+                const response = await axios.get(`http://localhost:8080/sesionAsignatura/${this.sessionId}`);
+                console.log(response);
+                this.asignatura = response.data;
+            } catch (error) {
+                console.error('Error encontrando asignatura:', error);
+            }
+        },
+
+        calculateTotalDangerousApps(students) {
+            return students.reduce((total, student) => {
+                return total + student.apps.filter(app => app.status === 'Peligro').length;
+            }, 0);
+        },
+
+        createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -115,9 +273,9 @@ export default {
                 labels: ['Peligro', 'Advertencia', 'Normal'],
                 datasets: [{
                     data: [
-                        students.value.filter(s => s.status === 'Peligro').length,
-                        students.value.filter(s => s.status === 'Advertencia').length,
-                        students.value.filter(s => s.status === 'Normal').length,
+                        this.alumnos.filter(s => s.status === 'Peligro').length,
+                        this.alumnos.filter(s => s.status === 'Advertencia').length,
+                        this.alumnos.filter(s => s.status === 'Normal').length,
                     ],
                     backgroundColor: ['#FF0000', '#f7d547', '#008000'],
                 }],
@@ -139,11 +297,11 @@ export default {
                             text: 'Estado de los Estudiantes',
                         },
                     },
-                    onClick: handleChartClick,
+                    onClick: this.handleChartClick,
                 },
             });
 
-            const appUsage = students.value.reduce((acc, student) => {
+            const appUsage = this.alumnos.reduce((acc, student) => {
                 student.apps.forEach(app => {
                     if (acc[app.name]) {
                         acc[app.name]++;
@@ -184,71 +342,119 @@ export default {
                             ticks: {
                                 maxRotation: 90,
                                 minRotation: 45,
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
             });
-        };
+        },
 
-        const closeModal = () => {
-            showModal.value = false;
-        };
+        handleChartClick(elements) {
+            if (elements.length) {
+                const chart = elements[0].element.$context.raw;
+                const index = elements[0].index;
+                const label = chart.data.labels[index];
+                this.filteredStudents = this.alumnos.filter(student => student.status === label);
+                this.showModal = true;
+            }
+        },
 
-        const banStudent = (student) => {
-            alert(`Estudiante ${student.nombre} baneado.`);
-        };
+        closeModal() {
+            this.showModal = false;
+        },
 
-        const expelStudent = (student) => {
-            alert(`Estudiante ${student.nombre} expulsado.`);
-        };
+        async banExpStudent(student, accion) {
+            if (student.status === 'Peligro' || student.status === 'Advertencia') {
+                try {
+                    this.alumnos = this.alumnos.filter(al => al !== student);
+                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
 
-        const notifyStudent = (student) => {
-            alert(`Notificación enviada a ${student.nombre}.`);
-        };
+                    if (!response.ok) {
+                        throw new Error('Error al actualizar la lista de participantes');
+                    }
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                }
 
-        const viewProcesses = (student) => {
-            selectedStudent.value = student;
-            showModal.value = true;
-        };
+            } else {
+                alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
+            }
+        },
 
-        const createSession = () => {
-            alert('Sesión creada.');
-        };
+        notifyStudent(student) {
+            alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
+        },
 
-        const otherOptions = () => {
+        viewProcesses(student) {
+            this.selectedStudent = student;
+            this.showModal = true;
+        },
+
+        redirigirCrearEvaluacion() {
+            this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
+
+        otherOptions() {
             alert('Otras opciones.');
-        };
+        },
 
-        onMounted(() => {
-            createCharts();
-        });
+        async mounted() {
+            const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+            const sessionUsers = sessionResponse.data;
 
-        return {
-            students,
-            filteredStudents,
-            showModal,
-            closeModal,
-            totalDangerousApps,
-            lastActivity,
-            selectedStudent,
-            banStudent,
-            expelStudent,
-            notifyStudent,
-            viewProcesses,
-            createSession,
-            otherOptions,
-        };
-    },
+            const participantesIds = sessionUsers.participantes;
+
+            const response = await axios.get('http://localhost:8080/users');
+            const allUsers = response.data;
+
+            axios.get('http://localhost:8080/users')
+                .then(response => {
+                    this.users = allUsers.filter(user => !participantesIds.includes(user._id));
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+
+        añadir() {
+            const modal = document.querySelector('.modal_añadir');
+            modal.classList.add('modal_añadir--show');
+        },
+
+        cerrarModal() {
+            const modal = document.querySelector('.modal_añadir');
+            modal.classList.remove('modal_añadir--show');
+        },
+
+        async anadir_Usuario() {
+            try {
+                const selectedUsers = this.users.filter(user => user.selected);
+                const response = await axios.post('http://localhost:8080/anadir_Usuario', {
+                    users: selectedUsers.map(user => user._id),
+                    sesion_id: this.sessionId
+                });
+                this.cerrarModal();
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        }
+    }
 };
 </script>
 
 <style scoped>
-h1 {
-    margin-bottom: 20px;
-    color: var(--text-color);
-}
-
 .profesorPage {
     padding: 2rem;
     margin: 60px auto;
@@ -289,14 +495,80 @@ h1 {
 .chartDataContainer {
     width: calc(50% - 10px);
     color: var(--text-color);
-    height: 500px;
+    height: auto;
+    min-height: 300px;
     padding: 10px;
     border-radius: 10px;
     background-color: var(--container-background-color);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
+    overflow: visible;
+}
+
+.menuContainer {
+    margin-top: 20px;
+    text-align: left;
+    position: relative;
+    width: 100%;
+}
+
+.menuButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--button-background-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    position: relative;
+}
+
+.menuButton::after {
+    content: "▼";
+    margin-left: 10px;
+    font-size: 0.8rem;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    background-color: var(--container-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
+
+.dropdownMenu button {
+    padding: 10px 20px;
+    background-color: var(--container-background-color);
+    color: var(--text-color);
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dropdownMenu button:last-child {
+    border-bottom: none;
+}
+
+.dropdownMenu button:hover {
+    background-color: var(--gray-hover-color);
+}
+
 
 .chartContainer {
     display: flex;
@@ -433,11 +705,171 @@ th {
     color: #FF0000;
 }
 
+.normal-text {
+    font-weight: bold;
+    color: #008000;
+}
+
 .advertencia-text {
     font-weight: bold;
     color: #f7d547;
 }
 
+.modal_añadir {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s;
+}
+
+.modal_añadir--show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal__container_añadir {
+    width: 90%;
+    max-width: 600px;
+    max-height: 90%;
+    background-color: var(--container-background-color);
+    border-radius: 6px;
+    padding: 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    overflow-y: auto;
+}
+
+.modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal__title_añadir {
+    font-size: 1.5rem;
+}
+
+.modal__counter {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.modal__search {
+    width: 100%;
+    padding: 0.5em;
+    margin-bottom: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.modal__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.modal__select_añadir {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.listar_alumnos {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding: 0.5em;
+    border-bottom: 1px solid #ddd;
+}
+
+.input_alumnos {
+    margin-right: 1em;
+}
+
+.dato_alumno {
+    flex: 1;
+    text-align: left;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.pagination button {
+    padding: 0.5em 1em;
+    background-color: var(--button-background-color);
+    border: none;
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination span {
+    font-weight: bold;
+}
+
+.botones_añadir {
+    display: flex;
+    justify-content: right;
+    gap: 20px;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.modal_reset,
+.modal__close_añadir,
+.modal_close_añadir {
+    text-decoration: none;
+    color: #fff;
+    background-color: #6c757d;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.modal__close_añadir {
+    background-color: var(--button-background-color);
+}
+
+.modal_close_añadir {
+    background-color: var(--button-background-color);
+}
+
+.modal_reset:hover,
+.modal__close_añadir:hover,
+.modal_close_añadir:hover {
+    background-color: #555;
+}
+
+.modal__close_añadir:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+.modal_close_añadir:hover {
+    background-color: var(--button-hover-background-color);
+}
 
 .modal {
     display: flex;
@@ -505,12 +937,20 @@ th {
     font-size: 1rem;
 }
 
+h1 {
+    color: var(--text-color);
+    font-weight: bold;
+}
+
 .closeButton:hover {
     background-color: var(--button-hover-background-color);
 }
 
-
 @media (max-width: 1200px) {
+    .profesorPage {
+        width: 90%;
+    }
+
     .mainContainer {
         flex-direction: column;
         align-items: center;
@@ -519,7 +959,11 @@ th {
     .chartContainer,
     .chartDataContainer {
         width: 100%;
-        margin-bottom: 20px;
+        height: auto;
+    }
+
+    .chartDataContainer .charts {
+        margin-top: 20px;
     }
 }
 
@@ -530,35 +974,52 @@ th {
     }
 
     .dashboard button {
+        width: 100%;
         margin-bottom: 10px;
+    }
+
+    .bottomContainer {
+        overflow-x: auto;
+    }
+
+    table {
         width: 100%;
     }
 
-    .legend {
-        flex-direction: column;
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.8rem;
     }
 }
 
-@media (max-width: 576px) {
-
-    .chartContainer,
-    .chartDataContainer {
-        height: auto;
+@media (max-width: 480px) {
+    .profesorPage {
+        padding: 1rem;
     }
 
-    .chartDataContainer .charts canvas {
-        height: 300px;
+    h1,
+    h2 {
+        font-size: 1.5rem;
     }
 
-    table,
+    .dashboard button {
+        font-size: 0.9rem;
+    }
+
     th,
     td {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
     }
 
-    .actionButton {
-        padding: 5px 8px;
-        font-size: 0.8rem;
+    .modal-content {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .closeButton {
+        padding: 8px 16px;
+        font-size: 0.9rem;
     }
 }
 </style>

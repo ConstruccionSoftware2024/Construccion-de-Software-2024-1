@@ -3,17 +3,25 @@ import HomeView from '../views/VistasGrupoJoaquin/HomeView.vue'
 import ListaAlumnos from '@/components/ComponentesGrupoClaudio/ListaAlumnos.vue'
 import HistorialAlumno from '../views/VistasGrupoFelipe/HistorialAlumno.vue'
 import InicioSesion from '@/components/ComponentesGrupoFelipe/InicioSesion.vue'
-import ComponenteModulos from '@/components/ComponentesGrupoFelipe/ComponenteModulos.vue'
+import ComponenteModulos from '../components/ComponentesGrupoFelipe/ComponenteModulos.vue'
 import ComponenteOpciones from '@/components/ComponentesGrupoFelipe/ComponenteOpciones.vue'
 import CrearEvaluacion from '@/components/ComponentesGrupoFelipe/CrearEvaluacion.vue'
 import HistorialEvaluaciones from '@/components/ComponentesGrupoFelipe/HistorialEvaluaciones.vue'
 import VistaAlumno from '../views/VistasGrupoJoaquin/VistaAlumno.vue'
+import VistaEvaluacion from '../views/VistasGrupoFelipe/VistaEvaluacion.vue'
 import RevisionesView from '../views/VistasGrupoClaudio/RevisionesView.vue'
 import InvitarAlumnos from '@/components/ComponentesGrupoClaudio/InvitarAlumnos.vue'
 import FaltaAlumnos from '@/views/VistasGrupoClaudio/FaltaAlumnos.vue'
-import EstadoAlumnos from '@/views/VistasGrupoClaudio/EstadoAlumnos.vue'
+import ProfileView from '@/views/VistasGrupoClaudio/ProfileView.vue'
 import VistaProfesor from '@/views/VistasGrupoJoaquin/VistaProfesor.vue'
+import VisualizarUrl from '@/views/VistasGrupoJoaquin/VisualizarUrl.vue'
 import AboutView from '@/views/VistasGrupoClaudio/AboutView.vue'
+import SesionesAlumnos from '../components/ComponentesGrupoJoaquin/ComponenteSesionesAlum.vue'
+import navegacion from '../components/ComponentesGrupoFelipe/navegacion.vue'
+import asignaturas from '../components/ComponentesGrupoFelipe/ListaAsignaturas.vue'
+import AsignaturaAlumno from '../components/ComponentesGrupoFelipe/AsignaturaAlumno.vue'
+import notFound from '../components/ComponentesGrupoFelipe/notFound.vue'
+import { useThemeStore, useUserStore } from '/back-end/src/store.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,21 +33,24 @@ const router = createRouter({
     },
 
     {
-      path: '/vistaProfesor',
-      name: 'VistaProfesor',
-      component: VistaProfesor
+      path: '/listaAsignaturas',
+      name: 'asignaturas',
+      component: asignaturas
     },
-
     {
-      path: '/about',
-      name: 'AboutView',
-      component: AboutView
+      path: '/visualizarUrl',
+      name: 'VisualizarUrl',
+      component: VisualizarUrl
     },
-
     {
       path: '/modulos',
       name: 'modulos',
       component: ComponenteModulos
+    },
+    {
+      path: '/sesionesAlum',
+      name: 'sesionesAlum',
+      component: SesionesAlumnos
     },
     {
       path: '/opciones',
@@ -50,11 +61,6 @@ const router = createRouter({
       path: '/historialevaluaciones',
       name: 'historialevaluaciones',
       component: HistorialEvaluaciones
-    },
-    {
-      path: '/crearevaluacion',
-      name: 'crearevaluacion',
-      component: CrearEvaluacion
     },
     {
       path: '/home',
@@ -74,7 +80,7 @@ const router = createRouter({
     {
       path: '/settings',
       name: 'settings',
-      component: () => import('../components/ComponentesGrupoJoaquin/SettingsView.vue')
+      component: () => import('../components/ComponentesGrupoJoaquin/SettingsPerfil.vue')
     },
     {
       path: '/invitar-alumnos',
@@ -82,32 +88,40 @@ const router = createRouter({
       component: InvitarAlumnos
     },
     {
-      path: '/newsession',
-      name: 'create',
-      component: () => import('../views/VistasGrupoClaudio/CrearSesion.vue')
-    },
-    {
       path: '/session',
       name: 'sesion',
       component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
     },
     {
-      path: '/session/:id',
-      name: 'sesionid',
-      component: () => import('../views/VistasGrupoClaudio/Sesion.vue'),
-      props: true
+      path: '/crear-evaluacion/:sesionId',
+      name: 'CrearEvaluacion',
+      component: CrearEvaluacion
     },
     {
-      path: '/faltaAlumnos',
+      path: '/vistaProfesor/:id',
+      name: 'VistaProfesor',
+      component: VistaProfesor
+    },
+    {
+      path: '/vistaAlumno/:id',
+      name: 'VistaAlumno',
+      component: VistaAlumno
+    },
+    {
+      path: '/vistaEvaluacion/:id',
+      name: 'VistaEvaluacion',
+      component: VistaEvaluacion
+    },
+    {
+      path: '/faltaAlumnos/:id',
       name: 'FaltasAlumnos',
       component: FaltaAlumnos
     },
     {
-      path: '/estadoAlumnos',
-      name: 'EstadoAlumnos',
-      component: EstadoAlumnos
+      path: '/lista-alumnos',
+      name: 'lista-alumnos',
+      component: ListaAlumnos
     },
-    { path: '/lista-alumnos', name: 'lista-alumnos', component: ListaAlumnos },
     {
       path: '/historial',
       name: 'historial',
@@ -117,8 +131,81 @@ const router = createRouter({
       path: '/vistaalumno',
       name: 'vista-alumno',
       component: VistaAlumno
-    }
-  ]
+    },
+    {
+      path: '/perfil',
+      name: 'perfil',
+      component: ProfileView
+    },
+    {
+      path: '/navegacion',
+      name: 'navegacion',
+      component: () => import('../components/ComponentesGrupoFelipe/navegacion.vue')
+    },
+    {
+      path: '/historial',
+      name: 'historial',
+      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+    },
+    {
+      path: '/HistorialSesiones',
+      name: 'HistorialSesiones',
+      component: () => import('../components/ComponentesGrupoFelipe/HistorialSesiones.vue')
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/VistasGrupoFelipe/about.vue')
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: () => import('../views/VistasGrupoFelipe/contact.vue')
+    },
+    {
+      path: '/asignaturaProfesor/:id',
+      name: 'asignatura',
+      component: () => import('../views/VistasGrupoClaudio/AsignaturaProfesor.vue')
+    },
+    {
+      path: '/asignaturaAlumno/:id',
+      name: 'asignaturaAlumno',
+      component: AsignaturaAlumno,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/:catchAll(.*)/',
+      name: 'not-found',
+      component: notFound
+    },
+    {
+      path: '/ContactoAlumno',
+      name: 'contactoalumno',
+      component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue')
+    },
+    {
+      path: '/VerForo',
+      name: 'VerForo',
+      component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+    },
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    return { top: 0 }
+  }
 })
 
-export default router
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+
+  const userStore = useUserStore()
+
+  if (requiresAuth && !userStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+
+
+
+export default router;

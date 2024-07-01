@@ -1,93 +1,107 @@
 <template>
-  <div class="datos">
-    <h1>Evaluación</h1>
-    <h3>Nombre del módulo</h3>
-  </div>
+  <div class="general-div">
+    <div class="datos">
+      <h1>Listado de Alumnos</h1>
+    </div>
 
-  <div class="lista">
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Apellido</th>
-          <th>Matrícula</th>
-          <th>Sesión Iniciada</th>
-          <th>Riesgo</th>
-          <th>Opciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="alumno in alumnos" :key="alumno.matricula">
-          <td>{{ alumno.nombre }}</td>
-          <td>{{ alumno.apellido }}</td>
-          <td>{{ alumno.matricula }}</td>
-          <td>{{ "Si/No" }}</td>
-          <td>
-            <i v-if="alumno.riesgo === 'Bajo'" class="fa-solid fa-check"></i>
-            <i v-else-if="alumno.riesgo === 'Medio'" class="fa-solid fa-exclamation"></i>
-            <i v-else-if="alumno.riesgo === 'Alto'" class="fa-solid fa-x"></i>
-          </td>
-          <td>
-            <div class="dropdown">
-              <button class="dropbtn">Ver más</button>
-              <div class="dropdown-content">
-                <router-link to="/historial">Ver alumno</router-link>
-                <a href="#">Enviar mensaje</a>
-                <a href="#">Bloquear</a>
-                <a href="#" @click="banearAlumno(alumno)">Banear alumno</a>
-              </div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="lista">
+      <table>
+        <thead>
+          <tr>
+            <th>Matrícula</th>
+            <th>Nombre</th>
+            <th>Apellido Paterno</th>
+            <th>Apellido Materno</th>
+            <th>Correo</th>
+            <th>Campus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="(alumno, index) in alumnos" :key="alumno.matricula">
+            <tr @click="seleccionarAlumno(index)">
+              <td>{{ alumno.matricula }}</td>
+              <td>{{ alumno.firstName }}</td>
+              <td>{{ alumno.lastName }}</td>
+              <td>{{ alumno.secondLastName }}</td>
+              <td>{{ alumno.email }}</td>
+              <td>{{ alumno.campus }}</td>
+            </tr>
+
+            <tr v-if="alumnoSeleccionado === index">
+              <td colspan="8">
+                <div class="detail-falta-container">
+                  <strong class="titulo">Asignaturas inscritas:</strong>
+                  <ul>
+                    <li v-for="asignatura in asignaturas" :key="asignatura._id">{{ asignatura.title }}</li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
       alumnos: [],
-      historial: [],//por ahora es una idea probicional hecha por enzo y erik
-      //la idea es guardar la informacion de los usuarios con su matricula, la idea es guardarlos posteriormente dentro de una nueva tabla en la base de datos
-      matriculaABanear: ''
+      historial: [],
+      matriculaABanear: '',
+      alumnoSeleccionado: null,
+      asignaturas: []
     }
   },
   methods: {
-    generarAlumnos() {
-      for (let i = 0; i < 5; i++) {
-        const alumno = {
-          nombre: `Alumno ${i + 1}`,
-          apellido: `Apellido ${i + 1}`,
-          matricula: `Matricula ${i + 1}`,
-          riesgo: ['Bajo', 'Medio', 'Alto'][Math.floor(Math.random() * 3)]
-        }
-        this.alumnos.push(alumno)
-        this.historial.push({
+    async obtenerAlumnos() {
+      try {
+        const response = await axios.get('http://localhost:8080/users');
+        this.alumnos = response.data;
+        this.historial = this.alumnos.map(alumno => ({
           nombre: alumno.nombre,
           matricula: alumno.matricula
-        })
+        }));
+      } catch (error) {
+        console.error('Failed to fetch alumnos', error);
       }
-      console.log(this.historial)
-      //examinando el localhost, revisando dentro de console se puede verificar que los datos
-      //se estan guardando correctamente nombre y matricula
     },
-    banearAlumno(alumno) {
-      // Placeholder para banear a un alumno sin lógica, dada la falta de la lógica de otros componentes
-      console.log(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
-      alert(`El alumno ${alumno.nombre} ${alumno.apellido} ha sido baneado.`)
+    async obtenerAsignaturas(alumnoId) {
+      try {
+        const response = await axios.get(`http://localhost:8080/asignaturas/${alumnoId}`);
+        this.asignaturas = response.data;
+      } catch (error) {
+        console.error('Failed to fetch asignaturas', error);
+      }
+    },
+    seleccionarAlumno(index) {
+      this.alumnoSeleccionado = this.alumnoSeleccionado === index ? null : index;
+      if (this.alumnoSeleccionado !== null) {  
+        this.obtenerAsignaturas(this.alumnos[this.alumnoSeleccionado]._id);
+      }
     }
   },
   created() {
-    this.generarAlumnos()
+    this.obtenerAlumnos();
   }
 }
 </script>
 
 <style scoped>
-h3 {
-  font-size: medium;
+
+.titulo {
+  font-weight: bold;
+}
+
+h1 {
+  font-size: 40px;
+  font-weight: bold;
+  text-align: center;
 }
 
 .dropdown {
@@ -98,7 +112,7 @@ h3 {
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: #f9f9f9;
+  background-color: var(--container-background-color);
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
@@ -120,12 +134,18 @@ h3 {
 }
 
 .dropbtn {
-  background-color: #e5ba73;
-  color: black;
+  background-color: #08cccc;
+  color: var(--text-color);
+  ;
   padding: 12px;
   font-size: 12px;
   border: none;
   cursor: pointer;
+}
+
+.general-div {
+  text-align: center;
+  justify-content: center;
 }
 
 table {
@@ -133,47 +153,36 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+th,
+td {
+  height: 40px;
+  text-align: center;
+  max-height: 40px;
+  overflow-y: auto;
+}
+
+td {
+  cursor: pointer;
+  border: 1px solid var(--border-color);
 }
 
 tr:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: var(--input-background-color);
 }
 
 th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  background-color: #c58940;
+  background-color: #08cccc;
   color: white;
+  font-weight: bold;
+  border-right: 1px solid var(--container-background-color);
 }
 
-body.dark-mode {
-  background-color: #333;
-  color: #fff;
-}
-
-body.dark-mode table {
-  color: #fff;
-}
-
-body.dark-mode th, body.dark-mode td {
-  border-bottom: 1px solid #888;
-}
-
-body.dark-mode tr:nth-child(even) {
-  background-color: #555;
-}
-
-body.dark-mode th {
-  background-color: #444;
-  color: #fff;
-}
-
-.dark-mode .switch {
-  background-color: #4e4e4e;
+.detail-falta-container {
+  border: 1px solid #ccc;
+  border: 1px solid var(--container-background-color);
+  padding: 6px;
+  text-align: left;
+  padding-left: 3rem;
+  width: 100%;
 }
 </style>

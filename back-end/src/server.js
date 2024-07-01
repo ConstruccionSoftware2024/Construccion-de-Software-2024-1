@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import { log } from 'console'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
-
+import bcrypt from 'bcrypt'
 dotenv.config()
 
 // Configuración de la aplicación
@@ -20,7 +20,7 @@ let db
 // Configuración de CORS
 const corsOptions = {
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'DELETE'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }
 app.use(cors(corsOptions))
@@ -54,65 +54,143 @@ app.get('/users', async (req, res) => {
   }
 })
 
-app.get('/faltas', async (req, res) => {
+app.get('/name/:id', async (req, res) => {
   try {
     const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
-  } catch (error) {
-    res.status(500).send(error.message)
-  }
-})
-
-app.post('/faltas-post', async (req, res) => {
-  try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const alumno = req.body
-    // Busca el alumno en la base de datos
-    const existingAlumno = await collection.findOne({ _id: alumno._id })
-
-    if (existingAlumno) {
-      // Si el alumno ya existe, actualiza detalleFaltas
-      const result = await collection.updateOne(
-        { _id: alumno._id },
-        { $push: { detalleFaltas: alumno.detalleFaltas[0] }, $inc: { faltas: 1 } }
-      )
+    const collection = database.collection('evaluaciones')
+    const evaluations = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    if (evaluations) {
+      res.send(evaluations);
     } else {
-      // Si el alumno no existe, inserta el nuevo alumno
-      const result = await collection.insertOne(alumno)
+      res.status(404).send('Evaluation not found');
     }
-    res.status(200).send('Falta agregada correctamente')
   } catch (error) {
-    console.error(error) // Imprime el error
-    res.status(500).send(error.message)
+    console.error('Failed to fetch evaluations from database', error)
+    res.status(500).send('Failed to fetch evaluations from database')
   }
 })
 
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
+app.get('/asignaturas', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find().toArray();
+    res.send(asignaturas);
   } catch (error) {
-    res.status(500).send(error.message)
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
   }
-})
+});
 
-// Obtener faltas de los alumnos
-app.get('/faltas', async (req, res) => {
+// Recuperar una asignatura segun id
+app.get('/asignatura/:id', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('faltas')
-    const faltas = await collection.find({}).toArray()
-    res.send(faltas)
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const asignatura = await collection.findOne(consulta);
+    if (asignatura) {
+      res.send(asignatura);
+    } else {
+      res.status(404).send('Asignatura no encontrada');
+    }
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
+});
+
+app.get('/asignaturas/:alumnoId', async (req, res) => {
+  try {
+    const alumnoId = new ObjectId(req.params.alumnoId);
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturas = await collection.find({ members: { $in: [alumnoId] } }).toArray();
+    res.send(asignaturas);
+  } catch (error) {
+    console.error('Failed to fetch asignaturas from database', error);
+    res.status(500).send('Failed to fetch asignaturas from database');
+  }
+});
+
+app.get('/evaluacion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('evaluaciones');
+    const consulta = { sesionId: new ObjectId(req.params.id) };
+    const evaluaciones = await collection.find(consulta).toArray();
+    if (evaluaciones) {
+      res.send(evaluaciones);
+    } else {
+      res.status(404).send('Evaluacion no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.get('/faltas/', async (req, res) => {
+  try {
+    const db = client.db('construccion');
+    const userCollection = db.collection('users');
+    const faltasCollection = db.collection('faltas');
+
+    const usersData = await userCollection.find({}).toArray();
+
+    const usersWithFaltas = await Promise.all(usersData.map(async (user) => {
+      const userID = user._id.toString();
+      const userFaltas = await faltasCollection.findOne({ _id: userID });
+      return {
+        id: userID,
+        nombre: user.firstName,
+        apellidoPat: user.lastName,
+        apellidoMat: user.secondLastName,
+        rut: user.rut,
+        matricula: user.matricula,
+        correo: user.email,
+        campus: user.campus,
+        faltas: userFaltas ? userFaltas.faltas : 0,
+        detalleFaltas: userFaltas ? userFaltas.detalleFaltas : null
+      };
+    }));
+    res.send(usersWithFaltas);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error al recuperar los detalles de los usuarios" });
+  }
+});
+
+// Recuperar faltas especificas de un usuario
+app.get('/faltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const result = await collection.findOne({ _id: req.params.id });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+
+app.post('/addFaltas/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('faltas');
+    const id = req.params.id;
+    const newFalta = req.body;
+
+    const result = await collection.updateOne(
+      { _id: id },
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { upsert: true }
+    );
+
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+});
 
 // Cambiar estado de alumno (Peligroso / No Peligroso)
 app.post('/faltas/:id', async (req, res) => {
@@ -120,7 +198,7 @@ app.post('/faltas/:id', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('faltas')
     const result = await collection.updateOne(
-      { id: Number(req.params.id) },
+      { _id: new ObjectId(req.params.id) },
       { $set: { estado: req.body.estado } }
     )
     res.send(result)
@@ -129,24 +207,56 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
-let historial = []
-/* FUNCION DE LOGIN ANTERIOR 
-//funcion que guarda el usuarios que se acaban de logear en un historial
-app.post('/login', async (req, res) => {
-  const { nombre, matricula } = req.body
+app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const asignaturaId = req.params.asignaturaId;
+    const sessionId = req.body.sessionId;
 
-  const database = client.db('construccion') //aqui debe de ir el nombre de la tabla donde se almacenan los usuarios logeados
-  const collection = database.collection('users')
-  const user = await collection.findOne({ nombre, matricula })
+    // Encuentra la asignatura por ID
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) });
+    if (!asignatura) {
+      return res.status(404).json({ message: 'Asignatura no encontrada' });
+    }
 
-  if (user) {
-    historial.push({ nombre, matricula, fecha: new Date() })
-    res.json({ message: 'usuario guardado' })
-  } else {
-    res.status(401).json({ message: 'usuario no encontrado' })
+    // Agrega la ID de la sesión al arreglo "sesiones" de la asignatura
+    const result = await collection.updateOne(
+      { _id: new ObjectId(asignaturaId) },
+      { $push: { sesiones: new ObjectId(sessionId) } }
+    );
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error updating document:', error);
+    res.status(500).send('Error updating document');
   }
 });
-*/
+
+//Obtener campus
+app.get('/carreras/:campus', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campus = req.params.campus;
+    const carrerasData = await collection.findOne({ campus: campus });
+    res.send(carrerasData ? carrerasData.carreras : []);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+//Obtener Carreras
+app.get('/campus', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('carreras');
+    const campusData = await collection.find({}).project({ campus: 1 }).toArray();
+    res.send(campusData);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
 
 // Obtener lista de sesiones
 app.get('/sesion', async (req, res) => {
@@ -159,6 +269,96 @@ app.get('/sesion', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.get('/sesionAsignatura/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const database = client.db('construccion');
+    const asignaturaCollection = database.collection('asignaturas');
+
+    const asignatura = await asignaturaCollection.findOne({ sesiones: new ObjectId(id) });
+    if (!asignatura) {
+      return res.status(404).send('Asignatura not found');
+    }
+
+    res.send(asignatura.title);
+  } catch (error) {
+    console.error('Failed to fetch asignatura', error);
+    res.status(500).send('Failed to fetch asignatura');
+  }
+});
+
+// Obtener una sesión específica por ID
+const getParticipantDetails = async (participantIds, usersCollection) => {
+  console.log('Original participant IDs:', participantIds);
+
+  // Convertimos los ids a ObjectId solo si no son ya ObjectId
+  const objectIds = participantIds.map(id => {
+    return typeof id === 'string' ? new ObjectId(id) : id;
+  });
+
+  console.log('Converted Object IDs:', objectIds);
+
+  // Realizamos la consulta y agregamos depuración
+  const participants = await usersCollection.find({ _id: { $in: objectIds } }).toArray();
+  console.log('Fetched participants:', participants);
+  return participants;
+}
+
+app.get('/sessions/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const sessionCollection = database.collection('sesion');
+    const usersCollection = database.collection('users');
+
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const session = await sessionCollection.findOne(consulta);
+
+    if (!session) {
+      return res.status(404).send('Sesión no encontrada');
+    }
+
+    // Obtener la información completa de los participantes
+    const participantes = await getParticipantDetails(session.participantes, usersCollection);
+
+    session.participantes = participantes;
+
+    res.json(session);
+  } catch (error) {
+    console.error('Error fetching session data:', error);
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/guardarEvaluacion', async (req, res) => {
+  const { evaluacion, sesionId } = req.body;
+
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('evaluaciones');
+
+    // Verifica que el sesionId es un ObjectId válido
+    let objectId;
+    try {
+      objectId = new ObjectId(sesionId);
+    } catch (error) {
+      return res.status(400).json({ success: false, message: 'Invalid session ID format', error: error.message });
+    }
+
+    // Inserta la evaluación en la colección de evaluaciones
+    const result = await collection.insertOne({
+      ...evaluacion,
+      sesionId: objectId
+    });
+
+    res.status(200).json({ success: true, result });
+  } catch (error) {
+    console.error('Error al guardar la evaluación:', error);
+    res.status(500).json({ success: false, message: 'Error al guardar la evaluación', error: error.message });
+  }
+});
+
+
 
 // Se actualiza la lista de participantes de una sesión
 app.put('/sesion/:id', async (req, res) => {
@@ -180,12 +380,14 @@ app.put('/sesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
 /* FUNCION DE LOGIN DE GRUPO JOAQUIN*/
 app.post('/login', async (req, res) => {
   try {
     const database = client.db('construccion')
     const User = database.collection('users')
     const user = await User.findOne({ email: req.body.email })
+    const historialLogin = database.collection('historialLogin') //nueva coleccion para almacenar el historial del login en la pagina
 
     if (!user) {
       return res.json({ success: false })
@@ -197,6 +399,17 @@ app.post('/login', async (req, res) => {
 
     // Excluir la contraseña de la respuesta
     const { password, ...userWithoutPassword } = user
+    // Guardar el usuario en el historial de login
+    await historialLogin.insertOne({
+      IdUsuario: user._id,
+      nombre: user.username,
+      email: user.email,
+      tiempoLogin: new Date()
+    })
+
+    // Mostrar historial de login
+    const historial = await historialLogin.find().toArray()
+    //console.log('Historial de login:', historial)
 
     res.json({ success: true, user: userWithoutPassword })
   } catch (error) {
@@ -216,6 +429,7 @@ app.post('/register', async (req, res) => {
     secondLastName,
     campus,
     major,
+    role,
     rut,
     matricula
   } = req.body
@@ -231,6 +445,7 @@ app.post('/register', async (req, res) => {
       campus,
       major,
       rut,
+      role,
       matricula
     },
     SECRET_KEY,
@@ -261,10 +476,106 @@ app.post('/register', async (req, res) => {
   })
 })
 
+app.post('/resetPassword', async (req, res) => {
+  const { email } = req.body;
+
+  const database = client.db('construccion');
+  const User = database.collection('users');
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).send('Usuario no encontrado.');
+  }
+
+  const resetCode = Math.random().toString(36).substring(2, 15);
+
+  await User.updateOne({ email }, { $set: { resetCode: resetCode } });
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: 'Código de reseteo de contraseña',
+    text: `Tu código de reseteo es: ${resetCode}`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).send('Error al enviar el correo.');
+    } else {
+      console.log('Email enviado: ' + info.response);
+      return res.send('Correo de reseteo enviado.');
+    }
+  });
+});
+
+app.post('/verifyResetCode', async (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ success: false, message: 'Email y código son requeridos.' });
+  }
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    if (user.resetCode === code) {
+      res.json({ success: true, message: 'Código verificado correctamente.', email: email });
+      await User.updateOne({ email: email }, { $set: { resetCode: '' } });
+    } else {
+      res.status(400).json({ success: false, message: 'Código inválido o expirado.' });
+    }
+  } catch (error) {
+    console.error('Error al verificar el código de restablecimiento:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+  }
+});
+
+app.post('/loginInsta', async (req, res) => {
+  const correo = req.body.email;
+  try {
+    const database = client.db('construccion');
+    const User = database.collection('users');
+    const user = await User.findOne({ email: correo });
+    if (user) {
+      const password = user.password;
+      const email2 = user.email;
+      res.json({ success: true, password, email2 });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+app.post('/update-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = decoded.userId;
+    await updateUserPassword(userId, newPassword);
+    res.send('Contraseña actualizada con éxito.');
+  } catch (error) {
+    res.status(400).send('Error al actualizar la contraseña.');
+  }
+});
+
 app.get('/verify', async (req, res) => {
   const { token } = req.query
   try {
     const decoded = jwt.verify(token, SECRET_KEY)
+    const rol = 'alumno'
     const {
       email,
       username,
@@ -275,9 +586,15 @@ app.get('/verify', async (req, res) => {
       secondLastName,
       campus,
       major,
+      role,
       rut,
       matricula
     } = decoded
+
+    const emailDomain = email.split('@')[1];
+    if (emailDomain === 'utalca.cl') {
+      rol = 'profesor';
+    }
 
     const database = client.db('construccion')
     const User = database.collection('users')
@@ -298,6 +615,7 @@ app.get('/verify', async (req, res) => {
         rut: rut,
         matricula: matricula,
         campus: campus,
+        role: rol,
         major: major
       })
     }
@@ -325,6 +643,78 @@ app.post('/checkEmail', async (req, res) => {
     res.status(500).json({ error: 'Error del servidor' })
   }
 })
+//actualizar ciertos datos del perfil
+app.post('/verify_password', async (req, res) => {
+  const database = client.db('construccion')
+  const User = database.collection('users')
+  try {
+    const email = { email: req.body.email }
+    const val_password = { val_password: req.body.val_password }
+
+    // Busca al usuario en la base de datos
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({ passwordCorrect: false })
+    }
+    const passwordCorrect = await bcrypt.compare(val_password, user.password)
+    res.json(passwordCorrect)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/edit_username', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const filter = { email: req.body.email }
+    const update = { username: req.body.new_username }
+    if (update != '') {
+      const poster = await User.updateOne(filter, { $set: update })
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/edit_password', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const User = database.collection('users')
+    const filter = { email: req.body.email }
+    const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
+    if (update1 != '' || update1 != ' ') {
+      const poster = await User.updateOne(filter, { $set: update1 })
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error del servidor' })
+  }
+})
+app.post('/anadir_Usuario', async (req, res) => {
+
+  try {
+    const database = client.db('construccion')
+    const Sesion = database.collection('sesion')
+    const nuevos_usuarios = req.body.users;
+    const sesion_id = req.body.sesion_id;
+
+    const result = await Sesion.updateOne({ _id: new ObjectId(sesion_id) }, { $push: { participantes: { $each: nuevos_usuarios } } });
+
+    if (result.matchedCount === 0) {
+      res.status(404).send('No se encontró la sesión con el id proporcionado');
+    } else if (result.modifiedCount === 0) {
+      res.status(400).send('No se pudo actualizar la sesión');
+    } else {
+      res.status(200).send('Usuarios añadidos exitosamente');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
+  }
+});
+//--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
   try {
@@ -341,7 +731,7 @@ app.get('/sesion/:id', async (req, res) => {
 //obtener usuario especifico
 app.get('/user/:id', async (req, res) => {
   try {
-    console.log('here')
+
     const database = client.db('construccion')
     const collection = database.collection('users')
     const consulta = { _id: new ObjectId(req.params.id) }
@@ -355,6 +745,24 @@ app.get('/user/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+// Actualizar datos usuario especifico
+app.post('/user/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('users')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, { $set: req.body })
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Ususaio no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario
@@ -399,24 +807,24 @@ app.get('/user/:id/alertas', async (req, res) => {
 // Para mostrar los mensajes de alerta en algún componente puedes usar la siguiente función
 // USAR SOLO EN EL FRONTEND (NO AQUI)
 /*
-const obtenerAlertas = async () => {
-  try {
-      let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
-      let alertas = await respuesta.json()
+  const obtenerAlertas = async () => {
+    try {
+        let respuesta = await fetch(`http://localhost:8080/user/${idUsuario}/alertas`)
+        let alertas = await respuesta.json()
+  
+        // Muestra las alertas al usuario
+        alertas.forEach(alerta => {
+            alert(alerta)
+        })
+    }
+    catch (error) {
+        console.error('Error al obtener las alertas:', error)
+    }
+  }  
+  // Se llama a obtenerAlertas cada 5 segundos
+  setInterval(obtenerAlertas, 5000)
+  */
 
-      // Muestra las alertas al usuario
-      alertas.forEach(alerta => {
-          alert(alerta)
-      })
-  }
-  catch (error) {
-      console.error('Error al obtener las alertas:', error)
-  }
-}
-
-// Se llama a obtenerAlertas cada 5 segundos
-setInterval(obtenerAlertas, 5000)
-*/
 
 // crear una nueva sesión
 app.post('/sesion', async (req, res) => {
@@ -426,13 +834,289 @@ app.post('/sesion', async (req, res) => {
     const newSession = {
       nombre: req.body.nombre,
       descripcion: req.body.descripcion,
-      participantes: []
+      asignatura: req.body.asignatura,
+      creador: req.body.creador,
+      participantes: [],
+      banlist: [],
+
     }
-    console.log('enviando', newSession.nombre, newSession.descripcion)
+    //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
+    res.status(200).json({ _id: result.insertedId });
+  } catch (error) {
+    console.error('Error inserting document:', error)
+    res.status(500).send('Error inserting document')
+  }
+})
+
+// Banear o expulsar a un alumno de una sesión
+
+app.post('/banearExpulsar/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const sessionId = req.params.id;
+    const bannedEmail = req.body.email;
+    const userId = req.body.userId;
+    const banear = req.body.banear;
+    console.log(sessionId, bannedEmail, userId, banear);
+
+    // Revisa si la sesión existe
+    const session = await collection.findOne({ _id: new ObjectId(sessionId) });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
+    }
+
+    let resultMessage = '';
+
+    if (banear) {
+      // Actualiza la lista de correos baneados de la sesión
+      const result = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $addToSet: { banlist: bannedEmail } }
+      );
+
+      if (result.matchedCount == 1) {
+        resultMessage = 'Alumno baneado de la sesión';
+      }
+    }
+
+    const removeResult = await collection.updateOne(
+      { _id: new ObjectId(sessionId) },
+      { $pull: { participantes: userId } }
+    );
+
+    if (removeResult.modifiedCount > 0) {
+      if (resultMessage) {
+        resultMessage += ' y expulsado de la lista de participantes.';
+      } else {
+        resultMessage = 'Alumno expulsado de la lista de participantes.';
+      }
+    } else {
+      if (!resultMessage) {
+        return res.status(404).json({ success: false, message: 'Problema encontrado al intentar banear al alumno' });
+      }
+    }
+
+    res.json({ success: true, message: resultMessage });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+app.post('/agregarParticipante', async (req, res) => {
+  try {
+    //Implementar lógica para agregar participante a sesion
+    //se asume que se enviaran como parametros el id de la sesion y el id del participante
+
+    //cambiar estos por req.body.idSesion y req.body.idParticipante
+    let idSesion = '665d1794a22b8d44afad0793'
+    let idParticipante = '665cfd84b637ff59e562b66d'
+
+    //obtenemos la sesion
+    const database = client.db('construccion')
+    const collection = database.collection('sesion')
+    const consulta = { _id: new ObjectId(idSesion) }
+    const result = await collection.findOne(consulta)
+
+    //Si el usuario fue baneado de la sesion no lo agregamos
+    if (result) {
+      // Verificar si el participante está en la banlist
+      const participanteBaneado = result.banlist.some((element) => idParticipante === element)
+      if (participanteBaneado) {
+        return res.status(403).send('Participante baneado no se puede agregar')
+      }
+    }
+
+    //Continuar con la lógica para agregar participante a sesion
+
+    res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send(error.message)
+  }
+})
+
+
+// HU-8 BlackList
+app.get('/sesion/:idSesion/blacklist', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const idSesion = new ObjectId(req.params.idSesion);
+
+    // Obtener la sesión y su banlist
+    const sesion = await collection.findOne({ _id: idSesion }, { projection: { banlist: 1 } });
+
+    if (sesion) {
+      res.send(sesion.banlist);
+    } else {
+      res.status(404).send('Sesión no encontrada');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+////////Funciones asociadas a los mensajes
+
+// Crear un nuevo mensaje
+app.post('/message', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    const newMessage = {
+      destinatario: req.body.destinatario,
+      mensaje: req.body.mensaje,
+      remitente: req.body.remitente,
+      visto: false,
+      alerta: ''
+    }
+    const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
   } catch (error) {
     console.error('Error inserting document:', error)
     res.status(500).send('Error inserting document')
   }
 })
+
+//traer todos los mensajes (No muy util)
+app.get('/message/', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    res.status(200).send(result)
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// traer los mensajes recibidos por un alumno especifico
+app.get('/message/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    let mensajesEspecificos = []
+    // revisamos todos los mensajes y guardamos aquellos que tengan remitente igual al id
+
+    if (!result) {
+      res.status(404).send('user not found')
+    }
+
+    result.forEach(element => {
+      if (element.destinatario == req.params.id) {
+        mensajesEspecificos.push(element)
+      }
+    });
+
+    res.status(200).send(mensajesEspecificos)
+
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// Actualizar estado de visto de un mensaje
+app.put('/message/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    const consulta = { _id: new ObjectId(req.params.id) }
+    const result = await collection.updateOne(consulta, {
+      $set: { visto: true }
+    })
+
+    if (result.modifiedCount === 1) {
+      res.send(result)
+    } else {
+      res.status(404).send('Mensaje no encontrado')
+    }
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+// Enviar email (página contacto)
+app.post('/send-email', async (req, res) => {
+  let { fullName, email, mobile, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: 'pruebas.construccion2024@outlook.com',
+    subject: `Mensaje de ${fullName}`,
+    text: `Nombre: ${fullName}\nEmail: ${email}\nTeléfono: ${mobile}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
+// Enviar email (página contacto alumno)
+app.post('/email-alumno', async (req, res) => {
+  let { fullName, email, msg } = req.body;
+
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: `Mensaje de profesor ${fullName}`,
+    text: `Profesor: ${fullName}\nMensaje enviado a: ${email}\nMensaje: ${msg}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+
+/* revisiar esta funcion de grupo joaquin*/
+app.post('/guardar-procesos', async (req, res) => {
+  const database = client.db('construccion');
+  const collection = database.collection('procesos');
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/historial');
+    const aplicaciones = response.data;
+
+    if (aplicaciones.length > 0) {
+      await collection.insertOne(aplicaciones);
+      res.status(200).send('Historial guardado en la base de datos');
+    } else {
+      res.status(204).send('No hay aplicaciones para guardar');
+    }
+  } catch (error) {
+    console.error('Error al guardar el historial:', error);
+    res.status(500).send('Error al guardar el historial');
+  }
+});
