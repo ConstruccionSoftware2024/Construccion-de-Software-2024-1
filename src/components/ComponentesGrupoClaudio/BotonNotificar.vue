@@ -32,7 +32,8 @@ import { useUserStore } from '../../../back-end/src/store'
 export default {
     props: {
         participante: Object,
-        ocultar: Boolean,
+        ocultado: Boolean,
+        session: String
     },
     setup(props) {
 
@@ -40,13 +41,12 @@ export default {
         const remitenteId = userStore.user._id
 
         let alumno = ref(props.participante)
-
+        let sesion = ref(props.session)
         let showModal = ref(false)
         let showAlerta = ref(false)
         let showMensaje = ref(false)
         let mensaje = ref('')
 
-        let ocultado = ref(props.ocultar)
 
         const toggleModal = () => {
             showModal.value = !showModal.value
@@ -78,7 +78,9 @@ export default {
                         mensaje: mensaje,
                         remitente: remitenteId,
                         visto: false,
-                        alerta: estado
+                        alerta: estado,
+                        sesion: sesion.value
+
                     }),
                 })
                 if (!respuesta.ok) {
@@ -101,7 +103,8 @@ export default {
                         mensaje: '',
                         remitente: remitenteId,
                         visto: false,
-                        alerta: estado
+                        alerta: estado,
+                        sesion: sesion.value
                     }),
                 })
                 if (!respuesta.ok) {
@@ -124,7 +127,8 @@ export default {
                         mensaje: mensaje,
                         remitente: remitenteId,
                         visto: false,
-                        alerta: ''
+                        alerta: '',
+                        sesion: sesion.value
                     }),
                 })
                 if (!respuesta.ok) {
@@ -143,7 +147,6 @@ export default {
             showAlerta,
             showMensaje,
             mensaje,
-            ocultado,
         }
     }
 }
