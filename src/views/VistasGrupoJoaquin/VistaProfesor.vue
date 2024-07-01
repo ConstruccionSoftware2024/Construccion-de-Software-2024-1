@@ -8,7 +8,8 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -63,7 +64,7 @@
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
-                                class="fas fa-eye"></i></button>
+                                    class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
                             style="font-size: 20px;">
@@ -77,8 +78,15 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
+                <h3>Últimas URLs</h3>
+                <ul>
+                    <li v-for="url in selectedStudent.latestUrls" :key="url">
+                        <a :href="url" target="_blank">{{ url }}</a>
+                    </li>
+                </ul>
+                <h3>Procesos</h3>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
@@ -87,6 +95,7 @@
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -476,18 +485,33 @@ export default {
             }
 
             try {
-                const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
+                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                const lastEntry = urlsResponse.data;
+                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
+
+                // Hacer una solicitud para obtener los procesos para este userId
+                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const apps = processesResponse.data;
+
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: response.data
+                    latestUrls, // Asignar el array de URLs
+                    apps // Asignar los procesos
                 };
-                console.log("procesos: " + response.data);
+
+                console.log("Última URLs: ", latestUrls);
+                console.log("Procesos: ", apps);
+
                 this.showModal = true;
             } catch (error) {
-                console.error('Error al obtener los procesos del estudiante:', error);
-                alert('Error al obtener los procesos del estudiante');
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
             }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },
@@ -519,7 +543,7 @@ export default {
             const modal = document.querySelector('.modal_añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
             const closeModal2 = document.querySelector('.modal_close_añadir');
-            
+
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
@@ -539,7 +563,7 @@ export default {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-                
+
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
@@ -591,7 +615,7 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
-                
+
                 return memberIdsAsString;
 
             } catch (error) {
