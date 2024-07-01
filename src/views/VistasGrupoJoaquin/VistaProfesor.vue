@@ -159,7 +159,10 @@ import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { time } from 'xpress/lib/string';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Accede a tu clave API como una variable de entorno
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     setup() {
         const route = useRoute();
@@ -356,7 +359,51 @@ export default {
                 return total + student.apps.filter(app => app.status === 'Peligro').length;
             }, 0);
         },
-        createCharts() {
+        async obtainAllProcesses() {
+            let matrixProcesses = [];
+            let processesMax = 0;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            try {
+                for (const alumno of this.alumnos) {
+                    const response = await axios.get(`http://localhost:8080/obtenerProcesos/${alumno._id}`);
+                    const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                    const result = await model.generateContent(prompt);
+                    const response2 = result.response;
+                    const text = response2.text();
+
+                    // Convertir la lista separada por comas a un arreglo
+                    const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                    // Combinar nombres únicos
+                    const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+                    matrixProcesses.push(uniqueProcessNamesWithCategories);
+                    if (response.data.length > processesMax) {
+                        processesMax = response.data.length;
+                    }
+                }
+
+                // Repeticiones de cada proceso
+                let processCount = {};
+                matrixProcesses.flat().forEach(process => {
+                    if (processCount[process]) {
+                        processCount[process]++;
+                    } else {
+                        processCount[process] = 1;
+                    }
+                });
+
+                // Crear matriz resultado con proceso y veces que se repite
+                let resultMatrix = [];
+                for (let process in processCount) {
+                    resultMatrix.push({ proceso: process, repeticiones: processCount[process] });
+                }
+                return resultMatrix;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                return [];
+            }
+        },
+        async createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -392,19 +439,10 @@ export default {
                 },
             });
 
-            const appUsage = this.alumnos.reduce((acc, student) => {
-                student.apps.forEach(app => {
-                    if (acc[app.name]) {
-                        acc[app.name]++;
-                    } else {
-                        acc[app.name] = 1;
-                    }
-                });
-                return acc;
-            }, {});
+            const resultMatrix = await this.obtainAllProcesses();
+            const appLabels = resultMatrix.map(item => item.proceso);
+            const appData = resultMatrix.map(item => item.repeticiones);
 
-            const appLabels = Object.keys(appUsage);
-            const appData = Object.values(appUsage);
 
             new Chart(appsCtx, {
                 type: 'bar',
@@ -478,32 +516,39 @@ export default {
         async viewProcesses(userId) {
             console.log("ID de la sesión: " + this.sessionId);
             const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
-
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             if (!selectedStudent) {
                 alert('Estudiante no encontrado');
                 return;
             }
 
             try {
-                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
-                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
-                const lastEntry = urlsResponse.data;
-                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
 
-                // Hacer una solicitud para obtener los procesos para este userId
-                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
-                const apps = processesResponse.data;
+                const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+
+                const result = await model.generateContent(prompt);
+                const response2 = result.response;
+                const text = response2.text();
+
+                // Convertir la lista separada por comas a un arreglo
+                const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                // Combinar nombres únicos
+                const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+
+                // Escribe los nombres de procesos únicos en un archivo
+                const fileText = uniqueProcessNamesWithCategories.join('\n');
 
                 this.selectedStudent = {
                     ...selectedStudent,
-                    latestUrls, // Asignar el array de URLs
-                    apps // Asignar los procesos
+                    apps: uniqueProcessNamesWithCategories
                 };
-
-                console.log("Última URLs: ", latestUrls);
-                console.log("Procesos: ", apps);
+                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
 
                 this.showModal = true;
+
+                return uniqueProcessNamesWithCategories;
             } catch (error) {
                 console.error('Error al obtener datos del estudiante:', error);
                 alert('Error al obtener datos del estudiante');
@@ -622,7 +667,7 @@ export default {
                 console.error(error);
                 return [];
             }
-        },
+        }
     },
     computed: {
         // Filtra los usuarios basándose en el campo de búsqueda
