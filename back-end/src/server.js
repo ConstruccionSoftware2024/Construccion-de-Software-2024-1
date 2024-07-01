@@ -1073,6 +1073,7 @@ app.post('/message', async (req, res) => {
     const users = await collUsers.find({}).toArray()
 
     let remitentenombre = users.filter(user => user._id == req.body.remitente)
+    let destinatarionombre = users.filter(user => user._id == req.body.destinatario)
 
     let asignatura = [{ title: 'default' }]
     // traemos las asignaturas
@@ -1092,7 +1093,8 @@ app.post('/message', async (req, res) => {
       sesion: sesionCorrecta[0].nombre,
       fecha: new Date(),
       asignatura: asignatura[0].title,
-      remitenteNombre: remitentenombre[0].firstName + ' ' + remitentenombre[0].lastName
+      remitenteNombre: remitentenombre[0].firstName + ' ' + remitentenombre[0].lastName,
+      destinatarionombre: destinatarionombre[0].firstName + ' ' + destinatarionombre[0].lastName
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
@@ -1132,6 +1134,34 @@ app.get('/message/:id', async (req, res) => {
 
     result.forEach(element => {
       if (element.destinatario == req.params.id) {
+        mensajesEspecificos.push(element)
+      }
+    });
+
+    res.status(200).send(mensajesEspecificos)
+
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// traer los mensajes enviados por alguien especifico 
+app.get('/sendmessage/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    let mensajesEspecificos = []
+    // revisamos todos los mensajes y guardamos aquellos que tengan remitente igual al id
+
+    if (!result) {
+      res.status(404).send('user not found')
+    }
+
+    result.forEach(element => {
+      if (element.remitente == req.params.id) {
         mensajesEspecificos.push(element)
       }
     });
