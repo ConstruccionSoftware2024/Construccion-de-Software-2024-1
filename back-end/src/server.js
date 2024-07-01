@@ -733,9 +733,6 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
       const miembros = asignatura.members;
       res.send(miembros);
     }
-
-
-
     //console.log("Miembros encontrados:", miembros);
 
   } catch (error) {
@@ -743,6 +740,26 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
     res.status(500).send({ error: 'Error interno del servidor' });
   }
 });
+app.post('/anadir_app', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const coleccion = database.collection('peligroSesion');
+
+    const nombreApp = req.body.nombreApp;
+    const LinkApp = req.body.LinkApp;
+    const nivelPeligro = req.body.nivelPeligro;
+    const asignatura = req.body.asignatura;
+    //console.log(nombreApp + " ---- " + LinkApp + " ------- " + nivelPeligro + " ---- " + asignatura)
+    await coleccion.insertOne({ nombre: nombreApp, link: LinkApp, peligro: nivelPeligro, asignatura: asignatura });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
+  }
+});
+
+
+
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {

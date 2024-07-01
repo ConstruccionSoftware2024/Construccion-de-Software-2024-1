@@ -7,9 +7,11 @@
         <div class="dashboard">
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="app" @click="añadir">Añadir Aplicación</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
             <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
                 Evaluación</button>
+
             <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
@@ -143,30 +145,35 @@
             </div>
         </section>
     </div>
-    <div class="modal__container_añadir">
-        <h2 class="modal__title_añadir">Agregar App Peligrosa</h2>
-        <form @submit.prevent="agregarAppPeligrosa" class="modal-form">
-            <div class="input-container_añadir">
-                <label for="peligrosidad">Nombre de la Aplicación:</label>
-                <input v-model="nombreApp" type="text" class="input_añadir" placeholder="" required>
+    <div class="app">
+        <section class="modal__añadir">
+            <div class="modal__container_añadir">
+                <h2 class="modal__title_añadir">Agregar App Peligrosa</h2>
+                <form @submit.prevent="agregarAppPeligrosa" class="modal-form">
+                    <div class="input-container_añadir">
+                        <label for="peligrosidad">Nombre de la Aplicación:</label>
+                        <input v-model="nombreApp" type="text" class="input_añadir" placeholder="" required>
+                    </div>
+                    <div class="input-container_añadir">
+                        <label for="peligrosidad">Link de la Aplicación:</label>
+                        <input v-model="LinkApp" type="text" class="input_añadir" placeholder="" required>
+                    </div>
+                    <div class="input-container_añadir">
+                        <label for="peligrosidad">Nivel de Peligro:</label>
+                        <select v-model="nivelPeligro" id="nivelPeligro" class="input_añadir" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="button-container">
+                        <a href="#" @click.prevent="anadir_app" class="modal_close__añadir">Añadir</a>
+                        <a href="#" class="modal__close__añadir">Cerrar</a>
+                    </div>
+                </form>
             </div>
-            <div class="input-container_añadir">
-                <label for="peligrosidad">Link de la Aplicación:</label>
-                <input v-model="LinkApp" type="text" class="input_añadir" placeholder="" required>
-            </div>
-            <div class="input-container_añadir">
-                <label for="peligrosidad">Nivel de Peligro:</label>
-                <select v-model="nivelPeligro" id="nivelPeligro" class="input_añadir" required>
-                    <option value="">Seleccionar...</option>
-                    <option value="baja">Baja</option>
-                    <option value="media">Media</option>
-                    <option value="alta">Alta</option>
-                </select>
-            </div>
-            <div class="button-container">
-                <a href="#" @click.prevent="peligrosidadAplicaciones" class="modal_close_añadir">Añadir</a>
-            </div>
-        </form>
+        </section>
     </div>
 </template>
 <script>
@@ -276,28 +283,6 @@ export default {
         redirigirCrearEvaluacion() {
             this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
         },
-
-        peligrosidadAplicaciones() {
-            if (this.nombreApp && this.LinkApp) {
-
-                const aplicacionAgregada = {
-                    nombreApp: this.nombreApp,
-                    LinkApp: this.LinkApp,
-                    nivelPeligro: this.nivelPeligro,
-                };
-                // Agregar a la lista de aplicaciones peligrosas
-                this.appPeligrosas.push(aplicacionAgregada);
-
-                // Limpiar campos
-                this.nombreApp = '';
-                this.LinkApp = '';
-                this.nivelPeligro = '';
-            } else {
-                alert('Por favor, complete ambos campos.');
-            }
-            console.log('Array apps:', this.appPeligrosas);
-        },
-
         assignAppsToStudents(students) {
             const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
             const warningApps = ['Slack', 'Skype', 'Zoom', "EpicGames", "Word", "Excel", "PowerPoint", "Paint", "Illustrator", "Photoshop", "Premiere", "Acrobat", "Ink"];
@@ -552,7 +537,7 @@ export default {
             const sessionUsers = sessionResponse.data;
             const asignatura = sessionUsers.asignatura;
             const participantesIds = sessionUsers.participantes;
-            console.log("--------->" + asignatura)
+            //console.log("--------->" + asignatura)
             const response = await axios.get('http://localhost:8080/users');
             const allUsers = response.data;
 
@@ -569,24 +554,45 @@ export default {
         },
         añadir() {
             const openModal = document.querySelector('.hero__cta');
+            const openModal2 = document.querySelector('.app');
             const modal = document.querySelector('.modal_añadir');
+            const modal2 = document.querySelector('.modal__añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
-            const closeModal2 = document.querySelector('.modal_close_añadir');
-
+            const closeModal_ = document.querySelector('.modal_close_añadir');
+            const closeModal2 = document.querySelector('.modal_close__añadir');
+            const closeModal2_ = document.querySelector('.modal__close__añadir');
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
             });
-
             closeModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.remove('modal_añadir--show');
             });
-            closeModal2.addEventListener('click', (e) => {
+            closeModal_.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.remove('modal_añadir--show');
                 //alert("alumnos agregados correctamente");
             });
+            openModal2.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal2.classList.add('modal__añadir--show');
+            });
+            closeModal2.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal2.classList.remove('modal__añadir--show');
+                this.nombreApp = '';
+                this.LinkApp = '';
+                this.nivelPeligro = '';
+            });
+            closeModal2_.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal2.classList.remove('modal__añadir--show');
+                this.nombreApp = '';
+                this.LinkApp = '';
+                this.nivelPeligro = '';
+            });
+
         },
         async anadir_Usuario() {
             try {
@@ -608,6 +614,25 @@ export default {
             } catch (error) {
                 console.error(error);
             }
+        },
+        async anadir_app() {
+            if (this.nombreApp && this.LinkApp && this.nivelPeligro) {
+                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+                const sessionUsers = sessionResponse.data;
+                const asignatura = sessionUsers.asignatura;
+                await axios.post('http://localhost:8080/anadir_app', {
+                    nombreApp: this.nombreApp,
+                    LinkApp: this.LinkApp,
+                    nivelPeligro: this.nivelPeligro,
+                    asignatura: asignatura
+                }
+                );
+                //console.log(this.nombreApp + " ---- " + this.LinkApp + " ------- " + this.nivelPeligro + " ---- " + asignatura)
+
+            } else {
+                alert('Por favor, complete los campos.');
+            }
+            //console.log('Array apps:', this.appPeligrosas);
         },
         async alumnosbaneados() {
             try {
@@ -810,6 +835,7 @@ export default {
     margin-left: -30%;
 }
 
+.modal__añadir,
 .modal_añadir {
     position: fixed;
     top: 0;
@@ -825,6 +851,7 @@ export default {
     --transition: transform .8s;
 }
 
+.modal__añadir--show,
 .modal_añadir--show {
     opacity: 1;
     pointer-events: unset;
@@ -858,6 +885,8 @@ export default {
     max-width: 300px;
 }
 
+.modal__close__añadir,
+.modal_close__añadir,
 .modal_close_añadir,
 .modal__close_añadir {
     text-decoration: none;
