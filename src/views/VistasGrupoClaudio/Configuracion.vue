@@ -2,7 +2,7 @@
     <div class="container">
         <div class="container-botones">
             <button>Nueva Configuración</button>
-            <button>Guardar Configuración</button>
+            <button @click="actualizarListas">Guardar Configuración</button>
         </div>
         <div class="container-listas">
             <div class="container-configs">
@@ -20,14 +20,14 @@
                     <span class="list-header">Rojo</span>
                 </div>
                 <div class="page-manager">
-                    <ul ref="parent1" class="page-list">
-                        <li v-for="item in pages1" :key="item" class="page">{{ item }}</li>
+                    <ul ref="parentVerde" class="page-list">
+                        <li v-for="item in pagesVerde" :key="item" class="page">{{ item }}</li>
                     </ul>
-                    <ul ref="parent2" class="page-list">
-                        <li v-for="item in pages2" :key="item" class="page">{{ item }}</li>
+                    <ul ref="parentAmarillo" class="page-list">
+                        <li v-for="item in pagesAmarillo" :key="item" class="page">{{ item }}</li>
                     </ul>
-                    <ul ref="parent3" class="page-list">
-                        <li v-for="item in pages3" :key="item" class="page">{{ item }}</li>
+                    <ul ref="parentRojo" class="page-list">
+                        <li v-for="item in pagesRojo" :key="item" class="page">{{ item }}</li>
                     </ul>
                 </div>
             </div>
@@ -39,32 +39,75 @@
 import { useDragAndDrop } from "@formkit/drag-and-drop/vue";
 import { multiDrag, selections } from "@formkit/drag-and-drop";
 import { ref, onMounted, computed } from 'vue'
+import { useUserStore } from "../../../back-end/src/store";
 
 export default {
     setup() {
+        const userConfigs = ref([])
         const configs = ref([])
+        const config = ref([])
+
         const listaVerde = ref([])
         const listaAmarillo = ref([])
         const listaRojo = ref([])
 
-        const obtenerConfiguraciones = async () => {
+        const userStore = useUserStore()
+        const user = computed(() => userStore.user);
+        const userId = user.value._id
+
+        const obtenerUserConfigs = async () => {
             try {
-                let respuesta = await fetch('http://localhost:8080/configs')
+                console.log(userId)
+                let respuesta = await fetch(`http://localhost:8080/userConfigs/${userId}`)
                 let data = await respuesta.json()
-                configs.value = data
-                actualizarListas()
+                userConfigs.value = data
+                obtenerConfigs()
             } catch (error) {
                 console.error(error)
             }
         }
 
-        const actualizarListas = () => {
-            listaVerde.value = configs.value.flatMap(config => config.verde.map(item => item.pagina))
-            listaAmarillo.value = configs.value.flatMap(config => config.amarillo.map(item => item.pagina))
-            listaRojo.value = configs.value.flatMap(config => config.rojo.map(item => item.pagina))
+        const obtenerConfigs = async () => {
+            for (let id of userConfigs.value) {
+                try {
+                    const data = await getConfigById(id);
+                    configs.value.push(data);
+                } catch (error) {
+                    console.error(`Error al obtener la configuración con id ${id}:`, error);
+                }
+            }
+            initialConfig();
+        };
+
+        const getConfigById = async (id) => {
+            try {
+                const response = await fetch(`/config/${id}`);
+                if (!response.ok) {
+                    throw new Error('La solicitud para obtener la configuración falló');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error al obtener la configuración:', error);
+                throw error;
+            }
+        };
+
+        const initialConfig = () => {
+            /* config = configs.value(0)
+            obtenerListas() */
         }
 
-        const [parent1, pages1] = useDragAndDrop(listaVerde, {
+        const obtenerListas = () => {
+            listaVerde.value = configs.value.flatMap(config => config.verde)
+            listaAmarillo.value = configs.value.flatMap(config => config.amarillo)
+            listaRojo.value = configs.value.flatMap(config => config.rojo)
+        }
+
+        const actualizarListas = () => {
+            console.log(pagesVerde.value);
+        }
+
+        const [parentVerde, pagesVerde] = useDragAndDrop(listaVerde, {
             group: "A",
             plugins: [
                 multiDrag({
@@ -77,7 +120,7 @@ export default {
             ],
         });
 
-        const [parent2, pages2] = useDragAndDrop(listaAmarillo, {
+        const [parentAmarillo, pagesAmarillo] = useDragAndDrop(listaAmarillo, {
             group: "A",
             plugins: [
                 multiDrag({
@@ -90,7 +133,7 @@ export default {
             ],
         });
 
-        const [parent3, pages3] = useDragAndDrop(listaRojo, {
+        const [parentRojo, pagesRojo] = useDragAndDrop(listaRojo, {
             group: "A",
             plugins: [
                 multiDrag({
@@ -104,17 +147,18 @@ export default {
         });
 
         onMounted(() => {
-            obtenerConfiguraciones()
+            obtenerUserConfigs()
         })
 
         return {
             configs,
-            parent1,
-            pages1,
-            parent2,
-            pages2,
-            parent3,
-            pages3
+            actualizarListas,
+            parentVerde,
+            pagesVerde,
+            parentAmarillo,
+            pagesAmarillo,
+            parentRojo,
+            pagesRojo
         }
     }
 }

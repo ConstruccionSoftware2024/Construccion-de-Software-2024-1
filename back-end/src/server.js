@@ -1380,7 +1380,35 @@ app.get('/configs', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
+
+app.get('/config/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('configuraciones')
+    const config = await collection.findOne({ _id: req.params.id });
+    res.send(config)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+});
+
+app.get('/userConfigs/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const result = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    console.log("Resultado: ", result.configs);
+    console.log("test4");
+    if (result && result.configs) {
+      res.send(result.configs);
+    } else {
+      res.status(404).send('No se encontraron configuraciones para el usuario especificado.');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
 
 app.put('/cancelarSesion/:id', async (req, res) => {
   try {
