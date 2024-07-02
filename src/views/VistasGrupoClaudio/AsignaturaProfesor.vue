@@ -3,7 +3,6 @@
         <h1>{{ asignatura.title }} - {{ asignatura.section }}</h1>
         <div class="content">
             <div class="left-column">
-                <!-- Listado de Sesiones -->
                 <div class="section">
                     <h2><i class="fa-solid fa-list-ul"></i> Listado de Sesiones</h2>
                     <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/vistaProfesor/' + sesion._id"
@@ -18,7 +17,6 @@
                     <button @click="mostrarPopup = true" class="new-section-button btn">Crear sesión</button>
                 </div>
 
-                <!-- Recursos de la Asignatura -->
                 <div class="section">
                     <h2><i class="fa-solid fa-book"></i> Recursos de la Asignatura</h2>
                     <div v-for="(recurso, index) in recursos" :key="index" class="resource-item">
@@ -27,7 +25,6 @@
                     <button @click="mostrarPopupRecurso = true" class="btn">Añadir Recurso</button>
                 </div>
 
-                <!-- Foro de Preguntas -->
                 <div class="section">
                     <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
                     <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="nuevaPregunta">
@@ -36,24 +33,21 @@
             </div>
 
             <div class="right-column">
-                <!-- Listado de Faltas -->
                 <div class="section">
                     <h2><i class="fa-solid fa-triangle-exclamation"></i> Listado de Faltas</h2>
                     <p>Ver el detalle de faltas de Alumnos</p>
                     <button class="btn" @click="goToFaltas">Ver Detalles</button>
                 </div>
 
-                <!-- Acciones Adicionales -->
                 <div class="section">
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
                         <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
-                        <button class="btn" @click="goToContact">Reportar un Problema</button>
+                        <button class="btn" @click="mostrarReportar = true">Reportar un Problema</button>
                     </div>
                 </div>
-
-                <!-- Contenedor para agregar/eliminar alumnos -->
-                <div class="section">
+                 <!-- Contenedor para agregar/eliminar alumnos -->
+                 <div class="section">
                     <h2><i class="fa-solid fa-user-plus"></i> Gestionar Alumnos</h2>
                     <div class="button-container">
                         <button class="btn" @click="mostrarPopupAgregar = true">Agregar Alumno</button>
@@ -62,6 +56,47 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal" v-if="mostrarReportar">
+            <div class="modal-content">
+                <span class="close" @click="mostrarReportar = false">&times;</span>
+                <h3>Reportar un problema</h3>
+                <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
+                <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
+            </div>
+        </div>
+
+        <div class="modal" v-if="mostrarPopup">
+            <div class="modal-content">
+                <span class="close" @click="mostrarPopup = false">&times;</span>
+                <div class="add-falta">
+                    <h2>Crear nueva sesión</h2>
+                    <div class="input-group">
+                        <input required placeholder="Nombre de la sesión" type="text" id="nombre"
+                            v-model="nuevaSesion.nombre">
+                        <textarea type="text" required placeholder="Descripción de la sesión"
+                            v-model="nuevaSesion.descripcion"></textarea>
+                        <div v-if="showError" class="error-message">
+                            Por favor complete todos los campos.
+                        </div>
+                    </div>
+                    <button @click.prevent="enviarFormulario" class="btn btn-modal">Crear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popup for adding resource -->
+        <div v-if="mostrarPopupRecurso" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="mostrarPopupRecurso = false">&times;</span>
+                <h3>Añadir nuevo recurso</h3>
+                <input required placeholder="Título del recurso" type="text" v-model="nuevoRecurso.titulo">
+                <textarea required placeholder="Descripción del recurso" v-model="nuevoRecurso.descripcion"></textarea>
+                <input required type="file" @change="onFileChange">
+                <button @click="enviarRecurso" class="btn btn-modal">Añadir Recurso</button>
+            </div>
+        </div>
+
 
         <!-- Popup para agregar alumno -->
         <div v-if="mostrarPopupAgregar" class="modal">
@@ -108,31 +143,55 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { ref, reactive, onMounted, computed} from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '../../../back-end/src/store.js';
+import axios from 'axios'
+import { showText } from 'pdf-lib';
+import Swal from 'sweetalert2';
+
+const userStore = useUserStore();
+const idUsuario = userStore.user._id;
 
 export default {
+    data() {
+        return {
+            sesiones: [],
+            mostrarPopup: false,
+            mostrarReportar: false,
+            nuevaSesion: {
+                nombre: '',
+                descripcion: '',
+                asignatura: ''
+            },
+            problemas: {
+                descripcion: '',
+                idUsuario: idUsuario
+            },
+            showError: false,
+        }
+    },
     setup() {
         const sesiones = ref([]);
         const router = useRouter();
-        const route = useRoute();
-        const asignaturaId = route.params.id;
+        const route = useRoute()
+        const asignaturaId = route.params.id
         const asignatura = ref({});
-        const mostrarPopup = ref(false);
-        const mostrarPopupRecurso = ref(false);
+        const mostrarPopup = ref(false)
+        const mostrarReportar = ref(false)
+        const mostrarPopupRecurso = ref(false)
         const mostrarPopupAgregar = ref(false);
         const mostrarPopupEliminar = ref(false);
-        const nuevaPregunta = ref('');
+        const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
             nombre: '',
             enlace: ''
-        });
+        })
         const nuevaTarea = reactive({
             nombre: '',
             descripcion: ''
-        });
+        })
         const info = ref([]);
         const recursos = ref([]);
         const seleccionados = ref([]);
@@ -146,25 +205,25 @@ export default {
             nombre: '',
             descripcion: '',
             creador: 'default'
-        });
+        })
 
-        const cargarRecursos = async () => { };
+        const cargarRecursos = async () => {
+        }
         const goToFaltas = () => {
             router.push(`/faltaAlumnos/${asignaturaId}`);
         };
         const goToListaAlumnos = () => {
-            router.push('/lista-alumnos');
+            router.push('/contactoAlumno');
         };
         const goToContact = () => {
             router.push('/contact');
         };
         const publicarPregunta = () => {
-            console.log('Pregunta publicada:', nuevaPregunta.value);
-        };
-
+            console.log('Pregunta publicada:', nuevaPregunta.value)
+        }
         const enviarRecurso = async () => {
-            console.log('Enviando recurso:');
-        };
+            console.log('Enviando recurso:')
+        }
         const cargarSesiones = async () => {
             try {
                 const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
@@ -184,7 +243,6 @@ export default {
                 console.error(error);
             }
         };
-
         const cargarAlumnos = async () => {
             try {
                 const response = await axios.get('http://localhost:8080/usuarios?rol=alumno');
@@ -193,7 +251,6 @@ export default {
                 console.error('Error al cargar alumnos:', error);
             }
         };
-
         const alumnosNoParticipantes = computed(() => {
             const participantesIds = new Set(asignatura.value.members.map(member => member.toString()));
             return alumnos.value.filter(alumno => !participantesIds.has(alumno._id.toString()));
@@ -249,16 +306,16 @@ export default {
                 console.error('Error al eliminar alumnos:', error);
             }
         };
-
         onMounted(() => {
             cargarRecursos();
-            cargarSesiones();
             cargarAlumnos();
-        });
+            cargarSesiones();
+        })
 
         return {
             asignatura,
             mostrarPopup,
+            mostrarReportar,
             mostrarPopupAgregar,
             mostrarPopupEliminar,
             mostrarPopupRecurso,
@@ -285,79 +342,112 @@ export default {
             currentPageEliminar,
             totalPagesAgregar,
             totalPagesEliminar
-        };
+        }
+    },
+    methods: {
+        async cargarSesiones() {
+            try {
+                const response = await axios.get(`http://localhost:8080/asignatura/${this.$route.params.id}`);
+                this.asignatura = response.data;
+                if (this.asignatura.sesiones) {
+                    const promises = this.asignatura.sesiones.map(sesionId =>
+                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
+                    );
+
+                    const sesionResponses = await Promise.all(promises);
+
+                    this.sesiones = sesionResponses.map(response => response.data);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        publicarPregunta() {
+            alert('Pregunta Publicada');
+        },
+        async fetchProjects() {
+            try {
+                const response = await axios.get('http://localhost:8080/asignaturas');
+                this.projects = response.data;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        },
+        goToProject(id) {
+            this.$router.push(`/asignatura/${id}`);
+        },
+
+        async enviarProblema() { 
+            if (!this.problemas.descripcion) {
+                console.log(this.problemas.descripcion);
+                return;
+            }
+
+            try {
+                const respuesta = await axios.post('http://localhost:8080/publicarProblema', this.problemas);
+
+                if (respuesta.status === 200) {
+                    this.problemas.descripcion = '';
+                    this.mostrarReportar = false;
+                    Swal.fire({
+                        title: 'Problema reportado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#08cccc'
+                    });
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+
+        async enviarFormulario() {
+            if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
+                this.showError = true;
+                return;
+            }
+            try {
+                const asignaturaId = this.$route.params.id;
+                if (!asignaturaId) {
+                    console.error('No se encontró la id de la asignatura');
+                    return;
+                }
+                this.nuevaSesion.asignatura = asignaturaId;
+                const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
+
+                if (respuesta.status === 200) {
+                    this.nuevaSesion.nombre = '';
+                    this.nuevaSesion.descripcion = '';
+                    const sessionId = respuesta.data._id;
+                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
+                    this.fetchProjects();
+                    this.mostrarPopup = false;
+                    Swal.fire({
+                        title: 'Sesion creada correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    await this.cargarSesiones();
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+    },
+    created() {
+        this.fetchProjects();
+        this.cargarSesiones();
     }
-};
+}
 </script>
 
+
 <style scoped>
-.modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: var(--container-background-color);
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    height: 500px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    font-size: 1.5rem;
-}
-
-.alumno-lista {
-    flex-grow: 1;
-    overflow-y: auto;
-    margin-bottom: 20px;
-}
-
-.alumno-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.alumno-item input {
-    margin-right: 10px;
-}
-
-.btn-modal {
-    background-color: var(--button-background-color);
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: center;
-    margin-top: 20px;
-}
-
-.btn-modal:hover {
-    background-color: var(--button-hover-background-color);
-}
-
 .pagination {
     display: flex;
     justify-content: space-between;
@@ -379,6 +469,30 @@ export default {
 
 .pagination button:hover:not(:disabled) {
     background-color: var(--button-hover-background-color);
+}
+
+.alumno-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.alumno-item input {
+    margin-right: 10px;
+}
+.alumno-lista {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 1.5rem;
 }
 
 .close:hover {
@@ -407,8 +521,7 @@ input[type="text"]:focus {
     display: flex;
     flex-direction: column;
     padding: 1rem;
-    width: 90%;
-    max-width: 1200px;
+    width: 70%;
     margin: auto;
     justify-content: space-between;
     margin-bottom: 3rem;
@@ -416,26 +529,33 @@ input[type="text"]:focus {
 }
 
 h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    text-align: center;
 }
 
 h2 {
     font-weight: bold;
+    margin-bottom: 2rem;
 }
 
 .content {
     display: flex;
-    flex-direction: column;
     gap: 2rem;
     margin-top: 1rem;
 }
 
-.left-column,
+.left-column {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
 .right-column {
-    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .section {
@@ -443,12 +563,13 @@ h2 {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
+
 }
 
 .section:not(:last-child) {
     margin-bottom: 1.5rem;
 }
+
 
 .session-item {
     cursor: pointer;
@@ -462,7 +583,7 @@ h2 {
 }
 
 .session-name {
-    font-size: 1rem;
+    font-size: 17px;
     font-weight: bold;
 }
 
@@ -506,8 +627,6 @@ button.btn {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 100%;
-    margin-bottom: 10px;
 }
 
 .btn-modal {
@@ -516,7 +635,7 @@ button.btn {
 
 button.btn:hover {
     background-color: var(--button-hover-background-color);
-    color: var(--text-color);
+    color: black;
 }
 
 button.btn-cerrar {
@@ -533,41 +652,53 @@ button.btn-cerrar:hover {
     background-color: #ff1a1a;
 }
 
-h2 {
-    font-weight: bold;
-    margin-bottom: 2rem;
-}
 
 .button-container {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
 }
 
-@media (min-width: 768px) {
-    .content {
-        flex-direction: row;
-    }
 
-    .left-column {
-        flex: 2;
-    }
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
 
-    .right-column {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
+.modal-content {
+    background-color: var(--container-background-color);
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    height: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
-    button.btn {
-        width: auto;
-        margin-bottom: 0;
-    }
+.modal-content h3 {
+    margin-bottom: 1rem;
+}
 
-    .button-container {
-        flex-direction: row;
-        justify-content: space-between;
-    }
+
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
 }
 </style>

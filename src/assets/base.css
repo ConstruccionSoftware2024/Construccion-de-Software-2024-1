@@ -20,6 +20,7 @@
   --gray-hover-color: #585858;
 
   --loader-color: rgba(255, 255, 255, 0.9);
+  --text-table-color: #08cccc;
 }
 
 body.light-mode {
@@ -35,6 +36,9 @@ body.light-mode {
   --gray-text-color: #eeeeee;
   --gray-hover-color: #dfdfdf;
   --loader-color: rgba(255, 255, 255, 0.7);
+  --text-table-color: #028383;
+  --background-color-disabled:#d6d6d6;
+  --text-color-disabled:#666666 ;
 }
 
 body.dark-mode {
@@ -50,6 +54,9 @@ body.dark-mode {
   --gray-text-color: #3a3a3c;
   --gray-hover-color: #333333;
   --loader-color: rgba(32, 32, 32, 0.7);
+  --text-table-color: #08cccc;
+  --background-color-disabled:#333333;
+  --text-color-disabled:#666666 ;
 }
 
 * {

@@ -315,6 +315,123 @@ app.post('/faltas/:id', async (req, res) => {
   }
 })
 
+app.post('/pregunta', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const pregunta = req.body.texto
+    const autor = req.body.autor
+    const preguntaId = new ObjectId()
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(req.body.asignaturaId) },
+      { $push: { preguntas: { _id: preguntaId, texto: pregunta, autor: autor, respuestas: [] } } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.get('/preguntas/:asignaturaId/', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const asignaturaId = req.params.asignaturaId
+    const asignatura = await collection.findOne({ _id: new ObjectId(asignaturaId) })
+
+    if (!asignatura) {
+      return res.status(404).json({ message: 'Asignatura no encontrada' })
+    }
+
+    const usersCollection = database.collection('users');
+    const preguntasConAutorYRespuestas = await Promise.all(asignatura.preguntas.map(async (pregunta) => {
+      const autor = await usersCollection.findOne({ _id: new ObjectId(pregunta.autor) });
+      const respuestasConAutor = await Promise.all(pregunta.respuestas.map(async (respuesta) => {
+        const autorRespuesta = await usersCollection.findOne({ _id: new ObjectId(respuesta.autor) });
+        return {
+          ...respuesta,
+          autor: autorRespuesta ? autorRespuesta.firstName + " " + autorRespuesta.lastName : 'Desconocido',
+          autorId: respuesta.autor,
+        };
+      }));
+      return {
+        texto: pregunta.texto,
+        autor: autor ? autor.firstName + " " + autor.lastName : 'Desconocido',
+        autorId: pregunta.autor,
+        preguntaId: pregunta._id,
+        respuestas: respuestasConAutor,
+      };
+    }));
+
+
+    res.send(preguntasConAutorYRespuestas)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.delete('/pregunta/:asignaturaId/:preguntaId', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const asignaturaId = req.params.asignaturaId
+    const preguntaId = req.params.preguntaId
+
+    // Eliminar pregunta del arreglo de preguntas de la asignatura
+    const result = await collection.updateOne(
+      { _id: new ObjectId(asignaturaId) },
+      { $pull: { preguntas: { _id: new ObjectId(preguntaId) } } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
+
+app.post('/respuesta', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const respuesta = req.body.texto
+    const autor = req.body.autorRespuesta
+    const respuestaId = new ObjectId()
+    // Agregar respuesta a arreglo de respuestas de la pregunta
+    console.log(respuesta)
+    console.log(autor)
+    console.log(req.body.asignaturaId)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(req.body.asignaturaId), 'preguntas._id': new ObjectId(req.body.preguntaId) },
+      { $push: { 'preguntas.$.respuestas': { _id: respuestaId, texto: respuesta, autor: autor } } }
+    )
+    res.send()
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
+
+app.delete('/respuesta/:asignaturaId/:preguntaId/:respuestaId', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('asignaturas')
+    const asignaturaId = req.params.asignaturaId
+    const preguntaId = req.params.preguntaId
+    const respuestaId = req.params.respuestaId
+
+    // Eliminar respuesta del arreglo de respuestas de la pregunta
+    const result = await collection.updateOne(
+      { _id: new ObjectId(asignaturaId), 'preguntas._id': new ObjectId(preguntaId) },
+      { $pull: { 'preguntas.$.respuestas': { _id: new ObjectId(respuestaId) } } }
+    )
+    res.send(result)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+)
+
 app.post('/asignatura/:asignaturaId/addSession', async (req, res) => {
   try {
     const database = client.db('construccion');
@@ -1322,7 +1439,7 @@ app.post('/send-email', async (req, res) => {
   let mailOptions = {
     from: 'pruebas.construccion2024@outlook.com',
     to: 'pruebas.construccion2024@outlook.com',
-    subject: `Mensaje de ${fullName}`,
+    subject: `[Contacto Cheat Detector] Mensaje de ${fullName}`,
     text: `Nombre: ${fullName}\nEmail: ${email}\nTeléfono: ${mobile}\nMensaje: ${msg}`
   };
 
@@ -1335,9 +1452,36 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
+app.post('/emailContactoAlumno', async (req, res) => {
+  try {
+    const { to, subject, body } = req.body;
+
+    let transporter = nodemailer.createTransport({
+      service: 'outlook',
+      auth: {
+        user: 'pruebas.construccion2024@outlook.com',
+        pass: 'RkUFFzM1LUTk'
+      }
+    });
+
+    const mailOptions = {
+      from: 'pruebas.construccion2024@outlook.com',
+      to: 'pruebas.construccion2024@outlook.com', // Cambiar por el email del alumno
+      subject: subject,
+      text: body
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    res.send({ message: 'Correo enviado correctamente', result: result });
+  } catch (error) {
+    console.error('Error al enviar correo electrónico:', error);
+    res.status(500).send({ message: 'Error al enviar correo electrónico', error: error });
+  }
+});
+
 // Enviar email (página contacto alumno)
 app.post('/email-alumno', async (req, res) => {
-  let { fullName, email, msg } = req.body;
+  let { profesor, email, msg, correoProfesor, alumno } = req.body;
 
   let transporter = nodemailer.createTransport({
     service: 'outlook',
@@ -1350,8 +1494,8 @@ app.post('/email-alumno', async (req, res) => {
   let mailOptions = {
     from: 'pruebas.construccion2024@outlook.com',
     to: email,
-    subject: `Mensaje de profesor ${fullName}`,
-    text: `Profesor: ${fullName}\nMensaje enviado a: ${email}\nMensaje: ${msg}`
+    subject: `[Cheat Detector] Mensaje de profesor ${profesor}`,
+    text: `Mensaje enviado a: ${email}\nEstimado ${alumno}:\n${msg}\nAtentamente, profesor ${profesor}\n ${correoProfesor}\n`
   };
 
   try {
@@ -1362,8 +1506,34 @@ app.post('/email-alumno', async (req, res) => {
     res.status(500).send('Hubo un error al enviar el correo electrónico');
   }
 });
+// Enviar email (contactar Profesor)
+app.post('/email-profesor', async (req, res) => {
+  let { profesor, email, mensaje, correoAlumno, alumno } = req.body;
 
-/* revisiar esta funcion de grupo joaquin*/
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: `[Cheat Detector] Mensaje de alumno ${alumno}`,
+    text: `Mensaje enviado a: ${email}\nEstimado profesor${profesor}:\n${mensaje}\nAtentamente, ${alumno}\n ${correoAlumno}\n`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+/* revisiar esta funcion de grupo joaquin */
 
 // Guarda/actualiza los procesos en la base de datos
 app.post('/checkTabs', async (req, res) => {
@@ -1540,6 +1710,19 @@ app.put('/cancelarSesion/:id', async (req, res) => {
       res.status(404).send('Sesion no encontrada')
     }
   } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.post('/publicarProblema', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const problemas = database.collection('problemas')
+    const problema = { descripcion: req.body.descripcion, usuarioId: req.body.idUsuario }
+    const result = await problemas.insertOne(problema)
+    res.send(result)
+  } catch (error) {
+    console.error(error)
     res.status(500).send(error.message)
   }
 })

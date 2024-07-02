@@ -1,6 +1,3 @@
-/*HU10 Como profesor quiero dejar constancia de acción de la falta incurrida por el alumno para futuras revisiones y/o
-avisos.*/
-
 <template>
   <div class="general-div">
     <h1>Faltas {{ asignatura.title }}</h1>
@@ -19,7 +16,8 @@ avisos.*/
       </thead>
       <tbody>
         <template v-for="(falta, index) in faltasFiltradas" :key="falta._id">
-          <tr class="fila" @click="selectedFalta = selectedFalta === index ? null : index">
+          <tr class="fila" :class="{ 'selected': selectedFalta === index }"
+            @click="selectedFalta = selectedFalta === index ? null : index">
             <td>{{ falta.matricula }}</td>
             <td>{{ falta.nombre }}</td>
             <td>{{ falta.apellidoPat }}</td>
@@ -180,6 +178,7 @@ export default {
       this.motivo = ''
       this.fecha = ''
       this.fetchUsers()
+      this.showError = false;
     },
     cerrarModal() {
       this.showError = false;
@@ -190,11 +189,17 @@ export default {
 </script>
 
 <style scoped>
+.selected {
+  color: var(--text-table-color);
+  background-color: var(--border-color);
+}
+
 .detail-falta-container {
   max-height: 200px;
   overflow-y: auto;
   width: 100%;
   cursor: auto;
+  background-color: var(--input-background-color);
 }
 
 .text-form {
@@ -222,8 +227,7 @@ export default {
 }
 
 .detail-falta {
-  border-bottom: 1px solid var(--border-color);
-  padding: 10px;
+  padding: 15px;
   text-align: left;
   padding-left: 3rem;
   width: 100%;
@@ -252,7 +256,7 @@ td {
 }
 
 tr:hover {
-  background-color: var(--gray-text-color);
+  background-color: var(--gray-hover-color);
 }
 
 td {
@@ -304,7 +308,7 @@ th {
   background-color: #e9e9e9;
   background-color: var(--container-background-color);
   padding: 2rem;
-  width: 65%;
+  width: 60%;
   min-height: 35%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -318,6 +322,10 @@ th {
   cursor: pointer;
 }
 
+.close:hover {
+  color: var(--button-background-color);
+}
+
 .modal-content h2 {
   text-align: center;
   margin-bottom: 1rem;
@@ -327,14 +335,14 @@ th {
 .input-group {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
   gap: 10px;
 }
 
-.select-alumno,
-.input-middle,
-.input-right {
+.addfalta {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .custom-select select,
@@ -359,7 +367,7 @@ th {
   min-height: 50px;
   max-width: 385px;
   min-width: 200px;
-  width: 385px;
+  width: 100%;
   height: 118px;
 }
 
@@ -401,5 +409,40 @@ h1 {
 h2 {
   font-weight: bold;
   margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .input-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .saveButton {
+    position: relative;
+    bottom: 0;
+    right: 0;
+    margin-top: 1rem;
+  }
+
+  .select-alumno,
+  .input-middle,
+  .input-right {
+    width: 80%;
+  }
+
+  .modal-content textarea {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 40%;
+    height: auto;
+    min-height: 400px;
+    min-width: 400px;
+  }
 }
 </style>

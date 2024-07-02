@@ -21,9 +21,9 @@
                 <p>Nuestro sistema de seguimiento histórico y gestión por alumno te proporciona un control total sobre
                     el proceso evaluativo.</p>
                 <ul>
-                    <li> Crea sesiones de evaluación en un instante.</li>
-                    <li> Mira en tiempo real las aplicaciones que los alumnos están utilizando.</li>
-                    <li> Evita que tus alumnos utilicen aplicaciones prohibidas durante las pruebas.</li>
+                    <li> &nbsp;Crea sesiones de evaluación en un instante.</li>
+                    <li> &nbsp;Mira en tiempo real las aplicaciones que los alumnos están utilizando.</li>
+                    <li> &nbsp;Evita que tus alumnos utilicen aplicaciones prohibidas durante las pruebas.</li>
                 </ul>
                 <li><router-link to="/contact"><a href="" class="btn"> ¡Contactanos!</a></router-link></li>
             </div>
@@ -149,7 +149,7 @@ export default {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: sans-serif;
+    font-size: 17px;
 }
 
 a {
@@ -202,7 +202,7 @@ a {
     animation: none;
     animation-duration: 0.5s;
     animation-fill-mode: forwards;
-    background-color: rgb(32, 154, 202);
+    background-color: var(--table-button-color);
 }
 
 #home {
@@ -232,6 +232,7 @@ a {
 .home-heading {
     font-size: 2rem;
     margin-bottom: 10px;
+    padding-bottom: 0.6em;
 }
 
 .home-para {
@@ -250,7 +251,7 @@ a {
     content: '';
     height: 4px;
     position: absolute;
-    background-color: aqua;
+    background-color: var(--table-button-color);
     left: 0;
     bottom: -10px;
     animation: width;
@@ -314,10 +315,12 @@ a {
 .goal-left {
     width: 60%;
     line-height: 2rem;
+    
 }
 
 .goal-left h2 {
     font-size: 2.4rem;
+    padding-bottom: 0.5em;
 }
 
 .goal-left p {
@@ -333,7 +336,7 @@ a {
 .goal-left ul li::before {
     line-height: 1.5rem;
     content: '●';
-    color: aqua;
+    color: var(--table-button-color);
 }
 
 .goal-right {
@@ -372,7 +375,7 @@ a {
     margin: 0 auto;
     text-align: center;
     width: 15%;
-    background-color: aqua;
+    background-color: var(--table-button-color);
     position: absolute;
     left: 50%;
     bottom: -10px;
