@@ -8,8 +8,10 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+            <button v-if=isCancelada class="hero__cta" @click="descancelarSesion(idRuta)">Descancelar Sesion</button>
+            <button v-if=!isCancelada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
                 Evaluación</button>
+            <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
         </div>
         <div class="mainContainer">
@@ -59,7 +61,8 @@
                             <button class="actionButton ban" @click="openBanModal(alumno, true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
-                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
+                            <button v-if=!isCancelada class="actionButton expel"
+                                @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
@@ -153,6 +156,31 @@
             </div>
         </section>
     </div>
+    <div class="modal__container_añadir">
+        <h2 class="modal__title_añadir">Agregar App Peligrosa</h2>
+        <form @submit.prevent="agregarAppPeligrosa" class="modal-form">
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Nombre de la Aplicación:</label>
+                <input v-model="nombreApp" type="text" class="input_añadir" placeholder="" required>
+            </div>
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Link de la Aplicación:</label>
+                <input v-model="LinkApp" type="text" class="input_añadir" placeholder="" required>
+            </div>
+            <div class="input-container_añadir">
+                <label for="peligrosidad">Nivel de Peligro:</label>
+                <select v-model="nivelPeligro" id="nivelPeligro" class="input_añadir" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="alta">Alta</option>
+                </select>
+            </div>
+            <div class="button-container">
+                <a href="#" @click.prevent="peligrosidadAplicaciones" class="modal_close_añadir">Añadir</a>
+            </div>
+        </form>
+    </div>
 </template>
 <script>
 import Chart from 'chart.js/auto';
@@ -193,10 +221,32 @@ export default {
                     }
                 });
                 if (respuesta.ok) {
+                    isCancelada.value = true;
                     console.log("marcado como cancelado")
+                    window.location.reload();
                 }
                 else {
                     console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
+        }
+        const descancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/descancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    isCancelada.value = false;
+                    console.log("Sesión marcada como no cancelada");
+                    window.location.reload();
+                }
+                else {
+                    console.error("Error al marcar como no cancelado")
                 }
             } catch {
                 console.error("Error al obtener sesion")
@@ -207,6 +257,7 @@ export default {
             idRuta,
             nombreSesion,
             cancelarSesion,
+            descancelarSesion,
             isCancelada,
             router
 
@@ -228,7 +279,12 @@ export default {
             searchQuery: '',
             showBanModal: false,
             banReason: '',
-            banAccion: null
+            banAccion: null,
+            isModalVisible: false,
+            nombreApp: '',
+            LinkApp: '',
+            nivelPeligro: '',
+            appPeligrosas: [],
         };
     },
 
@@ -258,6 +314,27 @@ export default {
         },*/
         redirigirCrearEvaluacion() {
             this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
+        },
+
+        peligrosidadAplicaciones() {
+            if (this.nombreApp && this.LinkApp) {
+
+                const aplicacionAgregada = {
+                    nombreApp: this.nombreApp,
+                    LinkApp: this.LinkApp,
+                    nivelPeligro: this.nivelPeligro,
+                };
+                // Agregar a la lista de aplicaciones peligrosas
+                this.appPeligrosas.push(aplicacionAgregada);
+
+                // Limpiar campos
+                this.nombreApp = '';
+                this.LinkApp = '';
+                this.nivelPeligro = '';
+            } else {
+                alert('Por favor, complete ambos campos.');
+            }
+            console.log('Array apps:', this.appPeligrosas);
         },
 
         assignAppsToStudents(students) {
@@ -1231,10 +1308,30 @@ th {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
 }
 
 .claseNumeroSesion {
     font-size: medium;
     color: gray;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-container_añadir {
+    margin-bottom: 10px;
+    /* Ajusta el espacio entre los elementos si es necesario */
+}
+
+.button-container {
+    margin-top: 20px;
+    /* Espacio entre los campos y los botones */
+    display: flex;
+    justify-content: center;
 }
 </style>

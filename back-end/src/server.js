@@ -1067,13 +1067,27 @@ app.post('/message', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('mensajes')
 
-    let sesionaGuardar = req.body.session
-
+    //traemos todas las sesiones
     const collSesiones = database.collection('sesion')
     const sesiones = await collSesiones.find({}).toArray()
 
     //traemos la información de la sesion correspondiente
     let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
+
+    // traemos los usuarios
+    const collUsers = database.collection('users')
+    const users = await collUsers.find({}).toArray()
+
+    let remitentenombre = users.filter(user => user._id == req.body.remitente)
+    let destinatarionombre = users.filter(user => user._id == req.body.destinatario)
+
+    let asignatura = [{ title: 'default' }]
+    // traemos las asignaturas
+    if (!sesionCorrecta.asignatura) {
+      const collAsignaturas = database.collection('asignaturas')
+      const asignaturas = await collAsignaturas.find({}).toArray()
+      asignatura = asignaturas.filter(assig => assig._id == sesionCorrecta[0].asignatura)
+    }
 
     const newMessage = {
       destinatario: req.body.destinatario,
@@ -1082,7 +1096,11 @@ app.post('/message', async (req, res) => {
       visto: false,
       alerta: '',
       //guardamos el nombre de la sesion
-      sesion: sesionCorrecta[0].nombre
+      sesion: sesionCorrecta[0].nombre,
+      fecha: new Date(),
+      asignatura: asignatura[0].title,
+      remitenteNombre: remitentenombre[0].firstName + ' ' + remitentenombre[0].lastName,
+      destinatarionombre: destinatarionombre[0].firstName + ' ' + destinatarionombre[0].lastName
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
@@ -1122,6 +1140,34 @@ app.get('/message/:id', async (req, res) => {
 
     result.forEach(element => {
       if (element.destinatario == req.params.id) {
+        mensajesEspecificos.push(element)
+      }
+    });
+
+    res.status(200).send(mensajesEspecificos)
+
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// traer los mensajes enviados por alguien especifico 
+app.get('/sendmessage/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    let mensajesEspecificos = []
+    // revisamos todos los mensajes y guardamos aquellos que tengan remitente igual al id
+
+    if (!result) {
+      res.status(404).send('user not found')
+    }
+
+    result.forEach(element => {
+      if (element.remitente == req.params.id) {
         mensajesEspecificos.push(element)
       }
     });
@@ -1381,7 +1427,6 @@ app.put('/cancelarSesion/:id', async (req, res) => {
       $set: { cancelada: true }
     })
     if (result.modifiedCount === 1) {
-      console.log('AAAAAAAAYUDA')
       res.send(result)
     } else {
       res.status(404).send('Sesion no encontrada')
@@ -1390,3 +1435,26 @@ app.put('/cancelarSesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.put('/descancelarSesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const result = await collection.updateOne(consulta, {
+      $set: { cancelada: false }
+    });
+    if (result.modifiedCount === 1) {
+      console.log('Sesión descancelada con éxito');
+      res.send(result);
+    } else {
+      console.log('Sesión no encontrada');
+      res.status(404).send('Sesion no encontrada');
+    }
+  } catch (error) {
+    console.log('Error al descancelar la sesión:', error.message);
+    res.status(500).send(error.message);
+  }
+});
+
+
