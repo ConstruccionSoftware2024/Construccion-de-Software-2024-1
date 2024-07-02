@@ -7,9 +7,25 @@
         <div class="dashboard">
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+            <button v-if=!isCancelada class="app" @click="añadir">Añadir Aplicación</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta"  @click="redirigirCrearEvaluacion(); menuOpen = false">Crear Evaluación</button>
+            <button v-if=isCancelada class="hero__cta" @click="descancelarSesion(idRuta)">Descancelar Sesion</button>
+            <button v-if=!isCancelada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                Evaluación</button>
+
+            <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
+            <div class="dashboard">
+                <select class="" required>
+                    <option value="default">Default</option>
+                    <!-- Añadir lista de configuraciones del profesor logeado-->
+                </select>
+                <button>
+                    <RouterLink to="/configuracion" class="link">
+                        Ver Configuraciones
+                    </RouterLink>
+                </button>
+            </div>
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -27,6 +43,24 @@
             </div>
         </div>
         <div class="bottomContainer">
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre de la Aplicación</th>
+                            <th>Link de la Aplicación</th>
+                            <th>Peligrosidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="app in appPeligrosas" :key="app._id">
+                            <td>{{ app.nombre }}</td>
+                            <td>{{ app.link }}</td>
+                            <td>{{ app.peligro }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -38,6 +72,7 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     <tr v-for="alumno in alumnos" :key="alumno._id">
                         <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
@@ -50,20 +85,21 @@
                             {{ alumno.secondLastName }}
                         </td>
                         <td
-                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            :class="{ 'row-red ban-text2': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
                             {{ alumno.status }}
                         </td>
                         <td v-if="!alumnosBaneados.includes(alumno.email)"
                             :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
-                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
+                            <button class="actionButton ban" @click="openBanModal(alumno, true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
-                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
+                            <button v-if=!isCancelada class="actionButton expel"
+                                @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
                             <BotonNotificar :participante="alumno" :session="sessionId" />
                             <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
-                                class="fas fa-eye"></i></button>
+                                    class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
                             style="font-size: 20px;">
@@ -74,19 +110,42 @@
                 </tbody>
             </table>
         </div>
+        <div v-if="showBanModal" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeBanModal">&times;</span>
+                <h2 style="font-size: 30px;"><b>Confirmar Baneo</b></h2>
+                <p>Razón del baneo:</p>
+                <textarea v-model="banReason" rows="4" cols="50"></textarea>
+                <br>
+                <button class="actionButton ban2" @click="banExpStudent(selectedStudent, banAccion)">Confirmar</button>
+                <button class="actionButton ban" @click="closeBanModal">Cancelar</button>
+            </div>
+        </div>
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
-                <ul>
-                    <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
-                    </li>
-                </ul>
+                <h3>Últimas URLs</h3>
+                <div class="scrollable-content">
+                    <ul>
+                        <li v-for="url in selectedStudent.latestUrls" :key="url">
+                            <a :href="url" target="_blank">{{ url }}</a>
+                        </li>
+                    </ul>
+                </div>
+                <h3>Ultimos Procesos</h3>
+                <div class="scrollable-content">
+                    <ul>
+                        <li v-for="app in selectedStudent.apps" :key="app.name">
+                            <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
+                        </li>
+                    </ul>
+                </div>
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -141,6 +200,36 @@
             </div>
         </section>
     </div>
+    <div class="app">
+        <section class="modal__añadir">
+            <div class="modal__container_añadir">
+                <h2 class="modal__title_añadir">Agregar App Peligrosa</h2>
+                <form @submit.prevent="agregarAppPeligrosa" class="modal-form">
+                    <div class="input-container_añadir">
+                        <label for="peligrosidad">Nombre de la Aplicación:</label>
+                        <input v-model="nombreApp" type="text" class="input_añadir" placeholder="" required>
+                    </div>
+                    <div class="input-container_añadir">
+                        <label for="peligrosidad">Link de la Aplicación:</label>
+                        <input v-model="LinkApp" type="text" class="input_añadir" placeholder="" required>
+                    </div>
+                    <div class="input-container_añadir">
+                        <label for="peligrosidad">Nivel de Peligro:</label>
+                        <select v-model="nivelPeligro" id="nivelPeligro" class="input_añadir" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="button-container">
+                        <a href="#" @click.prevent="anadir_app" class="modal_close__añadir">Añadir</a>
+                        <a href="#" class="modal__close__añadir">Cerrar</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
 </template>
 <script>
 import Chart from 'chart.js/auto';
@@ -150,7 +239,10 @@ import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { time } from 'xpress/lib/string';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Accede a tu clave API como una variable de entorno
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     setup() {
         const route = useRoute();
@@ -181,10 +273,32 @@ export default {
                     }
                 });
                 if (respuesta.ok) {
+                    isCancelada.value = true;
                     console.log("marcado como cancelado")
+                    window.location.reload();
                 }
                 else {
                     console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
+        }
+        const descancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/descancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    isCancelada.value = false;
+                    console.log("Sesión marcada como no cancelada");
+                    window.location.reload();
+                }
+                else {
+                    console.error("Error al marcar como no cancelado")
                 }
             } catch {
                 console.error("Error al obtener sesion")
@@ -195,6 +309,7 @@ export default {
             idRuta,
             nombreSesion,
             cancelarSesion,
+            descancelarSesion,
             isCancelada,
             router
 
@@ -214,6 +329,14 @@ export default {
             users: [],
             asignaturas: [],
             searchQuery: '',
+            showBanModal: false,
+            banReason: '',
+            banAccion: null,
+            isModalVisible: false,
+            nombreApp: '',
+            LinkApp: '',
+            nivelPeligro: '',
+            appPeligrosas: [],
         };
     },
 
@@ -221,6 +344,7 @@ export default {
         this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
+        this.Aplicaciones();
     },
 
     name: 'ProfesorPage',
@@ -244,7 +368,6 @@ export default {
         redirigirCrearEvaluacion() {
             this.router.push({ name: 'CrearEvaluacion', params: { sesionId: this.sessionId } });
         },
-
         assignAppsToStudents(students) {
             const dangerApps = ['ChatGPT', 'Steam', "Discord", "TeamSpeak", "Skype", "Zoom", "Telegram", "WhatsApp", "Instagram", "Snapchat", "TikTok", "YouTube", "Twitch", "Tinder", "Grinder"];
             const warningApps = ['Slack', 'Skype', 'Zoom', "EpicGames", "Word", "Excel", "PowerPoint", "Paint", "Illustrator", "Photoshop", "Premiere", "Acrobat", "Ink"];
@@ -347,7 +470,51 @@ export default {
                 return total + student.apps.filter(app => app.status === 'Peligro').length;
             }, 0);
         },
-        createCharts() {
+        async obtainAllProcesses() {
+            let matrixProcesses = [];
+            let processesMax = 0;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            try {
+                for (const alumno of this.alumnos) {
+                    const response = await axios.get(`http://localhost:8080/obtenerProcesos/${alumno._id}`);
+                    const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                    const result = await model.generateContent(prompt);
+                    const response2 = result.response;
+                    const text = response2.text();
+
+                    // Convertir la lista separada por comas a un arreglo
+                    const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                    // Combinar nombres únicos
+                    const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+                    matrixProcesses.push(uniqueProcessNamesWithCategories);
+                    if (response.data.length > processesMax) {
+                        processesMax = response.data.length;
+                    }
+                }
+
+                // Repeticiones de cada proceso
+                let processCount = {};
+                matrixProcesses.flat().forEach(process => {
+                    if (processCount[process]) {
+                        processCount[process]++;
+                    } else {
+                        processCount[process] = 1;
+                    }
+                });
+
+                // Crear matriz resultado con proceso y veces que se repite
+                let resultMatrix = [];
+                for (let process in processCount) {
+                    resultMatrix.push({ proceso: process, repeticiones: processCount[process] });
+                }
+                return resultMatrix;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                return [];
+            }
+        },
+        async createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -355,9 +522,9 @@ export default {
                 labels: ['Peligro', 'Advertencia', 'Normal'],
                 datasets: [{
                     data: [
-                        this.alumnos.filter(s => s.status === 'Peligro').length,
-                        this.alumnos.filter(s => s.status === 'Advertencia').length,
-                        this.alumnos.filter(s => s.status === 'Normal').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Peligro').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Advertencia').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Normal').length,
                     ],
                     backgroundColor: ['#FF0000', '#f7d547', '#008000'],
                 }],
@@ -383,19 +550,10 @@ export default {
                 },
             });
 
-            const appUsage = this.alumnos.reduce((acc, student) => {
-                student.apps.forEach(app => {
-                    if (acc[app.name]) {
-                        acc[app.name]++;
-                    } else {
-                        acc[app.name] = 1;
-                    }
-                });
-                return acc;
-            }, {});
+            const resultMatrix = await this.obtainAllProcesses();
+            const appLabels = resultMatrix.map(item => item.proceso);
+            const appData = resultMatrix.map(item => item.repeticiones);
 
-            const appLabels = Object.keys(appUsage);
-            const appData = Object.values(appUsage);
 
             new Chart(appsCtx, {
                 type: 'bar',
@@ -448,10 +606,11 @@ export default {
                     if (!accion) {
                         this.alumnos = this.alumnos.filter(al => al !== student)
                     }
-                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
+                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion, razonBan: student.email + ': ' + this.banReason });
 
                     if (response.status === 200) {
                         await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                        this.closeBanModal();
                     } else {
                         throw new Error('Error al actualizar la lista de participantes');
                     }
@@ -463,31 +622,107 @@ export default {
                 alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
             }
         },
+        openBanModal(student, accion) {
+            this.selectedStudent = student;
+            this.banAccion = accion;
+            this.showBanModal = true;
+        },
+        closeBanModal() {
+            this.showBanModal = false;
+            this.banReason = '';
+            this.selectedStudent = '';
+            this.banAccion = null;
+        },
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
         },
         async viewProcesses(userId) {
             console.log("ID de la sesión: " + this.sessionId);
             const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
-
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             if (!selectedStudent) {
                 alert('Estudiante no encontrado');
                 return;
             }
 
             try {
+                 // Obtener URLs del estudiante
+                const responseUrls = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                if (!responseUrls.data || !responseUrls.data.urls) {
+                    throw new Error('No se recibieron URLs');
+                }
+                const urlList = responseUrls.data.urls.split(',');
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const prompt = `Dada la lista de procesos: ${response.data}\n Dada la lista de URLs: ${urlList}\nProporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code)\n. Proporcione los URLs según su clasificación 'bueno', 'malo' o 'intermedio' según la ética estudiantil y los sitios que ayuden a realizar trampa son malos por ejemplo: "google.com" ya que permite hacer búsquedas, indicando la clasificación entre paréntesis al lado de los nombres. Devuelva la lista de URLs en un formato separado por comas. Seguir explícitamente este formato: url1 (bueno), url2 (malo), url3 (intermedio)\n.Al final del todo quiero una evaluación del alumno según las aplicaciones que tenga abierta, la evaluación deber ser segun 3 estados: Peligroso, Advertencia y Normal, sin la explicacion y procura cuidar el formato(esto incluye que no tenga carácteres especiales como por ej *)\n`;
+
+                const result = await model.generateContent(prompt);
+                const response2 = result.response;
+                let text = response2.text()
+
+                // Separar la evaluación de la lista de procesos
+                 const [processesText, evaluation] = text.split(/(?=\bPeligro\b|\bAdvertencia\b|\bNormal\b)/);
+
+                // Convertir la lista separada por comas a un arreglo
+                const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                // Combinar nombres únicos
+                const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+
+                // Escribe los nombres de procesos únicos en un archivo
+                const fileText = uniqueProcessNamesWithCategories.join('\n');
+                
+                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
+                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                const lastEntry = urlsResponse.data;
+                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
+
+                // Asignar la evaluación al estado del alumno
+                selectedStudent.status = evaluation.trim();
+
+                
+
+
+                // Actualizar el estado del alumno en el arreglo de alumnos
+                    const index = this.alumnos.findIndex(alumno => alumno._id === userId);
+                    if (index !== -1) {
+                        this.alumnos[index] = selectedStudent;
+                    }
+
+
+                // Hacer una solicitud para obtener los procesos para este userId
+                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const apps = processesResponse.data;
+
+                // Intentar obtener los procesos
+                try {
+                    const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                    apps = processesResponse.data;
+                } catch (error) {
+                    console.log('No se encontraron procesos para este estudiante');
+                }
+
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: response.data
+                    latestUrls, // Asignar el array de URLs
+                    apps: uniqueProcessNamesWithCategories,
+                    status: evaluation.trim(),
                 };
-                console.log("procesos: " + response.data);
+                console.log("Última URLs: ", latestUrls);
+                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
+                console.log("evaluación: " + evaluation.trim());
+
+                // Siempre mostrar el modal, incluso si no hay datos
                 this.showModal = true;
+
+                return uniqueProcessNamesWithCategories;
             } catch (error) {
-                console.error('Error al obtener los procesos del estudiante:', error);
-                alert('Error al obtener los procesos del estudiante');
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
             }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },
@@ -499,7 +734,7 @@ export default {
             const sessionUsers = sessionResponse.data;
             const asignatura = sessionUsers.asignatura;
             const participantesIds = sessionUsers.participantes;
-            console.log("--------->" + asignatura)
+            //console.log("--------->" + asignatura)
             const response = await axios.get('http://localhost:8080/users');
             const allUsers = response.data;
 
@@ -514,32 +749,69 @@ export default {
             });
 
         },
+        async Aplicaciones() {
+            const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+            const sessionUsers = sessionResponse.data;
+            const asignaturas = sessionUsers.asignatura;
+            //console.log("------>" + asignaturas)
+            axios.get('http://localhost:8080/appPeligrosas/' + asignaturas)
+                .then(response => {
+                    //console.log("Datos recibidos:", response.data);
+                    this.appPeligrosas = response.data;
+                })
+                .catch(error => {
+                    console.error("Hubo un error al obtener las aplicaciones:", error);
+                });
+
+
+        },
         añadir() {
             const openModal = document.querySelector('.hero__cta');
+            const openModal2 = document.querySelector('.app');
             const modal = document.querySelector('.modal_añadir');
+            const modal2 = document.querySelector('.modal__añadir');
             const closeModal = document.querySelector('.modal__close_añadir');
-            const closeModal2 = document.querySelector('.modal_close_añadir');
-            
+            const closeModal_ = document.querySelector('.modal_close_añadir');
+            const closeModal2 = document.querySelector('.modal_close__añadir');
+            const closeModal2_ = document.querySelector('.modal__close__añadir');
             openModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.add('modal_añadir--show');
             });
-
             closeModal.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.remove('modal_añadir--show');
             });
-            closeModal2.addEventListener('click', (e) => {
+            closeModal_.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal.classList.remove('modal_añadir--show');
                 //alert("alumnos agregados correctamente");
             });
+            openModal2.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal2.classList.add('modal__añadir--show');
+            });
+            closeModal2.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                modal2.classList.remove('modal__añadir--show');
+
+            });
+            closeModal2_.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal2.classList.remove('modal__añadir--show');
+                this.nombreApp = '';
+                this.LinkApp = '';
+                this.nivelPeligro = '';
+
+            });
+
         },
         async anadir_Usuario() {
             try {
                 const selectedUsers = this.users.filter(user => user.selected);
                 //console.log(selectedUsers.map(user => user._id));
-                
+
                 const response = await axios.post('http://localhost:8080/anadir_Usuario', {
                     users: selectedUsers.map(user => user._id),
                     sesion_id: this.sessionId
@@ -555,6 +827,25 @@ export default {
             } catch (error) {
                 console.error(error);
             }
+        },
+        async anadir_app() {
+            if (this.nombreApp && this.LinkApp && this.nivelPeligro) {
+                const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+                const sessionUsers = sessionResponse.data;
+                const asignatura = sessionUsers.asignatura;
+                await axios.post('http://localhost:8080/anadir_app', {
+                    nombreApp: this.nombreApp,
+                    LinkApp: this.LinkApp,
+                    nivelPeligro: this.nivelPeligro,
+                    asignatura: asignatura
+                }
+                );
+                //console.log(this.nombreApp + " ---- " + this.LinkApp + " ------- " + this.nivelPeligro + " ---- " + asignatura)
+                location.reload();
+            } else {
+                alert('Por favor, complete los campos.');
+            }
+            //console.log('Array apps:', this.appPeligrosas);
         },
         async alumnosbaneados() {
             try {
@@ -591,14 +882,14 @@ export default {
                 });
                 //console.log("Members de la asignatura:", response.data);
                 const memberIdsAsString = response.data.map(member => member.toString());
-                
+
                 return memberIdsAsString;
 
             } catch (error) {
                 console.error(error);
                 return [];
             }
-        },
+        }
     },
     computed: {
         // Filtra los usuarios basándose en el campo de búsqueda
@@ -757,6 +1048,7 @@ export default {
     margin-left: -30%;
 }
 
+.modal__añadir,
 .modal_añadir {
     position: fixed;
     top: 0;
@@ -772,6 +1064,7 @@ export default {
     --transition: transform .8s;
 }
 
+.modal__añadir--show,
 .modal_añadir--show {
     opacity: 1;
     pointer-events: unset;
@@ -805,6 +1098,8 @@ export default {
     max-width: 300px;
 }
 
+.modal__close__añadir,
+.modal_close__añadir,
 .modal_close_añadir,
 .modal__close_añadir {
     text-decoration: none;
@@ -840,14 +1135,20 @@ export default {
     max-width: 1200px;
 }
 
+.dashboards {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .dashboard {
     padding-top: 10px;
     padding-bottom: 10px;
     display: flex;
+    gap: 5px;
 }
 
 .dashboard button {
-    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -857,7 +1158,22 @@ export default {
     font-size: 1rem;
 }
 
+.dashboard select {
+    padding: 10px 10px;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    background-color: var(--button-background-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
 .dashboard button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+.dashboard select:hover {
     background-color: var(--button-hover-background-color);
 }
 
@@ -974,6 +1290,14 @@ th {
 
 .actionButton.ban:hover {
     background-color: var(--button-hover-background-color);
+}
+
+.actionButton.ban2 {
+    background-color: #E52B50;
+}
+
+.actionButton.ban2:hover {
+    background-color: red;
 }
 
 .actionButton.expel {
@@ -1105,6 +1429,10 @@ th {
     color: white;
 }
 
+.ban-text2 {
+    color: black;
+}
+
 .desban {
     margin-left: 7vw;
     background-color: #008000;
@@ -1192,10 +1520,140 @@ th {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
 }
 
 .claseNumeroSesion {
     font-size: medium;
     color: gray;
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 80%;
+    max-height: 80%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: black;
+}
+
+.scrollable-content {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 10px;
+    border: 3px solid black;
+    border-radius: 15px;
+    background-color: white;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: -10px;
+
+}
+
+li {
+    margin: 5px 0;
+    padding-right: 0px;
+    border-bottom: 1px solid black;
+}
+
+.closeButton {
+    display: block;
+    margin: 20px auto 0 auto;
+    padding: 10px 20px;
+    background: #06bfbf;
+    color: black;
+    border: none;
+    border-radius: 200px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+.closeButton:hover {
+    transform: scale(1.1);
+}
+
+.closeButton:focus {
+    outline: none;
+}
+
+.scrollable-content::-webkit-scrollbar {
+    width: 12px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+    background: black;
+    border-radius: 15px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+    background: #06bfbf;
+    border-radius: 15px;
+    border: 3px solid black;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: #3ecece;
+}
+
+.scrollable-content a {
+    color: #3399ff;
+    text-decoration: none;
+}
+
+.scrollable-content a:hover {
+    text-decoration: underline;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-container_añadir {
+    margin-bottom: 10px;
+    /* Ajusta el espacio entre los elementos si es necesario */
+}
+
+.button-container {
+    margin-top: 20px;
+    /* Espacio entre los campos y los botones */
+    display: flex;
+    justify-content: center;
+}
+
+.link {
+    color: black;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
 </style>

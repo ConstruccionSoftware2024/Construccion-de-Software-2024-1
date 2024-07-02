@@ -3,28 +3,56 @@
         <main>
             <h1>Sesion id: {{ sessionId }}</h1>
             <div class="danger-level box-shadow" :style="{ backgroundColor: dangerColor }">
-                    <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
-                    <p>{{ dangerMessage }}</p>
-                </div>
-
-            <div class="mainContainer">
-                    <div class="chartContainer box-shadow">
-                        <canvas id="statusChart"></canvas>
-                    </div>
-                    <div class="chartDataContainer box-shadow">
-                        <h3>Datos del Gráfico</h3>
-                        <p>Aplicaciones totales: {{ totalApps }}</p>
-                        <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
-                        <p>Última Actividad: {{ lastActivity }}</p>
-                        <canvas id="appsChart"></canvas>
-                    </div>
+                <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
+                <p>{{ dangerMessage }}</p>
             </div>
 
+            <div class="mainContainer">
+                <div class="chartContainer box-shadow">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chartDataContainer box-shadow">
+                    <h3>Datos del Gráfico</h3>
+                    <p>Aplicaciones totales: {{ totalApps }}</p>
+                    <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
+                    <p>Última Actividad: {{ lastActivity }}</p>
+                    <canvas id="appsChart"></canvas>
+                </div>
+            </div>
+            <div>
+                <div class="bottomContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre de la Aplicación</th>
+                                <th>Link de la Aplicación</th>
+                                <th>Peligrosidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="app in appPeligrosas" :key="app._id">
+                                <td>{{ app.nombre }}</td>
+                                <td>{{ app.link }}</td>
+                                <td>{{ app.peligro }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div class="evaluations box-shadow">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Evaluaciones</h3>
                 <div class="listaEvaluaciones">
                     <div class="sesionesItem" v-for="eva in evaluations" :key="eva.id">
-                        <router-link :to="'/vistaEvaluacion/'+eva._id" class="navLink"><span class="session-title">{{ eva.nombre }}</span></router-link>
+                        <div v-if="new Date() <= new Date(eva.fechaCierre)">
+                            <router-link :to="'/vistaEvaluacion/'+eva._id" class="navLink">
+                                <span class="session-title">{{ eva.nombre }}</span><br>
+                                <span class="session-dates">({{ formatFecha(eva.fechaApertura) }} - {{ formatFecha(eva.fechaCierre) }})</span>
+                            </router-link>
+                        </div>
+                        <div v-else class="navLink_disabled">
+                            <span class="session-title">{{ eva.nombre }}</span><br>
+                            <span class="session-dates">({{ formatFecha(eva.fechaApertura) }} - {{ formatFecha(eva.fechaCierre) }})</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -33,15 +61,16 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-            <button @click="guardarHistorial">Guardar procesos</button>
+                <button @click="guardarHistorial">Guardar procesos</button>
 
 
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
+
                     <thead v-if="tabs.length">
                         <tr v-for="(tab, index) in tabs" :key="index">
-                            <th>Hora</th>
+                            <td>{{ formatTime(tab.time) }}</td>
                             <th><a :href="tab.url" target="_blank">Url: {{ tab.url }}</a></th>
                         </tr>
                     </thead>
@@ -63,9 +92,9 @@ import Chart from 'chart.js/auto';
 import { useUserStore } from '../../../back-end/src/store.js';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     /*  mounted() {
           if (this.$store.state.usuario.role == "profesor") {
@@ -101,17 +130,49 @@ export default {
         const createSession = () => {
             // Lógica para unirse a una sesión
         };
-
+        const formatTime = (time) => {
+            const date = new Date(time);
+            const formattedTime = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+            return formattedTime;
+        };
         const fetchHistory = async () => {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/historial');
-                history.value = response.data.sort((a, b) => {
+                const procesosOrdenados = response.data.sort((a, b) => {
                     return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
                 });
+                // Obtener los nombres modificados de los procesos
+                const procesos = procesosOrdenados.map(proceso => proceso.url);
+                const rialNombres = await cambiaNombreProceso(procesos);
+
+                // Asignar los nombres modificados a history.value
+                const temp = procesosOrdenados.map((proceso, index) => {
+                    if (typeof proceso.url != 'string') {
+                        return { ...proceso, url: '-' };
+                    }
+                    return { ...proceso, url: rialNombres[index] };
+                });
+
+                const temp2 = [...new Set(temp)]; // Eliminar duplicados
+
+                // Filtrar los elementos que no son aplicaciones
+                history.value = temp2.filter(proceso => proceso.url !== '-' && proceso.url !== '- (-)');
             } catch (error) {
-                //console.error('Error fetching history:', error);
+                console.error('Error fetching history:', error);
             }
         };
+        async function cambiaNombreProceso(procesos) {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const prompt = `Dada la lista de procesos: ${procesos}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) (en el mismo orden que vienen y, si no es aplicacion, devolver con un -) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres (siempre solo de las apliciones). Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio), -. Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+
+            const result = await model.generateContent(prompt);
+            const response2 = result.response;
+            const text = response2.text();
+
+            // Convertir la lista separada por comas a un arreglo
+            const procesosModificados = text.split(',').map(name => name.trim());
+            return procesosModificados;
+        }
         async function recuperarEvaluaciones(id) {
             await axios.get(`http://localhost:8080/evaluacion/${id}`)
                 .then(async response => {
@@ -126,11 +187,11 @@ export default {
             setInterval(async () => {
                 await fetchHistory(); // Actualiza el historial cada intervalo                 
                 await guardarHistorial(); // Guarda el historial cada intervalo             
-            }, 5000); // Intervalo de 30 segundos
+            }, 10000); // Intervalo de 10 segundos
         };
 
         const guardarHistorial = () => {
-            const procesos = history.value.map(proceso => proceso.name);
+            const procesos = history.value.map(proceso => proceso.url);
             //const procesosString = procesos.join(',');
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
@@ -213,6 +274,7 @@ export default {
             sessionId,
             totalApps,
             dangerousApps,
+            formatTime,
             lastActivity,
             dangerLevel,
             dangerMessage,
@@ -226,54 +288,114 @@ export default {
     },
     data() {
         return {
-            tabs: []
+            tabs: [],
+            appPeligrosas: [],
         };
     },
     created() {
         this.fetchTabs(); // Fetch data when the component is created
         setInterval(this.fetchTabs, 10000); // Fetch data every 10 seconds
+        this.Aplicaciones();
     },
     methods: {
         async fetchTabs() {
             try {
-                const response = await axios.get('http://localhost:5151/tabs'); // Adjust the URL to your server endpoint
-                this.tabs = response.data; // Assuming the server responds with tab data in JSON format
+                const response = await axios.get('http://localhost:5151/tabs');
+                this.tabs = response.data.map(tab => ({
+                    time: new Date(), // Aquí puedes usar la hora actual o la hora del servidor
+                    url: tab.url
+                }));
 
-                // Extract URLs into a string array
-                const urls = this.tabs.map(tab => tab.url);
-                const urlsString = urls.join(', '); // Join URLs into a single string
-                console.log('URLs:', urlsString); // Print URLs as a single string to console
-
-                // Send data to server
-                this.sendDataToServer(urlsString);
+                // Llamar a sendDataToServer con las URLs obtenidas
+                this.sendDataToServer(this.tabs);
             } catch (error) {
                 console.error('Error al obtener los datos:', error);
             }
         },
-        async sendDataToServer(urlsString) {
+        async Aplicaciones() {
+            const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+            const sessionUsers = sessionResponse.data;
+            const asignaturas = sessionUsers.asignatura;
+            //console.log("------>" + asignaturas)
+            axios.get('http://localhost:8080/appPeligrosas/' + asignaturas)
+                .then(response => {
+                    //console.log("Datos recibidos:", response.data);
+                    this.appPeligrosas = response.data;
+                })
+                .catch(error => {
+                    console.error("Hubo un error al obtener las aplicaciones:", error);
+                });
+
+
+        },
+        formatFecha(fecha) {
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(fecha).toLocaleDateString('es-ES', opciones);
+        },
+        async sendDataToServer(tabs) {
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
-
             try {
-                // Primero, realiza una petición al servidor para verificar si los datos ya existen
-                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para verificar en el servidor
+                const formattedTime = new Date().toLocaleTimeString(); // Obtener la hora actual formateada
+                //console.log('Sending data to checkTabs:', { userId: user.value._id, tabs: tabs });
+                const tabsElements = tabs.map(tab => tab.url);
+                const tabstring = tabsElements.join(", ");
+                //console.log(tabstring);
+
+                const checkResponse = await axios.post('http://localhost:8080/checkTabs1', { userId: user.value._id, tabs: tabs});
                 if (checkResponse.data.exists) {
                     console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
-                    return; // Si los datos ya existen, no se hace nada más
+                    return;
                 }
 
-                // Si los datos no existen, procede a enviarlos al servidor
-                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para procesar en el servidor
+                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: tabstring, time: formattedTime });
                 console.log('Datos enviados al servidor correctamente:', processResponse.data);
             } catch (error) {
                 console.error('Error al enviar los datos al servidor:', error);
             }
         }
+
     }
 };
 </script>
 
 <style scoped>
+.bottomContainer {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: var(--container-background-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+table,
+th,
+td {
+    border: 1px solid var(--border-color);
+    background-color: var(--container-background-color);
+    color: var(--text-color);
+}
+
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+th {
+    background-color: var(--container-background-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+}
+
 .alumno-page {
     padding: 2rem;
     margin: 20px auto;
@@ -331,6 +453,17 @@ button {
     text-align: center;
 }
 
+.navLink_disabled{
+    text-decoration: none;
+    color: var(--text-color-disabled);
+    display: block;
+    padding: 10px 10px;
+    border-radius: 5px;
+    background-color: var(--background-color-disabled);
+    margin-bottom: 0.5rem;
+    cursor: not-allowed;
+}
+
 .mainContainer {
     display: flex;
     justify-content: space-between;
@@ -338,7 +471,8 @@ button {
     flex-wrap: wrap;
 }
 
-.chartContainer, .chartDataContainer {
+.chartContainer,
+.chartDataContainer {
     width: calc(50% - 10px);
     padding: 20px;
     background-color: var(--container-background-color);
@@ -409,7 +543,7 @@ button {
     border-radius: 10px;
 }
 
-.listaEvaluaciones{
+.listaEvaluaciones {
     margin-bottom: 20px;
     padding: 10px;
     border-radius: 5px;

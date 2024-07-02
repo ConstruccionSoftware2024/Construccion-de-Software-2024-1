@@ -1,8 +1,11 @@
 <template>
     <div class="dashboard" id="app">
+        <Loader v-if="loading" />
         <div class="text-container">
             <h1 class="greeting">Hola {{ userStore.user.firstName }} {{ userStore.user.lastName }}!</h1>
             <p class="description">{{ welcomeMessage }}</p>
+            <button v-if="userStore.user.role === 'profesor'" @click="showModal = true" class="create-button">Crear
+                Asignatura</button>
         </div>
         <div class="content-wrapper">
             <div class="card-container">
@@ -23,11 +26,36 @@
                     </div>
                     <div class="card-footer">
                         <div class="team-members">
-                            <img v-for="member in project.members" :key="member" :src="member" alt="Team member"
-                                class="team-member">
+                            <template v-for="(member, index) in project.members.slice(0, 3)" :key="index">
+                                <img :src="memberImages[member] || defaultImage" alt="Team member" class="team-member">
+                            </template>
+                            <template v-if="project.members.length > 3">
+                                <div class="more-members">+{{ project.members.length - 3 }}</div>
+                            </template>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div v-if="showModal" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="showModal = false">&times;</span>
+                <h2>Crear Nueva Asignatura</h2>
+                <form @submit.prevent="createNewProject">
+                    <label for="title">Título:</label>
+                    <input type="text" id="title" v-model="newProject.title" required>
+
+                    <label for="description">Descripción:</label>
+                    <textarea id="description" v-model="newProject.description" required></textarea>
+
+                    <label for="section">Sección:</label>
+                    <input type="text" id="section" v-model="newProject.section" required>
+
+                    <label for="image">Imagen:</label>
+                    <input type="file" id="image" @change="onFileChange" required>
+
+                    <button type="submit" class="submit-button">Crear</button>
+                </form>
             </div>
         </div>
     </div>
@@ -35,17 +63,37 @@
 
 <script>
 import axios from 'axios';
-import { computed } from 'vue';
-import { useUserStore } from '../../../back-end/src/store.js'
-const isAuthenticated = computed(() => userStore.isAuthenticated)
+import { computed, ref } from 'vue';
+import { useUserStore } from '../../../back-end/src/store.js';
+import { useLoaderStore } from '../../../back-end/src/store.js'; // Importa el store de loader
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { v4 as uuidv4 } from 'uuid';
+import Loader from '../ComponentesGrupoFelipe/Loader.vue';
+
+const defaultImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+
 export default {
+    components: {
+        Loader,
+    },
     setup() {
         const userStore = useUserStore();
-        return { userStore }
+        const loaderStore = useLoaderStore(); // Usa el store de loader
+        const storage = getStorage();
+        return { userStore, loaderStore, storage };
     },
     data() {
         return {
-            projects: []
+            projects: [],
+            showModal: false,
+            newProject: {
+                title: '',
+                description: '',
+                section: '',
+                image: null
+            },
+            imageUrl: '',
+            memberImages: {}
         }
     },
     computed: {
@@ -68,27 +116,93 @@ export default {
                 return '¡Bienvenido/a a tu perfil de profesor! Aquí puedes ver todas las asignaturas que estás impartiendo. Explora tus cursos y gestiona tus clases.';
             }
             return '';
+        },
+        loading() {
+            return this.loaderStore.loading; // Computed property para el estado de carga
         }
     },
     methods: {
-
         async fetchProjects() {
+            this.loaderStore.setLoading(true); // Activa el loader
             try {
                 const response = await axios.get('http://localhost:8080/asignaturas');
-                console.log('Response data:', response.data);
                 this.projects = response.data;
+                await this.fetchMemberImages();
             } catch (error) {
                 console.error('Error fetching projects:', error);
+            } finally {
+                this.loaderStore.setLoading(false); // Desactiva el loader
             }
         },
+        async fetchMemberImages() {
+            const memberIds = new Set(this.projects.flatMap(project => project.members));
+            const memberImagesPromises = Array.from(memberIds).map(async memberId => {
+                try {
+                    const response = await axios.get(`http://localhost:8080/user/${memberId}`);
+                    return { memberId, image: response.data.foto || defaultImage };
+                } catch (error) {
+                    return { memberId, image: defaultImage };
+                }
+            });
+
+            const memberImagesArray = await Promise.all(memberImagesPromises);
+            this.memberImages = Object.fromEntries(memberImagesArray.map(({ memberId, image }) => [memberId, image]));
+        },
         goToProject(id) {
-            console.log(this.userStore.user.role)
             if (this.userStore.user.role == 'alumno') {
                 this.$router.push(`/asignaturaAlumno/${id}`);
-            }
-            else if (this.userStore.user.role == 'profesor') {
+            } else if (this.userStore.user.role == 'profesor') {
                 this.$router.push(`/asignaturaProfesor/${id}`);
             }
+        },
+        onFileChange(e) {
+            this.newProject.image = e.target.files[0];
+        },
+        async createNewProject() {
+            this.loaderStore.setLoading(true); // Activa el loader
+            const formData = new FormData();
+            formData.append('title', this.newProject.title);
+            formData.append('description', this.newProject.description);
+            formData.append('section', this.newProject.section);
+            formData.append('profesorId', this.userStore.user._id);
+            formData.append('date', new Date().toISOString().split('T')[0]);
+
+            try {
+                if (this.newProject.image) {
+                    const uniqueId = uuidv4();
+                    const storageReference = storageRef(this.storage, `asignaturasFotos/${uniqueId}-${this.newProject.image.name}`);
+                    await uploadBytes(storageReference, this.newProject.image);
+                    const imageUrl = await getDownloadURL(storageReference);
+                    this.imageUrl = imageUrl;
+                }
+                formData.append('image', this.imageUrl);
+
+                const response = await axios.post('http://localhost:8080/asignaturasCrear', {
+                    title: this.newProject.title,
+                    description: this.newProject.description,
+                    section: 'Sección ' + this.newProject.section,
+                    profesorId: this.userStore.user._id,
+                    date: new Date().toISOString().split('T')[0],
+                    image: this.imageUrl
+                });
+
+                this.projects.push(response.data);
+                this.showModal = false;
+                this.resetNewProject();
+            } catch (error) {
+                console.error('Error creating project:', error);
+            } finally {
+                this.loaderStore.setLoading(false); // Desactiva el loader
+            }
+        },
+        resetNewProject() {
+            this.newProject = {
+                title: '',
+                description: '',
+                section: '',
+                image: null
+            };
+            this.imageUrl = '';
         }
     },
     created() {
@@ -98,6 +212,7 @@ export default {
 </script>
 
 <style scoped>
+/* Añade tu CSS aquí */
 body {
     background-color: var(--background-color);
 }
@@ -116,6 +231,9 @@ body {
     width: 100%;
     max-width: 1200px;
     margin-bottom: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .greeting,
@@ -133,6 +251,21 @@ body {
 .description {
     margin-bottom: 16px;
     font-size: 20px;
+}
+
+.create-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: var(--text-color);
+    background-color: var(--button-background-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 16px;
+}
+
+.create-button:hover {
+    background-color: var(--button-hover-background-color);
 }
 
 .content-wrapper {
@@ -247,7 +380,7 @@ body {
     height: 24px;
     border-radius: 50%;
     margin-left: -8px;
-    border: 2px solid white;
+    border: 2px solid var(--border-color);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -258,5 +391,106 @@ body {
 
 .team-member:first-child {
     margin-left: 0;
+}
+
+.more-members {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-left: -8px;
+    border: 2px solid var(--border-color);
+    background-color: var(--input-background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-color);
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: var(--container-background-color);
+    margin: auto;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--text-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin: 10px 0 5px;
+}
+
+input[type="text"],
+textarea,
+input[type="file"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+textarea {
+    resize: none;
+    height: 100px;
+}
+
+input {
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.submit-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: var(--button-background-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.submit-button:hover {
+    background-color: var(--button-hover-background-color);
 }
 </style>

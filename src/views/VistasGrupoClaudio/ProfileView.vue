@@ -2,7 +2,9 @@
     <div class="container">
         <div class="alumno-container">
             <div class="alumno-info">
-                <img class="alumno-img" :src="imagen" />
+                <img class="alumno-img" :src="alumno.foto || imagen" @mouseover="hover = true"
+                    @mouseleave="hover = false" @click="subirFoto" />
+                <div v-if="hover" class="hover-text">Agregar/Editar Foto</div>
                 <div class="alumno-text">
                     <h2>{{ alumno.firstName }} {{ alumno.lastName }}</h2>
                     <p class="texto-major"> {{ alumno.major }}, {{ alumno.campus }}</p>
@@ -16,24 +18,24 @@
                 <template v-if="mostrarFormulario">
                     <div class="input-group">
                         <label for="matricula">Matrícula: </label>
-                        <input id="matricula" class="inputEditable" v-model="alumno.matricula" placeholder="Matrícula"
-                            disabled>
+                        <input id="matricula" class="inputEditable" v-model="alumnoEditado.matricula"
+                            placeholder="Matrícula" disabled>
                     </div>
 
                     <div class="input-group">
                         <label for="rut">Rut: </label>
-                        <input id="rut" class="inputEditable" v-model="alumno.rut" placeholder="Rut" disabled>
+                        <input id="rut" class="inputEditable" v-model="alumnoEditado.rut" placeholder="Rut" disabled>
                     </div>
 
                     <div class="input-group">
                         <label for="fechaNacimiento">Fecha de Nacimiento: </label>
-                        <input id="fechaNacimiento" class="inputEditable" v-model="alumno.fechaNacimiento"
+                        <input id="fechaNacimiento" class="inputEditable" v-model="alumnoEditado.fechaNacimiento"
                             placeholder="Fecha de Nacimiento" disabled>
                     </div>
 
                     <div class="input-group">
-                        <label for="email">email: </label>
-                        <input id="email" class="inputEditable" v-model="alumnoEditado.email" placeholder="email">
+                        <label for="email">Email: </label>
+                        <input id="email" class="inputEditable" v-model="alumnoEditado.email" placeholder="Email">
                     </div>
 
                     <div class="input-group">
@@ -54,18 +56,16 @@
                     <p><span class="atributo-username">Rut</span><span class="dospuntos">:</span> {{ alumno.rut }}</p>
                     <p><span class="atributo-username">Fecha de Nacimiento</span><span class="dospuntos">:</span> {{
                         alumno.fechaNacimiento }}</p>
-                    <p><span class="atributo-username">email</span><span class="dospuntos">:</span> {{ alumno.email }}
+                    <p><span class="atributo-username">Email</span><span class="dospuntos">:</span> {{ alumno.email }}
                     </p>
-                    <p><span class="atributo-username">Teléfono</span><span class="dospuntos">:</span> {{ alumno.telefono
-                        }}</p>
+                    <p><span class="atributo-username">Teléfono</span><span class="dospuntos">:</span> {{
+                        alumno.telefono }}</p>
                     <p><span class="atributo-username">Dirección</span><span class="dospuntos">:</span> {{
                         alumno.direccion }}</p>
                 </template>
             </div>
             <div class="botones-contenedor">
-                <button v-if="mostrarFormulario" class="cancelar-perfil-btn" @click="cancelarEdicion">
-                    Cancelar
-                </button>
+                <button v-if="mostrarFormulario" class="cancelar-perfil-btn" @click="cancelarEdicion">Cancelar</button>
                 <button class="editar-perfil-btn" @click="toggleFormulario"
                     :disabled="mostrarFormulario && !cambiosRealizados">
                     {{ mostrarFormulario ? 'Guardar Cambios' : 'Editar Perfil' }}
@@ -80,12 +80,10 @@ import { ref, reactive, computed } from 'vue';
 import Swal from 'sweetalert2';
 import { useUserStore } from '../../../back-end/src/store.js';
 import axios from 'axios';
-
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Datos de prueba
-
 const imagen = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
-
 
 const alumno = ref({
     username: '',
@@ -100,12 +98,13 @@ const alumno = ref({
     fechaNacimiento: '',
     telefono: '',
     direccion: '',
+    foto: ''
 });
 
 const alumnoEditado = reactive({ ...alumno.value });
 
 const mostrarFormulario = ref(false);
-
+const hover = ref(false);
 const cambiosRealizados = computed(() => {
     return Object.keys(alumno.value).some(key => alumno.value[key] !== alumnoEditado[key]);
 });
@@ -133,12 +132,12 @@ function toggleFormulario() {
 }
 
 // Recuperar datos del usuario mediante el ._id
-
 async function cargarDatosUsuario() {
     try {
         const response = await axios.get(`http://localhost:8080/user/${user.value._id}`);
         const data = response.data;
         alumno.value = data;
+        Object.assign(alumnoEditado, data); // Asegura que alumnoEditado esté sincronizado con los datos originales
     } catch (error) {
         console.error(error);
     }
@@ -146,14 +145,40 @@ async function cargarDatosUsuario() {
 
 async function actualizarDatosUsuario() {
     try {
-        const { _id, ...datosActualizados } = alumnoEditado;
-        await axios.post(`http://localhost:8080/user/${user.value._id}`, datosActualizados);
+        const updateData = { ...alumnoEditado };
+        delete updateData._id; // Asegúrate de no enviar _id en el cuerpo de la solicitud
+        await axios.post(`http://localhost:8080/user/${user.value._id}`, updateData);
         cargarDatosUsuario();
     } catch (error) {
         console.error(error);
     }
 }
 
+// Función para subir foto
+async function subirFoto() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const storage = getStorage();
+            const storageReference = storageRef(storage, `profile_pictures/${user.value._id}`);
+            await uploadBytes(storageReference, file);
+            const downloadURL = await getDownloadURL(storageReference);
+            alumno.value.foto = downloadURL;
+            alumnoEditado.foto = downloadURL;
+            await actualizarDatosUsuario();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Foto actualizada!',
+                showConfirmButton: false,
+                timer: 1200
+            });
+        }
+    };
+    fileInput.click();
+}
 
 const cancelarEdicion = () => {
     if (cambiosRealizados.value) {
@@ -172,14 +197,13 @@ const cancelarEdicion = () => {
                 Object.assign(alumnoEditado, alumno.value);
             }
         });
-    } else
-
-    mostrarFormulario.value = false;
+    } else {
+        mostrarFormulario.value = false;
+    }
 };
 
 cargarDatosUsuario();
 </script>
-
 
 <style scoped>
 .container {
@@ -191,7 +215,6 @@ cargarDatosUsuario();
     margin-left: 10%;
     margin-right: 10%;
     margin-top: 2rem;
-
 }
 
 .alumno-container,
@@ -210,6 +233,24 @@ cargarDatosUsuario();
     flex-direction: row;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     padding: 3rem;
+    position: relative;
+}
+
+.hover-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    display: none;
+}
+
+.alumno-container:hover .hover-text {
+    display: block;
 }
 
 .detalle-container {
@@ -237,6 +278,7 @@ cargarDatosUsuario();
     border-radius: 50%;
     background-color: #ffffff;
     border: 2px solid var(--text-color);
+    cursor: pointer;
 }
 
 .alumno-text {
@@ -340,7 +382,6 @@ cargarDatosUsuario();
     justify-content: space-between;
 }
 
-
 .editar-perfil-btn {
     background-color: var(--button-background-color);
     color: black;
@@ -382,5 +423,32 @@ cargarDatosUsuario();
 
 .cancelar-perfil-btn:hover {
     background-color: #E50000;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        gap: 1rem;
+        margin-left: 5%;
+        margin-right: 5%;
+    }
+
+    .alumno-container,
+    .detalle-container {
+        flex-basis: auto;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .botones-contenedor {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .editar-perfil-btn,
+    .cancelar-perfil-btn {
+        width: 100%;
+        margin: 0;
+    }
 }
 </style>

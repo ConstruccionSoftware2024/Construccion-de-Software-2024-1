@@ -34,11 +34,11 @@ const router = createRouter({
       name: 'HomeView',
       component: HomeView
     },
-
     {
       path: '/listaAsignaturas',
       name: 'asignaturas',
-      component: asignaturas
+      component: asignaturas,
+      meta: { requiresAuth: true }
     },
     {
       path: '/visualizarUrl',
@@ -48,22 +48,26 @@ const router = createRouter({
     {
       path: '/modulos',
       name: 'modulos',
-      component: ComponenteModulos
+      component: ComponenteModulos,
+      meta: { requiresAuth: true }
     },
     {
       path: '/sesionesAlum',
       name: 'sesionesAlum',
-      component: SesionesAlumnos
+      component: SesionesAlumnos,
+      meta: { requiresAuth: true }
     },
     {
       path: '/opciones',
       name: 'opciones',
-      component: ComponenteOpciones
+      component: ComponenteOpciones,
+      meta: { requiresAuth: true }
     },
     {
       path: '/historialevaluaciones',
       name: 'historialevaluaciones',
-      component: HistorialEvaluaciones
+      component: HistorialEvaluaciones,
+      meta: { requiresAuth: true }
     },
     {
       path: '/home',
@@ -73,7 +77,8 @@ const router = createRouter({
     {
       path: '/revisiones',
       name: 'revisiones',
-      component: RevisionesView
+      component: RevisionesView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
@@ -83,82 +88,92 @@ const router = createRouter({
     {
       path: '/settings',
       name: 'settings',
-      component: () => import('../components/ComponentesGrupoJoaquin/SettingsPerfil.vue')
+      component: () => import('../components/ComponentesGrupoJoaquin/SettingsPerfil.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/invitar-alumnos',
       name: 'invitar-alumnos',
-      component: InvitarAlumnos
+      component: InvitarAlumnos,
+      meta: { requiresAuth: true }
     },
     {
       path: '/session',
       name: 'sesion',
-      component: () => import('../views/VistasGrupoClaudio/Sesion.vue')
+      component: () => import('../views/VistasGrupoClaudio/Sesion.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/crear-evaluacion/:sesionId',
       name: 'CrearEvaluacion',
-      component: CrearEvaluacion
+      component: CrearEvaluacion,
+      meta: { requiresAuth: true }
     },
     {
       path: '/vistaProfesor/:id',
       name: 'VistaProfesor',
-      component: VistaProfesor
+      component: VistaProfesor,
+      meta: { requiresAuth: true }
     },
     {
       path: '/vistaAlumno/:id',
       name: 'VistaAlumno',
-      component: VistaAlumno
+      component: VistaAlumno,
+      meta: { requiresAuth: true }
     },
     {
       path: '/vistaEvaluacion/:id',
       name: 'VistaEvaluacion',
-      component: VistaEvaluacion
+      component: VistaEvaluacion,
+      meta: { requiresAuth: true }
     },
     {
       path: '/faltaAlumnos/:id',
       name: 'FaltasAlumnos',
-      component: FaltaAlumnos
+      component: FaltaAlumnos,
+      meta: { requiresAuth: true }
     },
     {
       path: '/lista-alumnos',
       name: 'lista-alumnos',
-      component: ListaAlumnos
+      component: ListaAlumnos,
+      meta: { requiresAuth: true }
     },
     {
       path: '/historial',
       name: 'historial',
-      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/vistaalumno',
       name: 'vista-alumno',
-      component: VistaAlumno
+      component: VistaAlumno,
+      meta: { requiresAuth: true }
     },
     {
       path: '/vistaalumno1',
       name: 'vista-alumno1',
-      component: VistaAlumno1
+      component: VistaAlumno1,
+      meta: { requiresAuth: true }
     },
     {
       path: '/perfil',
       name: 'perfil',
-      component: ProfileView
+      component: ProfileView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/navegacion',
       name: 'navegacion',
-      component: () => import('../components/ComponentesGrupoFelipe/navegacion.vue')
-    },
-    {
-      path: '/historial',
-      name: 'historial',
-      component: () => import('../views/VistasGrupoFelipe/HistorialAlumno.vue')
+      component: () => import('../components/ComponentesGrupoFelipe/navegacion.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/HistorialSesiones',
       name: 'HistorialSesiones',
-      component: () => import('../components/ComponentesGrupoFelipe/HistorialSesiones.vue')
+      component: () => import('../components/ComponentesGrupoFelipe/HistorialSesiones.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/about',
@@ -173,7 +188,8 @@ const router = createRouter({
     {
       path: '/asignaturaProfesor/:id',
       name: 'asignatura',
-      component: () => import('../views/VistasGrupoClaudio/AsignaturaProfesor.vue')
+      component: () => import('../views/VistasGrupoClaudio/AsignaturaProfesor.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/asignaturaAlumno/:id',
@@ -189,22 +205,26 @@ const router = createRouter({
     {
       path: '/ContactoAlumno',
       name: 'contactoalumno',
-      component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue')
+      component: () => import('../views/VistasGrupoFelipe/ContactoAlumno.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/VerForo',
       name: 'VerForo',
-      component: () => import('../views/VistasGrupoFelipe/VerForo.vue')
+      component: () => import('../views/VistasGrupoFelipe/VerForo.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/mensajes',
       name: 'mensajes',
-      component: Mensajes
+      component: Mensajes,
+      meta: { requiresAuth: true }
     },
     {
       path: '/configuracion',
       name: 'configuracion',
-      component: Configuracion
+      component: Configuracion,
+      meta: { requiresAuth: true }
     },
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -214,7 +234,6 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
-
   const userStore = useUserStore()
 
   if (requiresAuth && !userStore.isAuthenticated) {
@@ -223,7 +242,5 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
-
-
 
 export default router;

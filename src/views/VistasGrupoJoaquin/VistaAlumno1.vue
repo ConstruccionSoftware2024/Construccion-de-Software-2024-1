@@ -31,7 +31,7 @@
                 <table>
                     <thead v-if="tabs.length">
                         <tr v-for="(tab, index) in tabs" :key="index">
-                            <th>Hora</th>
+                            <td>{{ getFormattedTime() }}</td>
                             <th><a :href="tab.url" target="_blank">Url: {{ tab.url }}</a></th>
                         </tr>
                     </thead>
@@ -86,7 +86,13 @@ export default {
                     return '#FFFFFF';
             }
         });
-
+        const getFormattedTime = () => {
+            const date = new Date();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        };
         const createSession = () => {
             // Lógica para unirse a una sesión
         };
@@ -208,6 +214,7 @@ export default {
             totalApps,
             dangerousApps,
             lastActivity,
+            getFormattedTime,
             dangerLevel,
             dangerMessage,
             dangerColor,
@@ -249,20 +256,30 @@ export default {
             const user = computed(() => userStore.user);
 
             try {
+                const currentDate = new Date().toISOString();
+
+
                 // Primero, realiza una petición al servidor para verificar si los datos ya existen
-                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para verificar en el servidor
+                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, urls: urlsString });
+
                 if (checkResponse.data.exists) {
                     console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
                     return; // Si los datos ya existen, no se hace nada más
                 }
 
                 // Si los datos no existen, procede a enviarlos al servidor
-                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para procesar en el servidor
+                const processResponse = await axios.post('http://localhost:8080/processTabs', {
+                    userId: user.value._id,
+                    urls: urlsString,
+                    timestamp: currentDate // Enviar la fecha actual al servidor
+                });
+
                 console.log('Datos enviados al servidor correctamente:', processResponse.data);
             } catch (error) {
                 console.error('Error al enviar los datos al servidor:', error);
             }
         }
+
     }
 };
 </script>

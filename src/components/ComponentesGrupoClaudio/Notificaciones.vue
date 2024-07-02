@@ -156,13 +156,15 @@ const marcarMensajeComoLeido = async (idMensaje) => {
                 <!-- solo mostramos los mensajes que no han sido visto -->
                 <li class="notificacion" v-if="!mensaje.visto">
                     <div class="info">
-                        <p :class="getStatus(mensaje)">
-                            {{ mensaje.alerta }}
-                        </p>
+                        <div class="remitente">
+                            <img src="/warning.svg" alt="advertencia" v-if="mensaje.alerta == 'Advertencia'">
+                            <img src="/normal.svg" alt="normal" v-if="mensaje.alerta == 'Normal'">
+                            <img src="/danger.svg" alt="peligro" v-if="mensaje.alerta == 'Peligro'">
+                            <h3>{{ mensaje.remitenteNombre }}</h3>
+                        </div>
                         <p style="">
                             {{ mensaje.mensaje }}
                         </p>
-
                         <p class="sesion">
                             {{ mensaje.sesion }}
                         </p>
@@ -171,19 +173,6 @@ const marcarMensajeComoLeido = async (idMensaje) => {
                         title="Marcar como visto">
                         <div class="puntito2"></div>
                     </div>
-
-                    <!-- Icono para mensajes ya leidos -->
-
-                    <!-- <div class="novisto">
-                        <svg class="tick" v-if="mensaje.visto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                            fill="currentColor" className="size-6">
-                            <path fillRule="evenodd"
-                                d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
-                                clipRule="evenodd" />
-                        </svg>
-                    </div> -->
-
-
 
                 </li>
 
@@ -318,20 +307,6 @@ ul.lista1 {
     align-items: center;
 }
 
-/* .dropdown::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    right: 5px;
-    z-index: 20;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 10px solid var(--container-background-color);
-    color: #08cccc;
-} */
-
 .puntito {
     position: absolute;
     z-index: 10;
@@ -358,8 +333,7 @@ ul.lista1 {
     justify-content: space-between;
     transition: all .3s ease;
     border-radius: 15px;
-    gap: .5rem;
-    padding: 1rem;
+    padding: .8rem;
     width: 100%;
 }
 
@@ -372,18 +346,21 @@ ul.lista1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.danger {
-    color: rgb(156, 15, 15);
-    font-weight: bold;
+img {
+    max-width: 20px;
+    max-height: 20px;
 }
 
-.warning {
-    font-weight: bold;
-    color: rgb(224, 146, 0);
+.remitente {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 200px;
 }
 
-.ok {
-    color: rgb(18, 105, 18);
+.remitente h3 {
+    width: 100%;
+    font-size: 1.1rem;
     font-weight: bold;
 }
 </style>
