@@ -124,16 +124,28 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
-                <ul>
-                    <li v-for="app in selectedStudent.apps" :key="app.name">
-                        <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
-                    </li>
-                </ul>
+                <h3>Últimas URLs</h3>
+                <div class="scrollable-content">
+                    <ul>
+                        <li v-for="url in selectedStudent.latestUrls" :key="url">
+                            <a :href="url" target="_blank">{{ url }}</a>
+                        </li>
+                    </ul>
+                </div>
+                <h3>Ultimos Procesos</h3>
+                <div class="scrollable-content">
+                    <ul>
+                        <li v-for="app in selectedStudent.apps" :key="app.name">
+                            <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
+                        </li>
+                    </ul>
+                </div>
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -227,7 +239,10 @@ import BotonNotificar from '@/components/ComponentesGrupoClaudio/BotonNotificar.
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { time } from 'xpress/lib/string';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Accede a tu clave API como una variable de entorno
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     setup() {
         const route = useRoute();
@@ -455,7 +470,51 @@ export default {
                 return total + student.apps.filter(app => app.status === 'Peligro').length;
             }, 0);
         },
-        createCharts() {
+        async obtainAllProcesses() {
+            let matrixProcesses = [];
+            let processesMax = 0;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            try {
+                for (const alumno of this.alumnos) {
+                    const response = await axios.get(`http://localhost:8080/obtenerProcesos/${alumno._id}`);
+                    const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                    const result = await model.generateContent(prompt);
+                    const response2 = result.response;
+                    const text = response2.text();
+
+                    // Convertir la lista separada por comas a un arreglo
+                    const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                    // Combinar nombres únicos
+                    const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+                    matrixProcesses.push(uniqueProcessNamesWithCategories);
+                    if (response.data.length > processesMax) {
+                        processesMax = response.data.length;
+                    }
+                }
+
+                // Repeticiones de cada proceso
+                let processCount = {};
+                matrixProcesses.flat().forEach(process => {
+                    if (processCount[process]) {
+                        processCount[process]++;
+                    } else {
+                        processCount[process] = 1;
+                    }
+                });
+
+                // Crear matriz resultado con proceso y veces que se repite
+                let resultMatrix = [];
+                for (let process in processCount) {
+                    resultMatrix.push({ proceso: process, repeticiones: processCount[process] });
+                }
+                return resultMatrix;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                return [];
+            }
+        },
+        async createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -463,9 +522,9 @@ export default {
                 labels: ['Peligro', 'Advertencia', 'Normal'],
                 datasets: [{
                     data: [
-                        this.alumnos.filter(s => s.status === 'Peligro').length,
-                        this.alumnos.filter(s => s.status === 'Advertencia').length,
-                        this.alumnos.filter(s => s.status === 'Normal').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Peligro').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Advertencia').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Normal').length,
                     ],
                     backgroundColor: ['#FF0000', '#f7d547', '#008000'],
                 }],
@@ -491,19 +550,10 @@ export default {
                 },
             });
 
-            const appUsage = this.alumnos.reduce((acc, student) => {
-                student.apps.forEach(app => {
-                    if (acc[app.name]) {
-                        acc[app.name]++;
-                    } else {
-                        acc[app.name] = 1;
-                    }
-                });
-                return acc;
-            }, {});
+            const resultMatrix = await this.obtainAllProcesses();
+            const appLabels = resultMatrix.map(item => item.proceso);
+            const appData = resultMatrix.map(item => item.repeticiones);
 
-            const appLabels = Object.keys(appUsage);
-            const appData = Object.values(appUsage);
 
             new Chart(appsCtx, {
                 type: 'bar',
@@ -589,25 +639,90 @@ export default {
         async viewProcesses(userId) {
             console.log("ID de la sesión: " + this.sessionId);
             const selectedStudent = this.alumnos.find(alumno => alumno._id === userId);
-
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             if (!selectedStudent) {
                 alert('Estudiante no encontrado');
                 return;
             }
 
             try {
+                 // Obtener URLs del estudiante
+                const responseUrls = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                if (!responseUrls.data || !responseUrls.data.urls) {
+                    throw new Error('No se recibieron URLs');
+                }
+                const urlList = responseUrls.data.urls.split(',');
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const prompt = `Dada la lista de procesos: ${response.data}\n Dada la lista de URLs: ${urlList}\nProporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code)\n. Proporcione los URLs según su clasificación 'bueno', 'malo' o 'intermedio' según la ética estudiantil y los sitios que ayuden a realizar trampa son malos por ejemplo: "google.com" ya que permite hacer búsquedas, indicando la clasificación entre paréntesis al lado de los nombres. Devuelva la lista de URLs en un formato separado por comas. Seguir explícitamente este formato: url1 (bueno), url2 (malo), url3 (intermedio)\n.Al final del todo quiero una evaluación del alumno según las aplicaciones que tenga abierta, la evaluación deber ser segun 3 estados: Peligroso, Advertencia y Normal, sin la explicacion y procura cuidar el formato(esto incluye que no tenga carácteres especiales como por ej *)\n`;
+
+                const result = await model.generateContent(prompt);
+                const response2 = result.response;
+                let text = response2.text()
+
+                // Separar la evaluación de la lista de procesos
+                 const [processesText, evaluation] = text.split(/(?=\bPeligro\b|\bAdvertencia\b|\bNormal\b)/);
+
+                // Convertir la lista separada por comas a un arreglo
+                const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                // Combinar nombres únicos
+                const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+
+                // Escribe los nombres de procesos únicos en un archivo
+                const fileText = uniqueProcessNamesWithCategories.join('\n');
+
+                // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
+                const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                const lastEntry = urlsResponse.data;
+                const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
+
+                // Asignar la evaluación al estado del alumno
+                selectedStudent.status = evaluation.trim();
+
+                
+
+
+                // Actualizar el estado del alumno en el arreglo de alumnos
+                    const index = this.alumnos.findIndex(alumno => alumno._id === userId);
+                    if (index !== -1) {
+                        this.alumnos[index] = selectedStudent;
+                    }
+
+
+                // Hacer una solicitud para obtener los procesos para este userId
+                const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                const apps = processesResponse.data;
+
+                // Intentar obtener los procesos
+                try {
+                    const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
+                    apps = processesResponse.data;
+                } catch (error) {
+                    console.log('No se encontraron procesos para este estudiante');
+                }
+
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: response.data
+                    latestUrls, // Asignar el array de URLs
+                    apps: uniqueProcessNamesWithCategories,
+                    status: evaluation.trim(),
                 };
-                console.log("procesos: " + response.data);
+                console.log("Última URLs: ", latestUrls);
+                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
+                console.log("evaluación: " + evaluation.trim());
+
+                // Siempre mostrar el modal, incluso si no hay datos
                 this.showModal = true;
+
+                return uniqueProcessNamesWithCategories;
             } catch (error) {
-                console.error('Error al obtener los procesos del estudiante:', error);
-                alert('Error al obtener los procesos del estudiante');
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
             }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },
@@ -774,7 +889,7 @@ export default {
                 console.error(error);
                 return [];
             }
-        },
+        }
     },
     computed: {
         // Filtra los usuarios basándose en el campo de búsqueda
@@ -1411,6 +1526,109 @@ th {
 .claseNumeroSesion {
     font-size: medium;
     color: gray;
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 80%;
+    max-height: 80%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: black;
+}
+
+.scrollable-content {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 10px;
+    border: 3px solid black;
+    border-radius: 15px;
+    background-color: white;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: -10px;
+
+}
+
+li {
+    margin: 5px 0;
+    padding-right: 0px;
+    border-bottom: 1px solid black;
+}
+
+.closeButton {
+    display: block;
+    margin: 20px auto 0 auto;
+    padding: 10px 20px;
+    background: #06bfbf;
+    color: black;
+    border: none;
+    border-radius: 200px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+.closeButton:hover {
+    transform: scale(1.1);
+}
+
+.closeButton:focus {
+    outline: none;
+}
+
+.scrollable-content::-webkit-scrollbar {
+    width: 12px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+    background: black;
+    border-radius: 15px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+    background: #06bfbf;
+    border-radius: 15px;
+    border: 3px solid black;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: #3ecece;
+}
+
+.scrollable-content a {
+    color: #3399ff;
+    text-decoration: none;
+}
+
+.scrollable-content a:hover {
+    text-decoration: underline;
 }
 
 .modal-form {

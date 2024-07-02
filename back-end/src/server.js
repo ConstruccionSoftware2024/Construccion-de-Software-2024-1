@@ -1630,11 +1630,11 @@ app.post('/email-profesor', async (req, res) => {
 /* revisiar esta funcion de grupo joaquin */
 
 // Guarda/actualiza los procesos en la base de datos
+
 app.post('/checkTabs', async (req, res) => {
   const { procesos, userId, sessionId } = req.body;
   const database = client.db('construccion');
   const collection = database.collection('procesos');
-
   try {
     // Asegurarse de que procesos sea un array
     const nuevosProcesoArray = Array.isArray(procesos) ? procesos : [procesos];
@@ -1704,15 +1704,15 @@ app.get('/obtenerProcesos/:userId', async (req, res) => {
   }
 });
 app.post('/processTabs', (req, res) => {
-  const { userId, urls } = req.body;
-  console.log('Received data:', { userId, urls });
+  const { userId, urls, timestamp } = req.body;
+  console.log('Received data:', { userId, urls, timestamp });
 
   // Guardar datos en MongoDB
   const database = client.db('construccion');
   const collection = database.collection('Pestanas'); // Nombre de la colección en MongoDB
 
-  // Insertar documento con userId y URLs en la colección
-  collection.insertOne({ userId, urls })
+  // Insertar documento con userId, URLs y timestamp en la colección
+  collection.insertOne({ userId, urls, timestamp })
     .then(result => {
       console.log('Datos guardados en MongoDB:', result.ops);
       res.send('Datos recibidos y guardados en MongoDB');
@@ -1722,6 +1722,29 @@ app.post('/processTabs', (req, res) => {
       res.status(500).send('Error interno del servidor al guardar datos en MongoDB');
     });
 });
+
+app.get('/obtenerUltimaEntrada/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  // Consultar MongoDB para obtener la última entrada para este userId
+  const database = client.db('construccion');
+  const collection = database.collection('Pestanas'); // Nombre de la colección en MongoDB
+
+  collection.find({ userId }).sort({ timestamp: -1 }).limit(1).toArray()
+    .then(entries => {
+      if (entries.length > 0) {
+        const lastEntry = entries[0];
+        res.json(lastEntry); // Enviar la última entrada encontrada como respuesta
+      } else {
+        res.status(404).send('No se encontraron entradas para este usuario');
+      }
+    })
+    .catch(err => {
+      console.error('Error al consultar MongoDB:', err);
+      res.status(500).send('Error interno del servidor al consultar MongoDB');
+    });
+});
+
 
 app.post('/checkTabs', (req, res) => {
   const { userId, urls } = req.body;
