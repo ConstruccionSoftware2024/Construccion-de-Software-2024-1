@@ -542,7 +542,7 @@ export default {
 
                 // Escribe los nombres de procesos únicos en un archivo
                 const fileText = uniqueProcessNamesWithCategories.join('\n');
-                
+
                 // Hacer una solicitud para obtener la última entrada de URLs para este userId en MongoDB
                 const urlsResponse = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
                 const lastEntry = urlsResponse.data;
@@ -574,6 +574,7 @@ export default {
                 console.log("Última URLs: ", latestUrls);
                 console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
                 console.log("evaluación: " + evaluation.trim());
+
                 this.showModal = true;
 
                 return uniqueProcessNamesWithCategories;

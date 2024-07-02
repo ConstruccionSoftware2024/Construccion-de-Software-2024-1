@@ -65,9 +65,9 @@ import Chart from 'chart.js/auto';
 import { useUserStore } from '../../../back-end/src/store.js';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-
+const genAI = new GoogleGenerativeAI("AIzaSyAt9ZEV59R9z5vL9ENMVwVx3b5t9kg0MNY");
 export default {
     /*  mounted() {
           if (this.$store.state.usuario.role == "profesor") {
@@ -111,13 +111,41 @@ export default {
         const fetchHistory = async () => {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/historial');
-                history.value = response.data.sort((a, b) => {
+                const procesosOrdenados = response.data.sort((a, b) => {
                     return new Date('1970/01/01 ' + a.time) - new Date('1970/01/01 ' + b.time);
                 });
+                // Obtener los nombres modificados de los procesos
+                const procesos = procesosOrdenados.map(proceso => proceso.url);
+                const rialNombres = await cambiaNombreProceso(procesos);
+
+                // Asignar los nombres modificados a history.value
+                const temp = procesosOrdenados.map((proceso, index) => {
+                    if (typeof proceso.url != 'string') {
+                        return { ...proceso, url: '-' };
+                    }
+                    return { ...proceso, url: rialNombres[index] };
+                });
+
+                const temp2 = [...new Set(temp)]; // Eliminar duplicados
+
+                // Filtrar los elementos que no son aplicaciones
+                history.value = temp2.filter(proceso => proceso.url !== '-' && proceso.url !== '- (-)');
             } catch (error) {
-                //console.error('Error fetching history:', error);
+                console.error('Error fetching history:', error);
             }
         };
+        async function cambiaNombreProceso(procesos) {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const prompt = `Dada la lista de procesos: ${procesos}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) (en el mismo orden que vienen y, si no es aplicacion, devolver con un -) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres (siempre solo de las apliciones). Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio), -. Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+
+            const result = await model.generateContent(prompt);
+            const response2 = result.response;
+            const text = response2.text();
+
+            // Convertir la lista separada por comas a un arreglo
+            const procesosModificados = text.split(',').map(name => name.trim());
+            return procesosModificados;
+        }
         async function recuperarEvaluaciones(id) {
             await axios.get(`http://localhost:8080/evaluacion/${id}`)
                 .then(async response => {
@@ -132,11 +160,11 @@ export default {
             setInterval(async () => {
                 await fetchHistory(); // Actualiza el historial cada intervalo                 
                 await guardarHistorial(); // Guarda el historial cada intervalo             
-            }, 5000); // Intervalo de 30 segundos
+            }, 10000); // Intervalo de 10 segundos
         };
 
         const guardarHistorial = () => {
-            const procesos = history.value.map(proceso => proceso.name);
+            const procesos = history.value.map(proceso => proceso.url);
             //const procesosString = procesos.join(',');
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
