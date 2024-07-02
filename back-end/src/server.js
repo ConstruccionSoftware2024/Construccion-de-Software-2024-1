@@ -1280,7 +1280,7 @@ app.post('/send-email', async (req, res) => {
   let mailOptions = {
     from: 'pruebas.construccion2024@outlook.com',
     to: 'pruebas.construccion2024@outlook.com',
-    subject: `Mensaje de ${fullName}`,
+    subject: `[Contacto Cheat Detector] Mensaje de ${fullName}`,
     text: `Nombre: ${fullName}\nEmail: ${email}\nTeléfono: ${mobile}\nMensaje: ${msg}`
   };
 
@@ -1320,8 +1320,34 @@ app.post('/email-alumno', async (req, res) => {
     res.status(500).send('Hubo un error al enviar el correo electrónico');
   }
 });
+// Enviar email (contactar Profesor)
+app.post('/email-profesor', async (req, res) => {
+  let { profesor, email, mensaje, correoAlumno, alumno } = req.body;
 
-/* revisiar esta funcion de grupo joaquin*/
+  let transporter = nodemailer.createTransport({
+    service: 'outlook',
+    auth: {
+      user: 'pruebas.construccion2024@outlook.com',
+      pass: 'RkUFFzM1LUTk'
+    }
+  });
+
+  let mailOptions = {
+    from: 'pruebas.construccion2024@outlook.com',
+    to: email,
+    subject: `[Cheat Detector] Mensaje de alumno ${alumno}`,
+    text: `Mensaje enviado a: ${email}\nEstimado profesor${profesor}:\n${mensaje}\nAtentamente, ${alumno}\n ${correoAlumno}\n`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Correo electrónico enviado correctamente');
+  } catch (error) {
+    console.error('Hubo un error al enviar el correo electrónico', error);
+    res.status(500).send('Hubo un error al enviar el correo electrónico');
+  }
+});
+/* revisiar esta funcion de grupo joaquin */
 
 // Guarda/actualiza los procesos en la base de datos
 app.post('/checkTabs', async (req, res) => {
