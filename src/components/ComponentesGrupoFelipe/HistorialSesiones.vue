@@ -1,7 +1,15 @@
 <template>
     <div class="session-history-page">
         <main>
-            <h3>Historial de Sesiones para {{ selectedSubject }}</h3>
+            <h3>Historial de Sesiones para {{ selectedSubjectTitle }}</h3>
+            <div class="filter">
+                <label for="subject-select">Selecciona una asignatura:</label>
+                <select id="subject-select" v-model="selectedSubject" @change="filterSessions">
+                    <option v-for="subject in subjects" :key="subject._id" :value="subject._id">
+                        {{ subject.title }}
+                    </option>
+                </select>
+            </div>
             <div class="history box-shadow">
                 <table>
                     <thead>
@@ -15,14 +23,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="session in sessions" :key="session.id">
-                            <td>{{ session.id }}</td>
+                        <tr v-for="session in filteredSessions" :key="session._id">
+                            <td>{{ session._id }}</td>
                             <td>{{ session.studentName }}</td>
                             <td>{{ session.date }}</td>
                             <td>{{ session.duration }}</td>
                             <td>{{ session.status }}</td>
                             <td class="acciones">
-                                <button v-if="session.status === 'Activo'" @click="handleButtonClick(session.id)">
+                                <button v-if="session.status === 'Activo'" @click="handleButtonClick(session._id)">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
@@ -35,32 +43,64 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import axios from 'axios';
 
 export default {
     setup() {
-        const selectedSubject = ref('Matemáticas');
-        const sessions = ref([
-            { id: 1, studentName: 'Alumno 1', subject: 'Matemáticas', date: '2023-06-01', duration: '1 hora', status: 'Inactivo' },
-            { id: 2, studentName: 'Alumno 2', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Inactivo' },
-            { id: 3, studentName: 'Alumno 3', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-            { id: 4, studentName: 'Alumno 4', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-            { id: 5, studentName: 'Alumno 5', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-            { id: 6, studentName: 'Alumno 6', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-            { id: 7, studentName: 'Alumno 7', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Inactivo' },
-            { id: 8, studentName: 'Alumno 8', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-            { id: 9, studentName: 'Alumno 9', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-            { id: 10, studentName: 'Alumno 10', subject: 'Matemáticas', date: '2023-06-05', duration: '1.5 horas', status: 'Activo' },
-        ]);
+        const selectedSubject = ref('');
+        const selectedSubjectTitle = ref('');
+        const subjects = ref([]);
+        const sessions = ref([]);
+        const filteredSessions = computed(() => {
+            return sessions.value.filter(session => session.asignatura === selectedSubject.value);
+        }
+        );
+
+        const fetchSubjects = async () => {
+            try {
+                const response = await axios.get('http://localhost:8080/api/subjects');
+                subjects.value = response.data;
+                if (subjects.value.length > 0) {
+                    selectedSubject.value = subjects.value[0]._id;
+                    selectedSubjectTitle.value = subjects.value[0].title;
+                }
+            } catch (error) {
+                console.error('Error fetching subjects:', error);
+            }
+        };
+
+        const fetchSessions = async () => {
+            try {
+                const response = await axios.get('http://localhost:8080/api/sessions');
+                sessions.value = response.data;
+            } catch (error) {
+                console.error('Error fetching sessions:', error);
+            }
+        };
 
         const handleButtonClick = (sessionId) => {
             alert(`Botón presionado para la sesión ${sessionId}`);
         };
 
+        const filterSessions = () => {
+            const subject = subjects.value.find(subj => subj._id === selectedSubject.value);
+            selectedSubjectTitle.value = subject ? subject.title : '';
+        };
+
+        onMounted(() => {
+            fetchSubjects();
+            fetchSessions();
+        });
+
         return {
             selectedSubject,
+            selectedSubjectTitle,
+            subjects,
             sessions,
+            filteredSessions,
             handleButtonClick,
+            filterSessions,
         };
     },
 };
@@ -77,6 +117,11 @@ export default {
 h3 {
     font-size: 3em;
     text-align: left;
+    margin-left: 4%;
+    margin-bottom: 20px;
+}
+
+.filter {
     margin-left: 4%;
     margin-bottom: 20px;
 }
