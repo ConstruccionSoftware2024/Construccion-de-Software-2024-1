@@ -355,9 +355,11 @@ img {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    width: 200px;
 }
 
 .remitente h3 {
+    width: 100%;
     font-size: 1.1rem;
     font-weight: bold;
 }
