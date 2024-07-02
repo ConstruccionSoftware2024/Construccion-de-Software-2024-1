@@ -1,17 +1,19 @@
 <template>
     <div class="container">
         <div class="container-botones">
-            <button>Nueva Configuración</button>
-            <button @click="actualizarListas">Guardar Configuración</button>
+            <button :disabled="true" class="disabled-button">Nueva Configuración</button>
+            <button @click="actualizarListas" class="boton">Guardar Configuración</button>
         </div>
         <div class="container-listas">
             <div class="container-configs">
-                <span class="list-header">Configuraciones</span>
-                <ul class="page-list">
-                    <li v-for="config in configs" :key="config._id" class="page">
-                        {{ config.nombre }}
-                    </li>
-                </ul>
+                <div class="config-manager">
+                    <span class="list-header">Configuraciones</span>
+                    <ul class="page-list">
+                        <li v-for="config in configs" :key="config._id" class="page">
+                            {{ config.nombre }}
+                        </li>
+                    </ul>
+                </div>
             </div>
             <div class="container-paginas">
                 <div class="page-manager">
@@ -43,9 +45,9 @@ import { useUserStore } from "../../../back-end/src/store";
 
 export default {
     setup() {
-        const userConfigs = ref([])
         const configs = ref([])
-        const config = ref([])
+        /* const userConfigs = ref([])
+        let config = ref() */
 
         const listaVerde = ref([])
         const listaAmarillo = ref([])
@@ -55,7 +57,18 @@ export default {
         const user = computed(() => userStore.user);
         const userId = user.value._id
 
-        const obtenerUserConfigs = async () => {
+        const obtenerConfiguraciones = async () => {
+            try {
+                let respuesta = await fetch('http://localhost:8080/configs')
+                let data = await respuesta.json()
+                configs.value = data
+                obtenerListas()
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        /* const obtenerUserConfigs = async () => {
             try {
                 console.log(userId)
                 let respuesta = await fetch(`http://localhost:8080/userConfigs/${userId}`)
@@ -81,11 +94,15 @@ export default {
 
         const getConfigById = async (id) => {
             try {
-                const response = await fetch(`/config/${id}`);
+                const response = await fetch(`http://localhost:8080/config/${id}`);
                 if (!response.ok) {
-                    throw new Error('La solicitud para obtener la configuración falló');
+                    throw new Error(`La solicitud para obtener la configuración falló con el estado ${response.status}`);
                 }
-                return await response.json();
+                const text = await response.text();
+                if (!text) {
+                    return {};
+                }
+                return JSON.parse(text);
             } catch (error) {
                 console.error('Error al obtener la configuración:', error);
                 throw error;
@@ -93,9 +110,11 @@ export default {
         };
 
         const initialConfig = () => {
-            /* config = configs.value(0)
-            obtenerListas() */
-        }
+            console.log(configs.value);
+            config = configs.value[0];
+            console.log(configs.value[0]);
+            obtenerListas();
+        } */
 
         const obtenerListas = () => {
             listaVerde.value = configs.value.flatMap(config => config.verde)
@@ -103,9 +122,40 @@ export default {
             listaRojo.value = configs.value.flatMap(config => config.rojo)
         }
 
-        const actualizarListas = () => {
-            console.log(pagesVerde.value);
-        }
+        const actualizarListas = async () => {
+            if (configs.value.length === 0) {
+                console.error("No hay configuraciones disponibles para actualizar.");
+                return;
+            }
+            const _id = configs.value[0]._id;
+            const url = `http://localhost:8080/configuracion/${_id}`;
+            const body = {
+                amarillo: pagesAmarillo.value,
+                rojo: pagesRojo.value,
+                verde: pagesVerde.value,
+            };
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                });
+
+                // Verifica si el tipo de contenido de la respuesta es JSON antes de procesarla
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const responseData = await response.json();
+                    console.log("Configuración actualizada con éxito:", responseData);
+                } else {
+                    const textResponse = await response.text();
+                    throw new Error(`Respuesta no esperada del servidor: ${textResponse}`);
+                }
+            } catch (error) {
+                console.error("Error al actualizar la configuración:", error);
+            }
+        };
 
         const [parentVerde, pagesVerde] = useDragAndDrop(listaVerde, {
             group: "A",
@@ -147,7 +197,7 @@ export default {
         });
 
         onMounted(() => {
-            obtenerUserConfigs()
+            obtenerConfiguraciones()
         })
 
         return {
@@ -161,6 +211,7 @@ export default {
             pagesRojo
         }
     }
+
 }
 </script>
 
@@ -179,7 +230,7 @@ export default {
     padding-bottom: 10px;
 }
 
-.container-botones button {
+.boton {
     border: none;
     text-align: center;
     text-decoration: none;
@@ -194,7 +245,7 @@ export default {
     text-wrap: nowrap;
 }
 
-.container-botones button:hover {
+.boton:hover {
     background-color: #06bfbf;
 }
 
@@ -208,15 +259,23 @@ export default {
 .container-configs {
     display: flex;
     flex-direction: column;
-    width: 60%;
+    width: 50%;
     gap: 10px;
 }
 
 .container-paginas {
     display: flex;
     flex-direction: column;
-    width: 80%;
+    width: 50%;
     gap: 10px;
+}
+
+.config-manager {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 10px;
+    width: 100%;
 }
 
 .page-manager {
@@ -262,5 +321,20 @@ export default {
     border: 1px solid #d6d6d6;
     border-radius: 8px;
     text-align: center;
+}
+
+.disabled-button {
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    font-size: .9rem;
+    margin: 5px 5px 5px 0;
+    padding: 8px 12px;
+    cursor: not-allowed;
+    border-radius: 5px;
+    background-color: #d6d6d6;
+    color: black;
+    transition: background-color 0.3s ease;
+    text-wrap: nowrap;
 }
 </style>
