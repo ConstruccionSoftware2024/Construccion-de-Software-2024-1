@@ -72,7 +72,7 @@ export default {
       asignaturas: [],
       mostrarReportar: false,
       descripcion: '',
-      idUsuario: ''
+      idUsuario: '',
       cargandoAsignaturas: false
     }
   },
