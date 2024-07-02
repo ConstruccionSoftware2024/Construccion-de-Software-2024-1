@@ -3,23 +3,42 @@
         <main>
             <h1>Sesion id: {{ sessionId }}</h1>
             <div class="danger-level box-shadow" :style="{ backgroundColor: dangerColor }">
-                    <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
-                    <p>{{ dangerMessage }}</p>
-                </div>
-
-            <div class="mainContainer">
-                    <div class="chartContainer box-shadow">
-                        <canvas id="statusChart"></canvas>
-                    </div>
-                    <div class="chartDataContainer box-shadow">
-                        <h3>Datos del Gráfico</h3>
-                        <p>Aplicaciones totales: {{ totalApps }}</p>
-                        <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
-                        <p>Última Actividad: {{ lastActivity }}</p>
-                        <canvas id="appsChart"></canvas>
-                    </div>
+                <h3>Nivel de Peligro: {{ dangerLevel }}</h3>
+                <p>{{ dangerMessage }}</p>
             </div>
 
+            <div class="mainContainer">
+                <div class="chartContainer box-shadow">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chartDataContainer box-shadow">
+                    <h3>Datos del Gráfico</h3>
+                    <p>Aplicaciones totales: {{ totalApps }}</p>
+                    <p>Aplicaciones Peligrosas Abiertas: {{ dangerousApps }}</p>
+                    <p>Última Actividad: {{ lastActivity }}</p>
+                    <canvas id="appsChart"></canvas>
+                </div>
+            </div>
+            <div>
+                <div class="bottomContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre de la Aplicación</th>
+                                <th>Link de la Aplicación</th>
+                                <th>Peligrosidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="app in appPeligrosas" :key="app._id">
+                                <td>{{ app.nombre }}</td>
+                                <td>{{ app.link }}</td>
+                                <td>{{ app.peligro }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div class="evaluations box-shadow">
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Evaluaciones</h3>
                 <div class="listaEvaluaciones">
@@ -42,7 +61,7 @@
                 <a :href="downloadLink" download="Procesos-exe.exe">
                     <button>Descargar Ejecutable</button>
                 </a>
-            <button @click="guardarHistorial">Guardar procesos</button>
+                <button @click="guardarHistorial">Guardar procesos</button>
 
 
 
@@ -235,12 +254,14 @@ export default {
     },
     data() {
         return {
-            tabs: []
+            tabs: [],
+            appPeligrosas: [],
         };
     },
     created() {
         this.fetchTabs(); // Fetch data when the component is created
         setInterval(this.fetchTabs, 10000); // Fetch data every 10 seconds
+        this.Aplicaciones();
     },
     methods: {
         async fetchTabs() {
@@ -258,6 +279,22 @@ export default {
             } catch (error) {
                 console.error('Error al obtener los datos:', error);
             }
+        },
+        async Aplicaciones() {
+            const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+            const sessionUsers = sessionResponse.data;
+            const asignaturas = sessionUsers.asignatura;
+            //console.log("------>" + asignaturas)
+            axios.get('http://localhost:8080/appPeligrosas/' + asignaturas)
+                .then(response => {
+                    //console.log("Datos recibidos:", response.data);
+                    this.appPeligrosas = response.data;
+                })
+                .catch(error => {
+                    console.error("Hubo un error al obtener las aplicaciones:", error);
+                });
+
+
         },
         formatFecha(fecha) {
             const opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -287,6 +324,42 @@ export default {
 </script>
 
 <style scoped>
+.bottomContainer {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: var(--container-background-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+table,
+th,
+td {
+    border: 1px solid var(--border-color);
+    background-color: var(--container-background-color);
+    color: var(--text-color);
+}
+
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+th {
+    background-color: var(--container-background-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+}
+
 .alumno-page {
     padding: 2rem;
     margin: 20px auto;
@@ -362,7 +435,8 @@ button {
     flex-wrap: wrap;
 }
 
-.chartContainer, .chartDataContainer {
+.chartContainer,
+.chartDataContainer {
     width: calc(50% - 10px);
     padding: 20px;
     background-color: var(--container-background-color);
@@ -433,7 +507,7 @@ button {
     border-radius: 10px;
 }
 
-.listaEvaluaciones{
+.listaEvaluaciones {
     margin-bottom: 20px;
     padding: 10px;
     border-radius: 5px;

@@ -938,7 +938,7 @@ app.post('/edit_username', async (req, res) => {
     const filter = { email: req.body.email }
     const update = { username: req.body.new_username }
     if (update != '') {
-      const poster = await User.updateOne(filter, { $set: update })
+      await User.updateOne(filter, { $set: update })
     }
   } catch (error) {
     console.error(error)
@@ -952,7 +952,7 @@ app.post('/edit_password', async (req, res) => {
     const filter = { email: req.body.email }
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
-      const poster = await User.updateOne(filter, { $set: update1 })
+      await User.updateOne(filter, { $set: update1 })
     }
   } catch (error) {
     console.error(error)
@@ -996,9 +996,6 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
       const miembros = asignatura.members;
       res.send(miembros);
     }
-
-
-
     //console.log("Miembros encontrados:", miembros);
 
   } catch (error) {
@@ -1006,6 +1003,50 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
     res.status(500).send({ error: 'Error interno del servidor' });
   }
 });
+app.post('/anadir_app', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const coleccion = database.collection('peligroSesion');
+
+    const nombreApp = req.body.nombreApp;
+    const LinkApp = req.body.LinkApp;
+    const nivelPeligro = req.body.nivelPeligro;
+    const asignatura = req.body.asignatura;
+    //console.log(nombreApp + " ---- " + LinkApp + " ------- " + nivelPeligro + " ---- " + asignatura)
+    const appExistente = await coleccion.findOne({
+      $or: [
+        { nombre: nombreApp, asignatura: asignatura },
+        { link: LinkApp, asignatura: asignatura }
+      ]
+    });
+
+    if (appExistente) {
+      res.status(409).send({ error: 'La aplicación con la misma asignatura ya está ingresada' });
+    } else {
+      await coleccion.insertOne({ nombre: nombreApp, link: LinkApp, peligro: nivelPeligro, asignatura: asignatura });
+      res.status(201).send({ message: 'Aplicación añadida exitosamente' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
+  }
+});
+app.get('/appPeligrosas/:asignaturas', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('peligroSesion');
+    const asignatura = req.params.asignaturas;
+    //console.log("Asignatura buscada:", asignatura);
+    const documentos = await collection.find({ asignatura: asignatura }).toArray();
+
+    res.status(200).json(documentos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+})
+
+
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
@@ -1144,6 +1185,7 @@ app.post('/sesion', async (req, res) => {
       participantes: [],
       banlist: [],
       cancelada: false,
+      config: "667a05efbb7705789ce7d147", //configuración default
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
@@ -1164,6 +1206,7 @@ app.post('/banearExpulsar/:id', async (req, res) => {
     const bannedEmail = req.body.email;
     const userId = req.body.userId;
     const banear = req.body.banear;
+    const razonban = req.body.razonBan;
 
     // Revisa si la sesión existe
     const session = await collection.findOne({ _id: new ObjectId(sessionId) });
@@ -1181,7 +1224,12 @@ app.post('/banearExpulsar/:id', async (req, res) => {
         { $addToSet: { banlist: bannedEmail } }
       );
 
-      if (result.matchedCount == 1) {
+      const result2 = await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        { $addToSet: { razonBAN: razonban } }
+      );
+
+      if (result.matchedCount == 1 && result2.matchedCount == 1) {
         resultMessage = 'Alumno baneado de la sesión';
       }
     }
@@ -1337,13 +1385,27 @@ app.post('/message', async (req, res) => {
     const database = client.db('construccion')
     const collection = database.collection('mensajes')
 
-    let sesionaGuardar = req.body.session
-
+    //traemos todas las sesiones
     const collSesiones = database.collection('sesion')
     const sesiones = await collSesiones.find({}).toArray()
 
     //traemos la información de la sesion correspondiente
     let sesionCorrecta = sesiones.filter(sesion => sesion._id == req.body.sesion)
+
+    // traemos los usuarios
+    const collUsers = database.collection('users')
+    const users = await collUsers.find({}).toArray()
+
+    let remitentenombre = users.filter(user => user._id == req.body.remitente)
+    let destinatarionombre = users.filter(user => user._id == req.body.destinatario)
+
+    let asignatura = [{ title: 'default' }]
+    // traemos las asignaturas
+    if (!sesionCorrecta.asignatura) {
+      const collAsignaturas = database.collection('asignaturas')
+      const asignaturas = await collAsignaturas.find({}).toArray()
+      asignatura = asignaturas.filter(assig => assig._id == sesionCorrecta[0].asignatura)
+    }
 
     const newMessage = {
       destinatario: req.body.destinatario,
@@ -1352,7 +1414,11 @@ app.post('/message', async (req, res) => {
       visto: false,
       alerta: '',
       //guardamos el nombre de la sesion
-      sesion: sesionCorrecta[0].nombre
+      sesion: sesionCorrecta[0].nombre,
+      fecha: new Date(),
+      asignatura: asignatura[0].title,
+      remitenteNombre: remitentenombre[0].firstName + ' ' + remitentenombre[0].lastName,
+      destinatarionombre: destinatarionombre[0].firstName + ' ' + destinatarionombre[0].lastName
     }
     const result = await collection.insertOne(newMessage)
     res.sendStatus(200)
@@ -1392,6 +1458,34 @@ app.get('/message/:id', async (req, res) => {
 
     result.forEach(element => {
       if (element.destinatario == req.params.id) {
+        mensajesEspecificos.push(element)
+      }
+    });
+
+    res.status(200).send(mensajesEspecificos)
+
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+// traer los mensajes enviados por alguien especifico 
+app.get('/sendmessage/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('mensajes')
+    // Lista de mensajes completa
+    const result = await collection.find({}).toArray()
+    let mensajesEspecificos = []
+    // revisamos todos los mensajes y guardamos aquellos que tengan remitente igual al id
+
+    if (!result) {
+      res.status(404).send('user not found')
+    }
+
+    result.forEach(element => {
+      if (element.remitente == req.params.id) {
         mensajesEspecificos.push(element)
       }
     });
@@ -1693,7 +1787,63 @@ app.get('/configs', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
+
+app.get('/config/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('configuraciones')
+    const config = await collection.findOne({ _id: req.params.id });
+    res.send(config)
+    console.log(config)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+});
+
+app.get('/userConfigs/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const result = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    if (result && result.configs) {
+      res.send(result.configs);
+    } else {
+      res.status(404).send('No se encontraron configuraciones para el usuario especificado.');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/configuracion/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amarillo, rojo, verde } = req.body;
+
+    if (!Array.isArray(amarillo) || !Array.isArray(rojo) || !Array.isArray(verde)) {
+      return res.status(400).send('Las listas amarillo, rojo y verde deben ser arreglos de strings.');
+    }
+
+    const database = client.db('construccion');
+    const collection = database.collection('configuraciones');
+
+    // Actualizar el objeto de configuración con el _id proporcionado
+    const resultado = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { amarillo, rojo, verde } }
+    );
+
+    if (resultado.matchedCount === 0) {
+      return res.status(404).send('Configuración no encontrada.');
+    }
+
+    res.send('Configuración actualizada con éxito.');
+  } catch (error) {
+    console.error('Error al actualizar la configuración:', error);
+    res.status(500).send('Error al actualizar la configuración');
+  }
+});
 
 app.put('/cancelarSesion/:id', async (req, res) => {
   try {
@@ -1704,7 +1854,6 @@ app.put('/cancelarSesion/:id', async (req, res) => {
       $set: { cancelada: true }
     })
     if (result.modifiedCount === 1) {
-      console.log('AAAAAAAAYUDA')
       res.send(result)
     } else {
       res.status(404).send('Sesion no encontrada')
@@ -1713,6 +1862,29 @@ app.put('/cancelarSesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.put('/descancelarSesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const result = await collection.updateOne(consulta, {
+      $set: { cancelada: false }
+    });
+    if (result.modifiedCount === 1) {
+      console.log('Sesión descancelada con éxito');
+      res.send(result);
+    } else {
+      console.log('Sesión no encontrada');
+      res.status(404).send('Sesion no encontrada');
+    }
+  } catch (error) {
+    console.log('Error al descancelar la sesión:', error.message);
+    res.status(500).send(error.message);
+  }
+});
+
+
 
 app.post('/publicarProblema', async (req, res) => {
   try {

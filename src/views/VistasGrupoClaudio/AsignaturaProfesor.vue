@@ -8,7 +8,10 @@
                     <router-link v-for="(sesion, index) in sesiones" :key="index" :to="'/vistaProfesor/' + sesion._id"
                         class="session-item">
                         <div class="session-content">
-                            <p class="session-name"> {{ sesion.nombre }}</p>
+                            <div class="containerCancelada">
+                                <p class="session-name"> {{ sesion.nombre }}</p>
+                                <span v-if=sesion.cancelada class="etiquetaCancelada"> Cancelada</span>
+                            </div>
                             <p><i class="fa-solid fa-layer-group"></i> Descripción: {{ sesion.descripcion }}</p>
                             <p><i class="fa-solid fa-user-group"></i> Participantes: {{ sesion.participantes ?
                                 sesion.participantes.length : 0 }}</p>
@@ -163,7 +166,7 @@ export default {
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
-                asignatura: ''
+                asignatura: '',
             },
             problemas: {
                 descripcion: '',
@@ -184,9 +187,10 @@ export default {
         const mostrarPopupAgregar = ref(false);
         const mostrarPopupEliminar = ref(false);
         const nuevaPregunta = ref('')
+        const isSesionCancelled = ref(false)
         const nuevoRecurso = reactive({
             nombre: '',
-            enlace: ''
+            enlace: '',
         })
         const nuevaTarea = reactive({
             nombre: '',
@@ -627,6 +631,7 @@ button.btn {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-left: 5px;
 }
 
 .btn-modal {
@@ -700,5 +705,22 @@ button.btn-cerrar:hover {
     border-radius: 4px;
     resize: none;
     height: 150px;
+}
+
+.etiquetaCancelada {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: rgb(160, 45, 45);
+    border-radius: 6px;
+    color: white;
+    margin-right: 15px;
+}
+
+.containerCancelada {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 </style>
