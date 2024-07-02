@@ -1,152 +1,164 @@
 <template>
     <div class="container">
-
-        <div class="seccion1">
-
-            <div class="containerTitle">
-                <h1 class="title">Asignatura: {{ asignatura.title }}</h1>
-                <p>Profesor: {{ asignatura.profesor }}</p>
-                <p>Descripción: {{ asignatura.description }}</p>
-                <hr>
-            </div>
-            <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Sesiones</h3>
-            <div class="sesiones">
-
-                <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
-                    <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="navLink"><span
-                            class="session-title">{{ sesion.nombre }}</span>
-                        <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{ sesion.descripcion }}
-                        </p>
-                        <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{ sesion.participantes ?
-                            sesion.participantes.length : 0 }}</p>
-                    </router-link>
-
-                </div>
-            </div>
-
-            <div class="recursos">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book']" /> Recursos de la Asignatura</h3>
-            </div>
-
-            <div class="foro">
-                <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
-                <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="textoPregunta">
-                <button @click="publicarPregunta" class="btn-pregunta">Publicar Pregunta</button>
-                <hr>
-                <h3><font-awesome-icon :icon="['fas', 'list-ul']" /> Preguntas Realizadas</h3>
-                <div class="preguntas">
-                    <div v-for="pregunta in listadoPreguntas" :key="pregunta.preguntaId" class="pregunta">
-                        <div class="pregunta-container">
-                            <p class="autorPregunta">{{ pregunta.autor }}</p>
-                            <div class="pregunta-responder">
-                                <p class="tituloPregunta">{{ pregunta.texto }}</p>
-                            </div>
-
-                            <button @click="toggleRespuestas(pregunta.preguntaId)" class="btn-mostrarRespuestas"
-                                v-if="pregunta.respuestas && pregunta.respuestas.length > 0">
-                                <font-awesome-icon class="iconoRespuesta" v-if="mostrarRespuestas[pregunta.preguntaId]"
-                                    :icon="['fas', 'eye-slash']" />
-                                <font-awesome-icon class="iconoRespuesta" v-else :icon="['fas', 'eye']" />{{
-                                    mostrarRespuestas[pregunta.preguntaId] ? 'Ocultar Respuestas' : 'Mostrar Respuestas' }}
-                            </button>
-                            <div class="respuestas">
-                                <div class="respuestas-container" v-if="mostrarRespuestas[pregunta.preguntaId]">
-                                    <div v-for="respuesta in pregunta.respuestas" :key="respuesta.respuestaId"
-                                        class="respuesta">
-                                        <p class="autorRespuesta">{{respuesta.autor}}</p>
-                                        <p class="textoRespuestas">{{ respuesta.texto }}</p>
-                                        <button v-if="respuesta.autorId === idUsuario" @click="eliminarRespuesta(pregunta.preguntaId, respuesta._id)"
-                                        class="btn-eliminar-respuesta"><font-awesome-icon :icon="['fas', 'minus']" class="icon-btn-eliminar-respuesta"/></button>
-                                    </div>
-
-                                </div>
-
-                                <div class="btn-responder">
-                                    <div v-if="inputRespuesta === pregunta.preguntaId" class="responderPregunta">
-                                        <input type="text" placeholder="Escribe tu respuesta aquí..."
-                                            v-model="textoRespuesta">
-                                        <div class="btn-publicar-container">
-                                            <button class="btn-cancelar"
-                                                @click="toggleInputRespuesta(pregunta.preguntaId)">Cancelar
-                                            </button>
-                                            <button @click="publicarRespuesta(pregunta.preguntaId)"
-                                                class="btn-publicar">Publicar
-                                                Respuesta</button>
-                                        </div>
-                                    </div>
-                                    <button v-if="inputRespuesta !== pregunta.preguntaId" class="btn-responder"
-                                        @click="toggleInputRespuesta(pregunta.preguntaId)"> Responder</button>
-                                    <div class="botonesPregunta">
-                                        <button
-                                            v-if="pregunta.autorId === idUsuario && inputRespuesta !== pregunta.preguntaId"
-                                            @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar">
-                                            <font-awesome-icon :icon="['fas', 'trash-alt']" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <h1>{{ asignatura.title }} - {{ asignatura.section }}</h1>
+        <div class="section">
+            <p class="profesor">Docente: {{ asignatura.profesor }}</p>
+            <p class="profesor">Descripción: {{ asignatura.description }}</p>
         </div>
+        <div class="content">
+            <div class="left-column">
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Sesiones</h2>
 
-        <div class="seccion2">
-            <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
-            <div class="faltas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de Faltas
-                </h3>
-                <p>Cantidad de Faltas: {{ faltaAlumnos.faltas }}</p>
-                <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
-                    <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Detalle de
-                        faltas</h1>
-                    <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
-                        <p class="subtitle">Falta: <span>{{ falta.falta }}</span></p>
-                        <p class="subtitle">Fecha: <span>{{ falta.fecha }}</span></p>
-                        <p class="subtitle">Profesor: <span> {{ falta.profesor }}</span></p>
-                        <p class="subtitle">Descripción: <span>{{ falta.motivo }}</span></p>
+                    <div class="sesionesItem" v-for="sesion in sesiones" :key="sesion.id">
+                        <router-link :to="determinarRuta(sesion._id, rolUsuario)" class="session-item">
+                            <div class="session-content">
+                                <p class="session-name"> {{ sesion.nombre }}</p>
+                                <p><font-awesome-icon :icon="['fas', 'layer-group']" /> Descripción: {{
+                                    sesion.descripcion
+                                    }}
+                                </p>
+                                <p><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes: {{
+                                    sesion.participantes ?
+                                        sesion.participantes.length : 0 }}</p>
+                            </div>
+                        </router-link>
+
                     </div>
-                    <button class="closeButton" @click="toggleDetallesFaltas"><font-awesome-icon
-                            :icon="['fas', 'circle-xmark']" /> Cerrar</button>
                 </div>
-                <button @click="toggleDetallesFaltas">Ver Detalles</button>
-            </div>
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'book']" /> Recursos de la Asignatura
+                    </h2>
+                    <ul>
+                        <li><a href="#" class="linkRecursos">PDF de Estudio</a></li>
+                        <li><a href="#" class="linkRecursos">Video de Clase</a></li>
+                        <li><a href="#" class="linkRecursos">Enlace Externo</a></li>
+                    </ul>
+                </div>
 
-            <div class="fechas">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'book-bookmark']" /> Tareas y Exámenes</h3>
-                <p>Próxima Tarea: [Fecha]</p>
-                <p>Próximo Examen: [Fecha]</p>
-            </div>
 
-            <div class="acciones">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h3>
-                <button @click="contactarProfesor">Contactar al Profesor</button>
-                <button @click="mostrarReportar = true">Reportar un Problema</button>
-            </div>
+                <div class="section">
+                    <div class="foro">
+                        <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
+                        <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="textoPregunta">
+                        <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
+                        <hr>
+                        <h3><font-awesome-icon :icon="['fas', 'list-ul']" /> Preguntas Realizadas</h3>
+                        <div class="preguntas">
+                            <div v-for="pregunta in listadoPreguntas" :key="pregunta.preguntaId" class="pregunta">
+                                <div class="pregunta-container">
+                                    <p class="autorPregunta">{{ pregunta.autor }}</p>
+                                    <div class="pregunta-responder">
+                                        <p class="tituloPregunta">{{ pregunta.texto }}</p>
+                                    </div>
 
-            <div class="modal" v-if="mostrarReportar">
-                <div class="modal-content">
-                    <span class="close" @click="mostrarReportar = false">&times;</span>
-                    <h3>Reportar un problema</h3>
-                    <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
-                    <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
+                                    <button @click="toggleRespuestas(pregunta.preguntaId)" class="btn-mostrarRespuestas"
+                                        v-if="pregunta.respuestas && pregunta.respuestas.length > 0">
+                                        <font-awesome-icon class="iconoRespuesta" v-if="mostrarRespuestas[pregunta.preguntaId]"
+                                            :icon="['fas', 'eye-slash']" />
+                                        <font-awesome-icon class="iconoRespuesta" v-else :icon="['fas', 'eye']" />{{
+                                            mostrarRespuestas[pregunta.preguntaId] ? 'Ocultar Respuestas' : 'Mostrar Respuestas' }}
+                                    </button>
+                                    <div class="respuestas">
+                                        <div class="respuestas-container" v-if="mostrarRespuestas[pregunta.preguntaId]">
+                                            <div v-for="respuesta in pregunta.respuestas" :key="respuesta.respuestaId"
+                                                class="respuesta">
+                                                <p class="autorRespuesta">{{respuesta.autor}}</p>
+                                                <p class="textoRespuestas">{{ respuesta.texto }}</p>
+                                                <button v-if="respuesta.autorId === idUsuario" @click="eliminarRespuesta(pregunta.preguntaId, respuesta._id)"
+                                                class="btn-eliminar-respuesta"><font-awesome-icon :icon="['fas', 'minus']" class="icon-btn-eliminar-respuesta"/></button>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="btn-responder">
+                                            <div v-if="inputRespuesta === pregunta.preguntaId" class="responderPregunta">
+                                                <input type="text" placeholder="Escribe tu respuesta aquí..."
+                                                    v-model="textoRespuesta">
+                                                <div class="btn-publicar-container">
+                                                    <button class="btn-cancelar"
+                                                        @click="toggleInputRespuesta(pregunta.preguntaId)">Cancelar
+                                                    </button>
+                                                    <button @click="publicarRespuesta(pregunta.preguntaId)"
+                                                        class="btn-publicar">Publicar
+                                                        Respuesta</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <button v-if="inputRespuesta !== pregunta.preguntaId" class="btn-responder"
+                                                @click="toggleInputRespuesta(pregunta.preguntaId)"> Responder</button>
+                                            <div class="botonesPregunta">
+                                                <button
+                                                    v-if="pregunta.autorId === idUsuario && inputRespuesta !== pregunta.preguntaId"
+                                                    @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar">
+                                                    <font-awesome-icon :icon="['fas', 'trash-alt']" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
                 </div>
             </div>
-
-            <div v-if="showAviso" class="aviso">
-                Correo del profesor copiado al portapapeles!
-            </div>
-            <div class="participantes">
-                <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h3>
-                <div class="team-members">
-                    <img v-for="member in asignatura.members" :key="member" :src="member" alt="Team member"
-                        class="team-member">
                 </div>
+
             </div>
 
+            <div class="right-column">
+                <div class="section">
+                    <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="overlay"></div>
+                    <div class="faltas">
+                        <h2><font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> Listado de
+                            Faltas
+                        </h2>
+                        <p>Cantidad de Faltas: {{ faltaAlumnos.faltas }}</p>
+                        <div v-if="mostrarDetallesFaltas && faltaAlumnos.faltas != 0" class="pop-up-detalles-faltas">
+                            <h1 class="titleFaltas"><font-awesome-icon :icon="['fas', 'triangle-exclamation']" />
+                                Detalle de
+                                faltas</h1>
+                            <div v-for="falta in faltaAlumnos.detalleFaltas" :key="falta" class="itemDetalleFaltas">
+                                <p class="subtitle">Falta: <span>{{ falta.falta }}</span></p>
+                                <p class="subtitle">Fecha: <span>{{ falta.fecha }}</span></p>
+                                <p class="subtitle">Profesor: <span> {{ falta.profesor }}</span></p>
+                                <p class="subtitle">Descripción: <span>{{ falta.motivo }}</span></p>
+                            </div>
+                            <button class="closeButton btn" @click="toggleDetallesFaltas"><font-awesome-icon
+                                    :icon="['fas', 'circle-xmark']" /> Cerrar</button>
+                        </div>
+                        <button class="btn" @click="toggleDetallesFaltas">Ver Detalles</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'book-bookmark']" /> Tareas y Exámenes
+                    </h2>
+                    <p>Próxima Tarea: [Fecha]</p>
+                    <p>Próximo Examen: [Fecha]</p>
+                    <button class="btn">Ver Calendario</button>
+                </div>
+
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'user-plus']" /> Acciones Rápidas</h2>
+                    <div class="button-container">
+                        <button class="btn" @click="contactarProfesor">Contactar al Profesor</button>
+                        <button class="btn">Reportar un Problema</button>
+                    </div>
+                </div>
+                <div v-if="showAviso" class="aviso">
+                    Correo del profesor copiado al portapapeles!
+                </div>
+
+                <div class="section">
+                    <h2><font-awesome-icon :icon="['fas', 'user-group']" /> Participantes</h2>
+                    <div class="team-members">
+                        <img v-for="member in asignatura.members" :key="member" :src="member" alt="Team member"
+                            class="team-member">
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 </template>
@@ -467,6 +479,96 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+input[type="text"] {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 1rem;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+input[type="text"]:focus {
+    box-shadow: 0 0 0 2px var(--button-background-color);
+    outline: none;
+}
+
+.profesor {
+    font-size: 18px;
+    font-weight: bold;
+    top: 1rem;
+}
+
+.session-item {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.session-item:hover {
+    background-color: var(--gray-hover-color);
+}
+
+.session-name {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.session-content {
+    flex-direction: column;
+    padding: 0.2rem;
+    border-radius: 5px;
+    padding-left: 1rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--gray-text-color);
+}
+
+.session-content:hover {
+    background-color: var(--gray-hover-color);
+    color: var(--text-color);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.linkRecursos:hover {
+    color: var(--button-hover-background-color);
+
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+h2 {
+    font-weight: bold;
+}
+
+.section {
+    background-color: var(--container-background-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.section:not(:last-child) {
+    margin-bottom: 1.7rem;
+}
+
+.content {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
 .aviso {
     position: fixed;
     bottom: 20px;
@@ -549,37 +651,34 @@ onMounted(async () => {
 }
 
 .container {
-    margin: 40px 10%;
-    padding: 20px;
     display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    width: 70%;
+    margin: auto;
     justify-content: space-between;
+    margin-bottom: 3rem;
+    margin-top: 0.5rem;
 }
 
 .containerTitle {
     margin-bottom: 20px;
 }
 
-.title {
-    font-size: 24px;
-    margin: 0;
-    font-weight: bold;
+
+
+.left-column {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
 }
 
-.seccion1 {
-    padding: 20px;
-    width: 70%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: var(--container-background-color);
+.right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.seccion2 {
-    padding: 20px;
-    width: 26%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: var(--container-background-color);
-}
 
 .sesiones,
 .participantes,
@@ -601,6 +700,7 @@ onMounted(async () => {
     margin-bottom: 5px;
 }
 
+
 button {
     padding: 10px;
     margin-top: 10px;
@@ -615,6 +715,89 @@ button {
 
 button:hover {
     background-color: var(--button-hover-background-color);
+}
+
+
+
+
+.btn-modal {
+    float: right;
+}
+
+button.btn:hover {
+    background-color: var(--button-hover-background-color);
+    color: black;
+}
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+button.btn:hover {
+    background-color: var(--button-hover-background-color);
+    color: black;
+}
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+button.btn:hover {
+    background-color: var(--button-hover-background-color);
+    color: black;
+}
+
+button.btn-cerrar {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-cerrar:hover {
+    background-color: #ff1a1a;
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
 }
 
 .session-title {
@@ -751,7 +934,7 @@ input[type="text"] {
     margin-bottom: 10px;
 }
 
-.btn-pregunta {
+button.btn-pregunta {
     margin-bottom: 0.8rem;
 }
 
@@ -804,7 +987,7 @@ input[type="text"] {
     justify-content: flex-end;
 }
 
-.btn-publicar {
+button.btn-publicar {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border: none;
@@ -888,7 +1071,7 @@ input[type="text"] {
 }
 
 .btn-mostrarRespuestas:hover {
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.13);
 }
 
 .iconoRespuesta {

@@ -18,7 +18,7 @@
         </thead>
         <tbody>
           <template v-for="(alumno, index) in alumnos" :key="alumno.matricula">
-            <tr @click="seleccionarAlumno(index)">
+            <tr @click="seleccionarAlumno(index)" :class="{ 'selected': alumnoSeleccionado === index }">
               <td>{{ alumno.matricula }}</td>
               <td>{{ alumno.firstName }}</td>
               <td>{{ alumno.lastName }}</td>
@@ -50,6 +50,7 @@
               </div>
               </td>
             </tr>
+
           </template>
         </tbody>
       </table>
@@ -188,11 +189,14 @@ h1 {
 .general-div {
   text-align: center;
   justify-content: center;
+  align-items: center;
 }
 
 table {
-  width: 100%;
+  width: 75%;
   border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 th,
@@ -208,8 +212,8 @@ td {
   border: 1px solid var(--border-color);
 }
 
-tr:nth-child(even) {
-  background-color: var(--input-background-color);
+tr:hover {
+  background-color: var(--gray-hover-color);
 }
 
 th {
@@ -220,12 +224,13 @@ th {
 }
 
 .detail-falta-container {
-  border: 1px solid #ccc;
-  border: 1px solid var(--container-background-color);
-  padding: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-background-color);
+  padding: 10px;
   text-align: left;
   padding-left: 3rem;
   width: 100%;
+  cursor: auto;
 }
 
 button {
