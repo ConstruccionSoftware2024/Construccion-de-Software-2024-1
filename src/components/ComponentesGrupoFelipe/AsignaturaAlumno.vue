@@ -146,6 +146,18 @@
                         <button class="btn">Reportar un Problema</button>
                     </div>
                 </div>
+                
+                <div v-if="mostrarModal" class="modal">
+                    <div class="modal-content">
+                        <form @submit.prevent="enviarMensaje">
+                            <span class="close" @click="cerrarModal">&times;</span>
+                            <p>Contactar al Profesor {{ asignatura.profesor }}, Correo:{{ asignatura.email }}</p>
+                            <textarea id="msg" name="msg" rows="5" class="texto-modal" v-model="mensaje" required
+                                placeholder="Escribe tu mensaje aquí..."></textarea>
+                            <button type="submit" class="boton-enviar">Enviar</button>
+                        </form>
+                    </div>
+                </div>
                 <div v-if="showAviso" class="aviso">
                     Correo del profesor copiado al portapapeles!
                 </div>
@@ -245,20 +257,46 @@ const problemas = ref({
 });
 
 const sesiones = ref([]);
-const showAviso = ref(false);
 
-const contactarProfesor = async () => {
-    try {
-        await navigator.clipboard.writeText(asignatura.value.email);
-        showAviso.value = true;
-        setTimeout(() => {
-            showAviso.value = false;
-        }, 2000); // Ocultar el aviso después de 2 segundos
-    } catch (err) {
-        console.error('Error al copiar el correo: ', err);
-    }
+const mostrarModal = ref(false);
+const mensaje = ref('');
+
+const contactarProfesor = () => {
+    mostrarModal.value = true;
 };
+const enviarMensaje = () => {
 
+    const datosParaEnviar = {
+        email: asignatura.value.email,
+        mensaje: mensaje.value,
+        profesor: asignatura.value.profesor,
+        alumno: useUserStore().user.firstName + ' ' + useUserStore().user.lastName,
+        correoAlumno: useUserStore().user.email
+    };
+
+    axios.post('http://localhost:8080/email-profesor', datosParaEnviar)
+        .then(response => {
+            console.log('Mensaje enviado con éxito:', response.data);
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Mensaje enviado!',
+                text: 'Tu mensaje ha sido enviado con éxito al profesor.',
+            });
+            cerrarModal();
+        })
+        .catch(error => {
+            console.error('Error al enviar el mensaje:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema al enviar tu mensaje. Por favor, intenta de nuevo más tarde.',
+            });
+        });
+};
+const cerrarModal = () => {
+    mostrarModal.value = false;
+};
 function recuperarSesiones(id) {
     return axios.get(`http://localhost:8080/sesion/${id}`)
         .then(response => {
@@ -453,7 +491,7 @@ async function publicarRespuesta(preguntaId) {
             console.error(error);
         });
 
-        recuperarPreguntas();
+    recuperarPreguntas();
 
     mostrarRespuestas.value[preguntaId] = true;
     textoRespuesta.value = '';
@@ -1085,12 +1123,12 @@ button.btn-publicar {
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    position:absolute;
-    margin:0;
+    position: absolute;
+    margin: 0;
     right: 2px;
     top: -5px;
     font-size: 8px;
-    padding:5px;
+    padding: 5px;
 }
 
 .btn-eliminar-respuesta:hover {

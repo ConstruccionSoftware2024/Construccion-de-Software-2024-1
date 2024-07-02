@@ -154,7 +154,7 @@ export default {
             router.push(`/faltaAlumnos/${asignaturaId}`);
         };
         const goToListaAlumnos = () => {
-            router.push('/lista-alumnos');
+            router.push('/contactoAlumno');
         };
         const goToContact = () => {
             router.push('/contact');
