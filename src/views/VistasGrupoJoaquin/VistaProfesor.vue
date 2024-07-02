@@ -616,7 +616,7 @@ export default {
             });
             closeModal2.addEventListener('click', (e) => {
                 e.preventDefault();
-                //location.reload();
+
                 modal2.classList.remove('modal__añadir--show');
 
             });
@@ -626,6 +626,7 @@ export default {
                 this.nombreApp = '';
                 this.LinkApp = '';
                 this.nivelPeligro = '';
+
             });
 
         },
@@ -663,7 +664,7 @@ export default {
                 }
                 );
                 //console.log(this.nombreApp + " ---- " + this.LinkApp + " ------- " + this.nivelPeligro + " ---- " + asignatura)
-
+                location.reload();
             } else {
                 alert('Por favor, complete los campos.');
             }
