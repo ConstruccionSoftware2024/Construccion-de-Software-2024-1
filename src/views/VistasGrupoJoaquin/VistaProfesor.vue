@@ -78,8 +78,15 @@
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>Procesos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
+                <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
+                <h3>Últimas URLs</h3>
+                <ul>
+                    <li v-for="url in selectedStudent.latestUrls" :key="url">
+                        <a :href="url" target="_blank">{{ url }}</a>
+                    </li>
+                </ul>
+                <h3>Procesos</h3>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
@@ -88,6 +95,7 @@
                 <button class="closeButton" @click="closeModal">Cerrar</button>
             </div>
         </div>
+
     </div>
     <div>
         <section class="modal_añadir">
@@ -351,7 +359,51 @@ export default {
                 return total + student.apps.filter(app => app.status === 'Peligro').length;
             }, 0);
         },
-        createCharts() {
+        async obtainAllProcesses() {
+            let matrixProcesses = [];
+            let processesMax = 0;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            try {
+                for (const alumno of this.alumnos) {
+                    const response = await axios.get(`http://localhost:8080/obtenerProcesos/${alumno._id}`);
+                    const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                    const result = await model.generateContent(prompt);
+                    const response2 = result.response;
+                    const text = response2.text();
+
+                    // Convertir la lista separada por comas a un arreglo
+                    const processNamesWithCategories = text.split(',').map(name => name.trim());
+
+                    // Combinar nombres únicos
+                    const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
+                    matrixProcesses.push(uniqueProcessNamesWithCategories);
+                    if (response.data.length > processesMax) {
+                        processesMax = response.data.length;
+                    }
+                }
+
+                // Repeticiones de cada proceso
+                let processCount = {};
+                matrixProcesses.flat().forEach(process => {
+                    if (processCount[process]) {
+                        processCount[process]++;
+                    } else {
+                        processCount[process] = 1;
+                    }
+                });
+
+                // Crear matriz resultado con proceso y veces que se repite
+                let resultMatrix = [];
+                for (let process in processCount) {
+                    resultMatrix.push({ proceso: process, repeticiones: processCount[process] });
+                }
+                return resultMatrix;
+            } catch (error) {
+                console.error('Error al obtener los procesos del estudiante:', error);
+                return [];
+            }
+        },
+        async createCharts() {
             const pieCtx = document.getElementById('studentsPieChart').getContext('2d');
             const appsCtx = document.getElementById('appsBarChart').getContext('2d');
 
@@ -387,19 +439,10 @@ export default {
                 },
             });
 
-            const appUsage = this.alumnos.reduce((acc, student) => {
-                student.apps.forEach(app => {
-                    if (acc[app.name]) {
-                        acc[app.name]++;
-                    } else {
-                        acc[app.name] = 1;
-                    }
-                });
-                return acc;
-            }, {});
+            const resultMatrix = await this.obtainAllProcesses();
+            const appLabels = resultMatrix.map(item => item.proceso);
+            const appData = resultMatrix.map(item => item.repeticiones);
 
-            const appLabels = Object.keys(appUsage);
-            const appData = Object.values(appUsage);
 
             new Chart(appsCtx, {
                 type: 'bar',
@@ -480,6 +523,7 @@ export default {
             }
 
             try {
+
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
                 /*const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
 
@@ -500,13 +544,17 @@ export default {
                     ...selectedStudent,
                     apps: response.data,
                 };
-                console.log("procesos: " + response.data);
                 this.showModal = true;
+
+                return uniqueProcessNamesWithCategories;
             } catch (error) {
-                console.error('Error al obtener los procesos del estudiante:', error);
-                alert('Error al obtener los procesos del estudiante');
+                console.error('Error al obtener datos del estudiante:', error);
+                alert('Error al obtener datos del estudiante');
             }
         },
+
+
+
         createSession() {
             console.log(this.idRuta);
         },

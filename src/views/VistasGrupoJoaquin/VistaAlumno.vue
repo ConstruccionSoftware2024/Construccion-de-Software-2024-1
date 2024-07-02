@@ -40,9 +40,10 @@
 
                 <h3>Historial de Aplicaciones</h3>
                 <table>
+
                     <thead v-if="tabs.length">
                         <tr v-for="(tab, index) in tabs" :key="index">
-                            <th>Hora</th>
+                            <td>{{ formatTime(tab.time) }}</td>
                             <th><a :href="tab.url" target="_blank">Url: {{ tab.url }}</a></th>
                         </tr>
                     </thead>
@@ -102,7 +103,11 @@ export default {
         const createSession = () => {
             // Lógica para unirse a una sesión
         };
-
+        const formatTime = (time) => {
+            const date = new Date(time);
+            const formattedTime = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+            return formattedTime;
+        };
         const fetchHistory = async () => {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/historial');
@@ -242,6 +247,7 @@ export default {
             sessionId,
             totalApps,
             dangerousApps,
+            formatTime,
             lastActivity,
             dangerLevel,
             dangerMessage,
@@ -265,39 +271,40 @@ export default {
     methods: {
         async fetchTabs() {
             try {
-                const response = await axios.get('http://localhost:5151/tabs'); // Adjust the URL to your server endpoint
-                this.tabs = response.data; // Assuming the server responds with tab data in JSON format
+                const response = await axios.get('http://localhost:5151/tabs');
+                this.tabs = response.data.map(tab => ({
+                    time: new Date(), // Aquí puedes usar la hora actual o la hora del servidor
+                    url: tab.url
+                }));
 
-                // Extract URLs into a string array
-                const urls = this.tabs.map(tab => tab.url);
-                const urlsString = urls.join(', '); // Join URLs into a single string
-                console.log('URLs:', urlsString); // Print URLs as a single string to console
-
-                // Send data to server
-                this.sendDataToServer(urlsString);
+                // Llamar a sendDataToServer con las URLs obtenidas
+                this.sendDataToServer(this.tabs);
             } catch (error) {
                 console.error('Error al obtener los datos:', error);
             }
         },
-        async sendDataToServer(urlsString) {
+
+        async sendDataToServer(tabs) {
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
 
             try {
-                // Primero, realiza una petición al servidor para verificar si los datos ya existen
-                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para verificar en el servidor
+                const formattedTime = new Date().toLocaleTimeString(); // Obtener la hora actual formateada
+                console.log('Sending data to checkTabs:', { userId: user.value._id, tabs: tabs });
+
+                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, tabs: tabs, time: formattedTime });
                 if (checkResponse.data.exists) {
                     console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
-                    return; // Si los datos ya existen, no se hace nada más
+                    return;
                 }
 
-                // Si los datos no existen, procede a enviarlos al servidor
-                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: urlsString }); // Endpoint para procesar en el servidor
+                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, tabs: tabs, time: formattedTime });
                 console.log('Datos enviados al servidor correctamente:', processResponse.data);
             } catch (error) {
                 console.error('Error al enviar los datos al servidor:', error);
             }
         }
+
     }
 };
 </script>
