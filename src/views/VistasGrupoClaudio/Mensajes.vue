@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../../../back-end/src/store.js'
-import * as ordenamiento from '../../lib/Ordenamiento.js'
+import * as ordenamiento from '../../algoritmos/Ordenamiento.js/index.js'
 
 let info = ref([])
 let enviados = ref(false)
