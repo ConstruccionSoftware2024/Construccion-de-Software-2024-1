@@ -25,6 +25,7 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 app.use(express.json())
+
 // Conexión a la base de datos de MongoDB
 client
   .connect()
@@ -34,6 +35,18 @@ client
   .catch((error) => {
     console.error('Failed to connect to database', error)
   })
+
+// Ruta para verificar la conexión a la base de datos
+app.get('/checkdb', async (req, res) => {
+  try {
+    const database = client.db('construDatabase');
+    const collections = await database.listCollections().toArray();
+    res.send(collections);
+  } catch (error) {
+    console.error('Error al verificar la base de datos: ', error.message);
+    res.status(500).send('Error al verificar la base de datos: ' + error.message);
+  }
+});
 
 // Iniciar el servidor
 const PORT = process.env.PORT || 8080
@@ -159,6 +172,25 @@ app.get('/faltas/', async (req, res) => {
   }
 });
 
+app.post('/problema', async (req, res) => {
+  try {
+    const nuevoProblema = req.body;
+    console.log('Datos recibidos:', nuevoProblema);
+
+    const database = client.db('construDatabase');
+    const collection = database.collection('problemas');
+
+    const resultado = await collection.insertOne(nuevoProblema);
+    console.log('Resultado de la inserción:', resultado);
+
+    res.status(201).send(resultado.ops[0]);
+  } catch (error) {
+    console.error('Error al enviar problema:', error.message);
+    res.status(500).send('Error al enviar problema: ' + error.message);
+  }
+});
+
+
 // Recuperar faltas especificas de un usuario
 app.get('/faltas/:id', async (req, res) => {
   try {
@@ -181,7 +213,7 @@ app.post('/addFaltas/:id', async (req, res) => {
 
     const result = await collection.updateOne(
       { _id: id },
-      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 }}, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
+      { $push: { detalleFaltas: newFalta }, $inc: { faltas: 1 } }, // Utiliza $push para agregar newFalta al arreglo detalleFaltas
       { upsert: true }
     );
 
