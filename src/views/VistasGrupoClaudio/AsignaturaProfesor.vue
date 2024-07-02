@@ -43,9 +43,18 @@
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
                         <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
-                        <button class="btn" @click="goToContact">Reportar un Problema</button>
+                        <button class="btn" @click="mostrarReportar = true">Reportar un Problema</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="modal" v-if="mostrarReportar">
+            <div class="modal-content">
+                <span class="close" @click="mostrarReportar = false">&times;</span>
+                <h3>Reportar un problema</h3>
+                <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
+                <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
             </div>
         </div>
 
@@ -57,7 +66,7 @@
                     <div class="input-group">
                         <input required placeholder="Nombre de la sesión" type="text" id="nombre"
                             v-model="nuevaSesion.nombre">
-                        <textarea required placeholder="Descripción de la sesión"
+                        <textarea type="text" required placeholder="Descripción de la sesión"
                             v-model="nuevaSesion.descripcion"></textarea>
                         <div v-if="showError" class="error-message">
                             Por favor complete todos los campos.
@@ -86,19 +95,28 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../../../back-end/src/store.js';
 import axios from 'axios'
 import { showText } from 'pdf-lib';
 import Swal from 'sweetalert2';
+
+const userStore = useUserStore();
+const idUsuario = userStore.user._id;
 
 export default {
     data() {
         return {
             sesiones: [],
             mostrarPopup: false,
+            mostrarReportar: false,
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
                 asignatura: ''
+            },
+            problemas: {
+                descripcion: '',
+                idUsuario: idUsuario
             },
             showError: false,
         }
@@ -110,6 +128,7 @@ export default {
         const asignaturaId = route.params.id
         const asignatura = ref('Nombre Ejemplo')
         const mostrarPopup = ref(false)
+        const mostrarReportar = ref(false)
         const mostrarPopupRecurso = ref(false)
         const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
@@ -142,39 +161,18 @@ export default {
         };
         const publicarPregunta = () => {
             console.log('Pregunta publicada:', nuevaPregunta.value)
-
         }
-
         const enviarRecurso = async () => {
             console.log('Enviando recurso:')
         }
-        const cargarSesiones = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
-                asignatura.value = response.data;
-                if (asignatura.value.sesiones) {
-                    const promises = asignatura.value.sesiones.map(sesionId =>
-                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
-                    );
-
-                    const sesionResponses = await Promise.all(promises);
-
-                    sesiones.value = sesionResponses.map(response => response.data);
-
-                    console.log(sesiones);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        };
         onMounted(() => {
             cargarRecursos();
-            cargarSesiones();
         })
 
         return {
             asignatura,
             mostrarPopup,
+            mostrarReportar,
             mostrarPopupRecurso,
             nuevaPregunta,
             nuevoRecurso,
@@ -187,20 +185,28 @@ export default {
             goToFaltas,
             goToListaAlumnos,
             goToContact,
-            //onFileChange,
             enviarRecurso
         }
     },
     methods: {
-        recuperarSesiones() {
-            axios.get(`http://localhost:8080/sesion`)
-                .then(response => {
-                    this.sesiones = response.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
+        async cargarSesiones() {
+            try {
+                const response = await axios.get(`http://localhost:8080/asignatura/${this.$route.params.id}`);
+                this.asignatura = response.data;
+                if (this.asignatura.sesiones) {
+                    const promises = this.asignatura.sesiones.map(sesionId =>
+                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
+                    );
+
+                    const sesionResponses = await Promise.all(promises);
+
+                    this.sesiones = sesionResponses.map(response => response.data);
+                }
+            } catch (error) {
+                console.error(error);
+            }
         },
+
         publicarPregunta() {
             alert('Pregunta Publicada');
         },
@@ -215,37 +221,52 @@ export default {
         goToProject(id) {
             this.$router.push(`/asignatura/${id}`);
         },
+
+        async enviarProblema() { 
+            if (!this.problemas.descripcion) {
+                console.log(this.problemas.descripcion);
+                return;
+            }
+
+            try {
+                const respuesta = await axios.post('http://localhost:8080/publicarProblema', this.problemas);
+
+                if (respuesta.status === 200) {
+                    this.problemas.descripcion = '';
+                    this.mostrarReportar = false;
+                    Swal.fire({
+                        title: 'Problema reportado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#08cccc'
+                    });
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
-                console.log(this.nuevaSesion.nombre + " " + this.nuevaSesion.descripcion);
                 this.showError = true;
                 return;
             }
             try {
-                // Obtiene la id de la asignatura de la URL
                 const asignaturaId = this.$route.params.id;
-
                 if (!asignaturaId) {
                     console.error('No se encontró la id de la asignatura');
                     return;
                 }
-
-                // Agrega la id de la asignatura al objeto nuevaSesion
                 this.nuevaSesion.asignatura = asignaturaId;
-                console.log('Datos a enviar:', this.nuevaSesion);
-
                 const respuesta = await axios.post('http://localhost:8080/sesion', this.nuevaSesion)
 
                 if (respuesta.status === 200) {
                     this.nuevaSesion.nombre = '';
                     this.nuevaSesion.descripcion = '';
-                    // Obtiene la id de la sesión creada
                     const sessionId = respuesta.data._id;
-
                     await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addSession`, { sessionId });
-
-                    console.log('Sesión creada con ID:', sessionId);
-
                     this.fetchProjects();
                     this.mostrarPopup = false;
                     Swal.fire({
@@ -253,6 +274,7 @@ export default {
                         icon: 'success',
                         confirmButtonText: 'Aceptar'
                     });
+                    await this.cargarSesiones();
                 } else {
                     console.error('Error al enviar los datos:', respuesta.statusText)
                 }
@@ -263,12 +285,14 @@ export default {
     },
     created() {
         this.fetchProjects();
+        this.cargarSesiones();
     }
 }
 </script>
 
 
 <style scoped>
+
 .close {
     cursor: pointer;
     float: right;
@@ -315,6 +339,7 @@ h1 {
 
 h2 {
     font-weight: bold;
+    margin-bottom: 2rem;
 }
 
 .content {
@@ -430,10 +455,6 @@ button.btn-cerrar:hover {
     background-color: #ff1a1a;
 }
 
-h2 {
-    font-weight: bold;
-    margin-bottom: 2rem;
-}
 
 .button-container {
     display: flex;

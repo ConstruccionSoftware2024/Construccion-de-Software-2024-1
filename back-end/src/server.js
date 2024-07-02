@@ -1293,6 +1293,33 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
+app.post('/emailContactoAlumno', async (req, res) => {
+  try {
+    const { to, subject, body } = req.body;
+
+    let transporter = nodemailer.createTransport({
+      service: 'outlook',
+      auth: {
+        user: 'pruebas.construccion2024@outlook.com',
+        pass: 'RkUFFzM1LUTk'
+      }
+    });
+
+    const mailOptions = {
+      from: 'pruebas.construccion2024@outlook.com',
+      to: 'pruebas.construccion2024@outlook.com', // Cambiar por el email del alumno
+      subject: subject,
+      text: body
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    res.send({ message: 'Correo enviado correctamente', result: result });
+  } catch (error) {
+    console.error('Error al enviar correo electrónico:', error);
+    res.status(500).send({ message: 'Error al enviar correo electrónico', error: error });
+  }
+});
+
 // Enviar email (página contacto alumno)
 app.post('/email-alumno', async (req, res) => {
   let { profesor, email, msg, correoProfesor, alumno } = req.body;
@@ -1524,6 +1551,19 @@ app.put('/cancelarSesion/:id', async (req, res) => {
       res.status(404).send('Sesion no encontrada')
     }
   } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.post('/publicarProblema', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const problemas = database.collection('problemas')
+    const problema = { descripcion: req.body.descripcion, usuarioId: req.body.idUsuario }
+    const result = await problemas.insertOne(problema)
+    res.send(result)
+  } catch (error) {
+    console.error(error)
     res.status(500).send(error.message)
   }
 })
