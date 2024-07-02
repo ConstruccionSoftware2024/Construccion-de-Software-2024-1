@@ -44,22 +44,7 @@
         </div>
         <div class="bottomContainer">
             <div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre de la Aplicación</th>
-                            <th>Link de la Aplicación</th>
-                            <th>Peligrosidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="app in appPeligrosas" :key="app._id">
-                            <td>{{ app.nombre }}</td>
-                            <td>{{ app.link }}</td>
-                            <td>{{ app.peligro }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                
             </div>
             <table>
                 <thead>
