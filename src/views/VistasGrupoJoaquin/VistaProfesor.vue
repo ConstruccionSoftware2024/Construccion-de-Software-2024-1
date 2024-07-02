@@ -525,7 +525,7 @@ export default {
             try {
 
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
-                const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                /*const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
 
                 const result = await model.generateContent(prompt);
                 const response2 = result.response;
@@ -538,14 +538,12 @@ export default {
                 const uniqueProcessNamesWithCategories = [...new Set(processNamesWithCategories)];
 
                 // Escribe los nombres de procesos únicos en un archivo
-                const fileText = uniqueProcessNamesWithCategories.join('\n');
+                const fileText = uniqueProcessNamesWithCategories.join('\n');*/
 
                 this.selectedStudent = {
                     ...selectedStudent,
-                    apps: uniqueProcessNamesWithCategories
+                    apps: response.data,
                 };
-                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
-
                 this.showModal = true;
 
                 return uniqueProcessNamesWithCategories;

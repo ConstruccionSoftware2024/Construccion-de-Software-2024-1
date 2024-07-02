@@ -1207,11 +1207,11 @@ app.post('/email-alumno', async (req, res) => {
 /* revisiar esta funcion de grupo joaquin*/
 
 // Guarda/actualiza los procesos en la base de datos
-app.post('/checkTabs1', async (req, res) => {
+
+app.post('/checkProcesos', async (req, res) => {
   const { procesos, userId, sessionId } = req.body;
   const database = client.db('construccion');
   const collection = database.collection('procesos');
-
   try {
     // Asegurarse de que procesos sea un array
     const nuevosProcesoArray = Array.isArray(procesos) ? procesos : [procesos];
