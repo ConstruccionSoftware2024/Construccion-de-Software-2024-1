@@ -617,7 +617,7 @@ export default {
             closeModal2.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal2.classList.remove('modal__añadir--show');
-
+                window.location.reload();
             });
             closeModal2_.addEventListener('click', (e) => {
                 e.preventDefault();

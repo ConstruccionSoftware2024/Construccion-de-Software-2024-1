@@ -749,9 +749,19 @@ app.post('/anadir_app', async (req, res) => {
     const LinkApp = req.body.LinkApp;
     const nivelPeligro = req.body.nivelPeligro;
     const asignatura = req.body.asignatura;
-    //console.log(nombreApp + " ---- " + LinkApp + " ------- " + nivelPeligro + " ---- " + asignatura)
-    await coleccion.insertOne({ nombre: nombreApp, link: LinkApp, peligro: nivelPeligro, asignatura: asignatura });
+    const appExistente = await coleccion.findOne({
+      $or: [
+        { nombre: nombreApp, asignatura: asignatura },
+        { link: LinkApp, asignatura: asignatura }
+      ]
+    });
 
+    if (appExistente) {
+      res.status(409).send({ error: 'La aplicación ya está ingresada' });
+    } else {
+      await coleccion.insertOne({ nombre: nombreApp, link: LinkApp, peligro: nivelPeligro, asignatura: asignatura });
+      res.status(201).send({ message: 'Aplicación añadida exitosamente' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send('Hubo un error al añadir los usuarios');
