@@ -24,7 +24,16 @@
                 <h3 class="subtitulo"><font-awesome-icon :icon="['fas', 'list-ul']" /> Listado de Evaluaciones</h3>
                 <div class="listaEvaluaciones">
                     <div class="sesionesItem" v-for="eva in evaluations" :key="eva.id">
-                        <router-link :to="'/vistaEvaluacion/'+eva._id" class="navLink"><span class="session-title">{{ eva.nombre }}</span></router-link>
+                        <div v-if="new Date() <= new Date(eva.fechaCierre)">
+                            <router-link :to="'/vistaEvaluacion/'+eva._id" class="navLink">
+                                <span class="session-title">{{ eva.nombre }}</span><br>
+                                <span class="session-dates">({{ formatFecha(eva.fechaApertura) }} - {{ formatFecha(eva.fechaCierre) }})</span>
+                            </router-link>
+                        </div>
+                        <div v-else class="navLink_disabled">
+                            <span class="session-title">{{ eva.nombre }}</span><br>
+                            <span class="session-dates">({{ formatFecha(eva.fechaApertura) }} - {{ formatFecha(eva.fechaCierre) }})</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -250,6 +259,10 @@ export default {
                 console.error('Error al obtener los datos:', error);
             }
         },
+        formatFecha(fecha) {
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(fecha).toLocaleDateString('es-ES', opciones);
+        },
         async sendDataToServer(urlsString) {
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
@@ -329,6 +342,17 @@ button {
     background: white;
     border-radius: 10px;
     text-align: center;
+}
+
+.navLink_disabled{
+    text-decoration: none;
+    color: var(--text-color-disabled);
+    display: block;
+    padding: 10px 10px;
+    border-radius: 5px;
+    background-color: var(--background-color-disabled);
+    margin-bottom: 0.5rem;
+    cursor: not-allowed;
 }
 
 .mainContainer {

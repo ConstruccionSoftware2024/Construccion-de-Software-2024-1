@@ -28,16 +28,26 @@
             </tr>
 
             <tr v-if="alumnoSeleccionado === index">
-              <td colspan="8" class="detail-falta-container">
-                <div v-if="asignaturas.length > 0">
-                  <strong class="titulo">Asignaturas inscritas:</strong>
-                  <ul>
-                    <li v-for="asignatura in asignaturas" :key="asignatura._id">{{ asignatura.title }}</li>
-                  </ul>
+              <td colspan="8">
+                <div class="detail-falta-container">
+                  <div v-if="cargandoAsignaturas">
+                  </div>
+                  <div v-else>
+                    <strong class="titulo">Asignaturas inscritas:</strong>
+                    <ul>
+                      <li v-for="asignatura in asignaturas" :key="asignatura._id">{{ asignatura.title }}</li>
+                    </ul>
+                  </div>
                 </div>
-                <div v-else>
-                  <p class="titulo">No hay asignaturas inscritas</p>
-                </div>
+                <button @click="mostrarReportar = true">Contactar</button>
+                <div class="modal" v-if="mostrarReportar">
+                  <div class="modal-content">
+                      <span class="close" @click="mostrarReportar = false">&times;</span>
+                      <h3>Contactar alumno</h3>
+                      <textarea placeholder="Descripción" v-model="descripcion"></textarea>
+                      <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
+                  </div>
+              </div>
               </td>
             </tr>
 
@@ -51,6 +61,7 @@
 
 <script>
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 export default {
   data() {
@@ -59,7 +70,11 @@ export default {
       historial: [],
       matriculaABanear: '',
       alumnoSeleccionado: null,
-      asignaturas: []
+      asignaturas: [],
+      mostrarReportar: false,
+      descripcion: '',
+      idUsuario: '',
+      cargandoAsignaturas: false
     }
   },
   methods: {
@@ -76,11 +91,36 @@ export default {
       }
     },
     async obtenerAsignaturas(alumnoId) {
+      this.cargandoAsignaturas = true;
       try {
         const response = await axios.get(`http://localhost:8080/asignaturas/${alumnoId}`);
         this.asignaturas = response.data;
       } catch (error) {
         console.error('Failed to fetch asignaturas', error);
+      } finally {
+        this.cargandoAsignaturas = false;
+      }
+    },
+    async enviarProblema() {
+      try {
+        this.descripcion = '';
+        this.mostrarReportar = false;
+        Swal.fire({
+            title: 'Correo enviado al alumno',
+            icon: 'success',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#08cccc'
+        });
+        const emailData = {
+        to: 'pruebas.construccion2024@outlook.com',
+        subject: 'Asunto del correo', // Asunto del correo
+        body: this.descripcion // Cuerpo del correo
+      };
+
+      const emailResponse = await axios.post('http://localhost:8080/emailContactoAlumno', emailData);
+
+      } catch (error) {
+          console.error('Error en la petición fetch:', error)
       }
     },
     seleccionarAlumno(index) {
@@ -97,11 +137,6 @@ export default {
 </script>
 
 <style scoped>
-.selected {
-  color: var(--text-table-color);
-  background-color: var(--border-color);
-}
-
 .titulo {
   font-weight: bold;
 }
@@ -196,5 +231,77 @@ th {
   padding-left: 3rem;
   width: 100%;
   cursor: auto;
+}
+
+button {
+    padding: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.close:hover {
+    color: var(--button-background-color);
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--container-background-color);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+
+.modal-content h3 {
+    margin-bottom: 1rem;
+}
+
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--input-background-color);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
 }
 </style>

@@ -3,18 +3,18 @@
     <body>
         <div class="ffbox">
             <div class="ffbox1">
-                <h1 class="gfg">Contactanos</h1>
+                <h1 class="gfg">Contáctanos</h1>
                 <form @submit.prevent="sendEmail">
                     <label for="fullName">
                         <i class="fa fa-solid fa-user" style="margin: 2px;">
-                        </i> Nombre completo:
+                        </i> Nombre completo
                     </label>
                     <input type="text" id="fullName" name="fullName" required>
 
                     <label for="email">
                         <i class="fa fa-solid fa-envelope" style="margin: 2px;">
                         </i>
-                        Correo electrónico:
+                        Correo electrónico
 
                     </label>
                     <input type="email" id="email" name="email" required>
@@ -22,14 +22,14 @@
                     <label for="mobile">
                         <i class=" fa fa-solid fa-phone" style="margin: 2px;">
                         </i>
-                        Número de teléfono:
+                        Número de teléfono
                     </label>
                     <input type="tel" id="mobile" name="mobile" required>
 
                     <label for="msg">
                         <i class=" fa fa-solid fa-comment" style="margin: 2px;">
                         </i>
-                        Tu mensaje:
+                        Tu mensaje
                     </label>
                     <textarea id="msg" name="msg" rows="5" required style="vertical-align: top;"></textarea>
 

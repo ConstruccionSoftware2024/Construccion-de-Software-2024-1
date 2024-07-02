@@ -43,9 +43,18 @@
                     <h2><i class="fa-solid fa-user-plus"></i> Acciones Adicionales</h2>
                     <div class="button-container">
                         <button class="btn" @click="goToListaAlumnos">Contactar a un Alumno</button>
-                        <button class="btn" @click="goToContact">Reportar un Problema</button>
+                        <button class="btn" @click="mostrarReportar = true">Reportar un Problema</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="modal" v-if="mostrarReportar">
+            <div class="modal-content">
+                <span class="close" @click="mostrarReportar = false">&times;</span>
+                <h3>Reportar un problema</h3>
+                <textarea placeholder="Descripción del problema" v-model="problemas.descripcion"></textarea>
+                <button @click="enviarProblema" class="btn btn-modal">Enviar</button>
             </div>
         </div>
 
@@ -86,19 +95,28 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../../../back-end/src/store.js';
 import axios from 'axios'
 import { showText } from 'pdf-lib';
 import Swal from 'sweetalert2';
+
+const userStore = useUserStore();
+const idUsuario = userStore.user._id;
 
 export default {
     data() {
         return {
             sesiones: [],
             mostrarPopup: false,
+            mostrarReportar: false,
             nuevaSesion: {
                 nombre: '',
                 descripcion: '',
                 asignatura: ''
+            },
+            problemas: {
+                descripcion: '',
+                idUsuario: idUsuario
             },
             showError: false,
         }
@@ -110,6 +128,7 @@ export default {
         const asignaturaId = route.params.id
         const asignatura = ref('Nombre Ejemplo')
         const mostrarPopup = ref(false)
+        const mostrarReportar = ref(false)
         const mostrarPopupRecurso = ref(false)
         const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
@@ -153,6 +172,7 @@ export default {
         return {
             asignatura,
             mostrarPopup,
+            mostrarReportar,
             mostrarPopupRecurso,
             nuevaPregunta,
             nuevoRecurso,
@@ -201,6 +221,33 @@ export default {
         goToProject(id) {
             this.$router.push(`/asignatura/${id}`);
         },
+
+        async enviarProblema() { 
+            if (!this.problemas.descripcion) {
+                console.log(this.problemas.descripcion);
+                return;
+            }
+
+            try {
+                const respuesta = await axios.post('http://localhost:8080/publicarProblema', this.problemas);
+
+                if (respuesta.status === 200) {
+                    this.problemas.descripcion = '';
+                    this.mostrarReportar = false;
+                    Swal.fire({
+                        title: 'Problema reportado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#08cccc'
+                    });
+                } else {
+                    console.error('Error al enviar los datos:', respuesta.statusText)
+                }
+            } catch (error) {
+                console.error('Error en la petición fetch:', error)
+            }
+        },
+
         async enviarFormulario() {
             if (!this.nuevaSesion.nombre || !this.nuevaSesion.descripcion) {
                 this.showError = true;
@@ -245,6 +292,7 @@ export default {
 
 
 <style scoped>
+
 .close {
     cursor: pointer;
     float: right;

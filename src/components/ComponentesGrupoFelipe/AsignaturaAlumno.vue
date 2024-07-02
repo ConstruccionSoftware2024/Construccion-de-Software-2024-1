@@ -38,10 +38,70 @@
 
 
                 <div class="section">
-                    <h2> <font-awesome-icon :icon="['far', 'comment-dots']" /> Foro de Preguntas
-                    </h2>
-                    <input type="text" placeholder="Escribe tu pregunta aquí...">
-                    <button class="btn" @click="publicarPregunta">Publicar Pregunta</button>
+                    <div class="foro">
+                        <h2><i class="fa-regular fa-comment-dots"></i> Foro de Preguntas</h2>
+                        <input type="text" placeholder="Escribe tu pregunta aquí..." v-model="textoPregunta">
+                        <button @click="publicarPregunta" class="btn">Publicar Pregunta</button>
+                        <hr>
+                        <h3><font-awesome-icon :icon="['fas', 'list-ul']" /> Preguntas Realizadas</h3>
+                        <div class="preguntas">
+                            <div v-for="pregunta in listadoPreguntas" :key="pregunta.preguntaId" class="pregunta">
+                                <div class="pregunta-container">
+                                    <p class="autorPregunta">{{ pregunta.autor }}</p>
+                                    <div class="pregunta-responder">
+                                        <p class="tituloPregunta">{{ pregunta.texto }}</p>
+                                    </div>
+
+                                    <button @click="toggleRespuestas(pregunta.preguntaId)" class="btn-mostrarRespuestas"
+                                        v-if="pregunta.respuestas && pregunta.respuestas.length > 0">
+                                        <font-awesome-icon class="iconoRespuesta" v-if="mostrarRespuestas[pregunta.preguntaId]"
+                                            :icon="['fas', 'eye-slash']" />
+                                        <font-awesome-icon class="iconoRespuesta" v-else :icon="['fas', 'eye']" />{{
+                                            mostrarRespuestas[pregunta.preguntaId] ? 'Ocultar Respuestas' : 'Mostrar Respuestas' }}
+                                    </button>
+                                    <div class="respuestas">
+                                        <div class="respuestas-container" v-if="mostrarRespuestas[pregunta.preguntaId]">
+                                            <div v-for="respuesta in pregunta.respuestas" :key="respuesta.respuestaId"
+                                                class="respuesta">
+                                                <p class="autorRespuesta">{{respuesta.autor}}</p>
+                                                <p class="textoRespuestas">{{ respuesta.texto }}</p>
+                                                <button v-if="respuesta.autorId === idUsuario" @click="eliminarRespuesta(pregunta.preguntaId, respuesta._id)"
+                                                class="btn-eliminar-respuesta"><font-awesome-icon :icon="['fas', 'minus']" class="icon-btn-eliminar-respuesta"/></button>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="btn-responder">
+                                            <div v-if="inputRespuesta === pregunta.preguntaId" class="responderPregunta">
+                                                <input type="text" placeholder="Escribe tu respuesta aquí..."
+                                                    v-model="textoRespuesta">
+                                                <div class="btn-publicar-container">
+                                                    <button class="btn-cancelar"
+                                                        @click="toggleInputRespuesta(pregunta.preguntaId)">Cancelar
+                                                    </button>
+                                                    <button @click="publicarRespuesta(pregunta.preguntaId)"
+                                                        class="btn-publicar">Publicar
+                                                        Respuesta</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <button v-if="inputRespuesta !== pregunta.preguntaId" class="btn-responder"
+                                                @click="toggleInputRespuesta(pregunta.preguntaId)"> Responder</button>
+                                            <div class="botonesPregunta">
+                                                <button
+                                                    v-if="pregunta.autorId === idUsuario && inputRespuesta !== pregunta.preguntaId"
+                                                    @click="eliminarPregunta(pregunta.preguntaId)" class="btn-eliminar">
+                                                    <font-awesome-icon :icon="['fas', 'trash-alt']" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                </div>
+            </div>
                 </div>
 
             </div>
@@ -118,8 +178,35 @@ const rolUsuario = userStore.user.role;
 const idUsuario = userStore.user._id;
 
 const mostrarDetallesFaltas = ref(false);
+const mostrarReportar = ref(false);
 
 const faltaAlumnos = ref([]);
+
+const textoPregunta = ref('');
+
+const listadoPreguntas = ref([]);
+
+const textoRespuesta = ref('');
+
+const inputRespuesta = ref('');
+
+const mostrarRespuestas = ref({});
+
+const toggleRespuestas = (id) => {
+    if (mostrarRespuestas.value === null) {
+        mostrarRespuestas.value = {};
+    }
+    mostrarRespuestas.value[id] = !mostrarRespuestas.value[id];
+};
+
+const toggleInputRespuesta = (id) => {
+    if (inputRespuesta.value === id) {
+        inputRespuesta.value = '';
+    } else {
+        inputRespuesta.value = id;
+    }
+};
+
 
 const toggleDetallesFaltas = () => {
     mostrarDetallesFaltas.value = !mostrarDetallesFaltas.value;
@@ -129,7 +216,9 @@ const toggleDetallesFaltas = () => {
             icon: 'error',
             title: 'Oops...',
             text: 'No hay faltas registradas',
-            timer: 1200
+            timer: 1200,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#08cccc'
         });
     }
 };
@@ -140,6 +229,7 @@ const closePopUp = (event) => {
     }
 }
 
+
 const asignatura = ref({
     nombre: 'Nombre Ejemplo',
     profesor: 'Profesor Ejemplo',
@@ -147,6 +237,11 @@ const asignatura = ref({
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
     members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
+});
+
+const problemas = ref({
+    descripcion: '',
+    idUsuario: idUsuario
 });
 
 const sesiones = ref([]);
@@ -174,15 +269,42 @@ function recuperarSesiones(id) {
         });
 }
 
-const publicarPregunta = () => {
-    alert('Pregunta Publicada');
-};
+
+async function enviarProblema() {
+
+    console.log('problemas:', problemas);
+
+    const problemaParaEnviar = {
+        descripcion: problemas.value.descripcion,
+        idUsuario: idUsuario // Asegúrate de que idUsuario esté definido
+    };
+
+    try {
+        // Envía el objeto problema a /publicarProblema
+        const respuesta = await axios.post('http://localhost:8080/publicarProblema', problemaParaEnviar);
+
+        if (respuesta.status === 200) {
+            // Resetea la descripción del problema y oculta el formulario de reporte
+            problemas.value.descripcion = '';
+            mostrarReportar.value = false;
+            Swal.fire({
+                title: 'Problema reportado correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#08cccc'
+            });
+        } else {
+            console.error('Error al enviar los datos:', respuesta.statusText)
+        }
+    } catch (error) {
+        console.error('Error en la petición fetch:', error)
+    }
+}
 
 async function recuperarAsignatura(id) {
     await axios.get(`http://localhost:8080/asignatura/${id}`)
         .then(async response => {
             asignatura.value = response.data;
-            console.log("asignatura: ", asignatura);
             recuperarProfesor(response.data.profesorId);
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);
@@ -226,9 +348,131 @@ function determinarRuta(id, rol) {
     }
 }
 
+async function publicarPregunta() {
+
+    //validacion
+    if (textoPregunta.value === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Debes escribir una pregunta',
+            timer: 1200
+        });
+        return;
+    }
+
+    const nuevaPregunta = {
+        texto: textoPregunta.value,
+        autor: userStore.user._id,
+    }
+
+    await axios.post('http://localhost:8080/pregunta', {
+        texto: nuevaPregunta.texto,
+        autor: nuevaPregunta.autor,
+        asignaturaId: id
+    })
+        .then(response => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pregunta Publicada',
+                text: 'Tu pregunta ha sido publicada con éxito',
+                timer: 1200
+            });
+
+            textoPregunta.value = '';
+            recuperarPreguntas();
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function eliminarPregunta(preguntaId) {
+    await axios.delete(`http://localhost:8080/pregunta/${id}/${preguntaId}`)
+        .then(response => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pregunta Eliminada',
+                text: 'Tu pregunta ha sido eliminada con éxito',
+                timer: 1000
+            });
+            recuperarPreguntas();
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function recuperarPreguntas() {
+    await axios.get(`http://localhost:8080/preguntas/${id}`)
+        .then(response => {
+            listadoPreguntas.value = response.data;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+async function publicarRespuesta(preguntaId) {
+    //validacion
+    if (textoRespuesta.value === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Debes escribir una respuesta',
+            timer: 1200
+        });
+        return;
+    }
+
+    const nuevaRespuesta = {
+        texto: textoRespuesta.value,
+        autorRespuesta: userStore.user._id,
+        preguntaId: preguntaId,
+    }
+
+    const preguntaIndex = listadoPreguntas.value.findIndex(pregunta => pregunta.preguntaId === preguntaId);
+    if (preguntaIndex !== -1) {
+        if (!listadoPreguntas.value[preguntaIndex].respuestas) {
+            listadoPreguntas.value[preguntaIndex].respuestas = [];
+        }
+        listadoPreguntas.value[preguntaIndex].respuestas.push(nuevaRespuesta);
+    }
+
+    // Enviar informacion a la base de datos
+    await axios.post('http://localhost:8080/respuesta', {
+        texto: nuevaRespuesta.texto,
+        autorRespuesta: nuevaRespuesta.autorRespuesta,
+        preguntaId: nuevaRespuesta.preguntaId,
+        asignaturaId: id
+    })
+        .then(response => {
+            textoRespuesta.value = '';
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+        recuperarPreguntas();
+
+    mostrarRespuestas.value[preguntaId] = true;
+    textoRespuesta.value = '';
+}
+
+async function eliminarRespuesta(preguntaId, respuestaId) {
+    await axios.delete(`http://localhost:8080/respuesta/${id}/${preguntaId}/${respuestaId}`)
+        .then(response => {
+            recuperarPreguntas();
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
 onMounted(async () => {
     recuperarAsignatura(id);
     recuperarFaltas(idUsuario);
+    recuperarPreguntas();
     window.addEventListener('click', closePopUp);
 });
 
@@ -456,15 +700,25 @@ h2 {
     margin-bottom: 5px;
 }
 
-button.btn {
+
+button {
+    padding: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
     background-color: var(--button-background-color);
-    color: white;
-    padding: 0.75rem 1.5rem;
+    color: var(--button-text-color);
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: 12px;
 }
+
+button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+
+
 
 .btn-modal {
     float: right;
@@ -598,6 +852,7 @@ a {
 .team-members {
     margin-top: 10px;
     display: flex;
+    flex-wrap: wrap;
 }
 
 .team-member {
@@ -607,6 +862,245 @@ a {
     margin-right: 5px;
 }
 
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.close:hover {
+    color: var(--button-background-color);
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--container-background-color);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+
+.modal-content h3 {
+    margin-bottom: 1rem;
+}
+
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--input-background-color);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: none;
+    height: 150px;
+}
+
+input[type="text"] {
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+}
+
+.pregunta {
+    margin-bottom: 10px;
+}
+
+button.btn-pregunta {
+    margin-bottom: 0.8rem;
+}
+
+.pregunta-container {
+    background-color: var(--gray-text-color);
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.tituloPregunta {
+    font-weight: bold;
+}
+
+.autorPregunta {
+    font-style: italic;
+    margin-bottom: 0;
+    margin-top: 0;
+    font-size: 0.8rem;
+}
+
+.btn-responder {
+    background-color: none;
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 5px;
+    margin: 0;
+    margin-right: 5px;
+    margin-left: auto;
+    display: flex;
+    align-items: end;
+}
+
+.btn-cancelar {
+    background-color: var(--gray-hover-color);
+    margin: 0;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    padding: 5px;
+}
+
+.btn-cancelar:hover {
+    background-color: var(--border-color)
+}
+
+.btn-publicar-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+button.btn-publicar {
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    margin-right: 0;
+}
+
+.pregunta-responder {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 8px;
+}
+
+.btn-eliminar {
+    background-color: red;
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+    margin: 0;
+}
+
+.btn-eliminar:hover {
+    background-color: darkred;
+}
+
+.responderPregunta input {
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    border: 1px solid #cccccc7a;
+}
+
+.respuestas-container {
+    margin-top: 10px;
+}
+
+.respuesta {
+    background-color: var(--border-color);
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.textoRespuestas {
+    margin: 0;
+    margin-left: 10px;
+}
+
+.autorRespuesta {
+    font-style: italic;
+    margin-bottom: 8px;
+    margin-top: 0;
+    font-size: 0.8rem;
+}
+
+.responderPregunta {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.btn-mostrarRespuestas {
+    background-color: transparent;
+    color: var(--button-text-color);
+    text-decoration: underline;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px;
+    margin: 0;
+}
+
+.btn-mostrarRespuestas:hover {
+    background-color: rgba(0, 0, 0, 0.13);
+}
+
+.iconoRespuesta {
+    margin-right: 5px;
+}
+
+
+.btn-eliminar-respuesta {
+    background-color: red;
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position:absolute;
+    margin:0;
+    right: 2px;
+    top: -5px;
+    font-size: 8px;
+    padding:5px;
+}
+
+.btn-eliminar-respuesta:hover {
+    background-color: darkred;
+}
+
+.icon-btn-eliminar-respuesta {
+    font-size: 8px;
+    margin: 0;
+}
 @media screen and (max-width: 768px) {
     .container {
         flex-direction: column;
