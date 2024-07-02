@@ -757,7 +757,20 @@ app.post('/anadir_app', async (req, res) => {
     res.status(500).send('Hubo un error al añadir los usuarios');
   }
 });
-
+app.get('/appPeligrosas/:asignaturas', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('peligroSesion');
+    const asignatura = req.params.asignaturas;
+    console.log("Asignatura buscada:", asignatura);
+    const documentos = await collection.find({ asignatura: asignatura }).toArray();
+    console.log("Documentos encontrados:", documentos);
+    res.status(200).json(documentos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+})
 
 
 //--------------------

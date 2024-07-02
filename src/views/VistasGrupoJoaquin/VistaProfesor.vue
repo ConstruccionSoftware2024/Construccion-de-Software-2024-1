@@ -31,6 +31,24 @@
             </div>
         </div>
         <div class="bottomContainer">
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre de la Aplicación</th>
+                            <th>Link de la Aplicación</th>
+                            <th>Peligrosidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="app in appPeligrosas" :key="app._id">
+                            <td>{{ app.nombre }}</td>
+                            <td>{{ app.link }}</td>
+                            <td>{{ app.peligro }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -42,6 +60,7 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     <tr v-for="alumno in alumnos" :key="alumno._id">
                         <td :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }">
@@ -260,6 +279,7 @@ export default {
         this.alumnosbaneados();
         this.fetchUsers();
         this.mounted();
+        this.Aplicaciones();
     },
 
     name: 'ProfesorPage',
@@ -552,6 +572,22 @@ export default {
             });
 
         },
+        async Aplicaciones() {
+            const sessionResponse = await axios.get('http://localhost:8080/sesion/' + this.sessionId);
+            const sessionUsers = sessionResponse.data;
+            const asignaturas = sessionUsers.asignatura;
+            //console.log("------>" + asignaturas)
+            axios.get('http://localhost:8080/appPeligrosas/' + asignaturas)
+                .then(response => {
+                    console.log("Datos recibidos:", response.data);
+                    this.appPeligrosas = response.data;
+                })
+                .catch(error => {
+                    console.error("Hubo un error al obtener las aplicaciones:", error);
+                });
+
+
+        },
         añadir() {
             const openModal = document.querySelector('.hero__cta');
             const openModal2 = document.querySelector('.app');
@@ -581,9 +617,7 @@ export default {
             closeModal2.addEventListener('click', (e) => {
                 e.preventDefault();
                 modal2.classList.remove('modal__añadir--show');
-                this.nombreApp = '';
-                this.LinkApp = '';
-                this.nivelPeligro = '';
+
             });
             closeModal2_.addEventListener('click', (e) => {
                 e.preventDefault();
