@@ -1421,7 +1421,6 @@ app.put('/cancelarSesion/:id', async (req, res) => {
       $set: { cancelada: true }
     })
     if (result.modifiedCount === 1) {
-      console.log('AAAAAAAAYUDA')
       res.send(result)
     } else {
       res.status(404).send('Sesion no encontrada')
@@ -1430,3 +1429,26 @@ app.put('/cancelarSesion/:id', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+app.put('/descancelarSesion/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('sesion');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const result = await collection.updateOne(consulta, {
+      $set: { cancelada: false }
+    });
+    if (result.modifiedCount === 1) {
+      console.log('Sesión descancelada con éxito');
+      res.send(result);
+    } else {
+      console.log('Sesión no encontrada');
+      res.status(404).send('Sesion no encontrada');
+    }
+  } catch (error) {
+    console.log('Error al descancelar la sesión:', error.message);
+    res.status(500).send(error.message);
+  }
+});
+
+

@@ -8,7 +8,8 @@
             <!--  <button @click="createSession">Crear Sesión</button> -->
             <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
             <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+            <button v-if=isCancelada class="hero__cta" @click="descancelarSesion(idRuta)">Descancelar Sesion</button>
+            <button v-if=!isCancelada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
                 Evaluación</button>
             <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
             <!--  <button @click="otherOptions">Otras Opciones</button> -->
@@ -57,14 +58,17 @@
                         </td>
                         <td v-if="!alumnosBaneados.includes(alumno.email)"
                             :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
-                            <button class="actionButton ban" @click="banExpStudent(alumno, accion = true)"
+                            <button v-if=!isCancelada class="actionButton ban"
+                                @click="banExpStudent(alumno, accion = true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
-                            <button class="actionButton expel" @click="banExpStudent(alumno, accion = false)"
+                            <button v-if=!isCancelada class="actionButton expel"
+                                @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
-                            <BotonNotificar :participante="alumno" :session="sessionId" />
-                            <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
+                            <BotonNotificar v-if=!isCancelada :participante="alumno" :session="sessionId" />
+                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
+
                                     class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
@@ -208,10 +212,32 @@ export default {
                     }
                 });
                 if (respuesta.ok) {
+                    isCancelada.value = true;
                     console.log("marcado como cancelado")
+                    window.location.reload();
                 }
                 else {
                     console.error("Error al marcar como cancelado")
+                }
+            } catch {
+                console.error("Error al obtener sesion")
+            }
+        }
+        const descancelarSesion = async (id) => {
+            try {
+                let respuesta = await fetch(`http://localhost:8080/descancelarSesion/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (respuesta.ok) {
+                    isCancelada.value = false;
+                    console.log("Sesión marcada como no cancelada");
+                    window.location.reload();
+                }
+                else {
+                    console.error("Error al marcar como no cancelado")
                 }
             } catch {
                 console.error("Error al obtener sesion")
@@ -222,6 +248,7 @@ export default {
             idRuta,
             nombreSesion,
             cancelarSesion,
+            descancelarSesion,
             isCancelada,
             router
 
@@ -1245,6 +1272,7 @@ th {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
 }
 
 .claseNumeroSesion {
