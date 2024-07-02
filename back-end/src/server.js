@@ -675,7 +675,7 @@ app.post('/edit_username', async (req, res) => {
     const filter = { email: req.body.email }
     const update = { username: req.body.new_username }
     if (update != '') {
-      const poster = await User.updateOne(filter, { $set: update })
+      await User.updateOne(filter, { $set: update })
     }
   } catch (error) {
     console.error(error)
@@ -689,7 +689,7 @@ app.post('/edit_password', async (req, res) => {
     const filter = { email: req.body.email }
     const update1 = { password: req.body.new_password, confirmPassword: req.body.new_password }
     if (update1 != '' || update1 != ' ') {
-      const poster = await User.updateOne(filter, { $set: update1 })
+      await User.updateOne(filter, { $set: update1 })
     }
   } catch (error) {
     console.error(error)
@@ -733,9 +733,6 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
       const miembros = asignatura.members;
       res.send(miembros);
     }
-
-
-
     //console.log("Miembros encontrados:", miembros);
 
   } catch (error) {
@@ -743,6 +740,50 @@ app.get('/obtenerMiembrosAsignatura', async (req, res) => {
     res.status(500).send({ error: 'Error interno del servidor' });
   }
 });
+app.post('/anadir_app', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const coleccion = database.collection('peligroSesion');
+
+    const nombreApp = req.body.nombreApp;
+    const LinkApp = req.body.LinkApp;
+    const nivelPeligro = req.body.nivelPeligro;
+    const asignatura = req.body.asignatura;
+    //console.log(nombreApp + " ---- " + LinkApp + " ------- " + nivelPeligro + " ---- " + asignatura)
+    const appExistente = await coleccion.findOne({
+      $or: [
+        { nombre: nombreApp, asignatura: asignatura },
+        { link: LinkApp, asignatura: asignatura }
+      ]
+    });
+
+    if (appExistente) {
+      res.status(409).send({ error: 'La aplicación con la misma asignatura ya está ingresada' });
+    } else {
+      await coleccion.insertOne({ nombre: nombreApp, link: LinkApp, peligro: nivelPeligro, asignatura: asignatura });
+      res.status(201).send({ message: 'Aplicación añadida exitosamente' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Hubo un error al añadir los usuarios');
+  }
+});
+app.get('/appPeligrosas/:asignaturas', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('peligroSesion');
+    const asignatura = req.params.asignaturas;
+    //console.log("Asignatura buscada:", asignatura);
+    const documentos = await collection.find({ asignatura: asignatura }).toArray();
+
+    res.status(200).json(documentos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+})
+
+
 //--------------------
 // Obtener sesion especifica
 app.get('/sesion/:id', async (req, res) => {
