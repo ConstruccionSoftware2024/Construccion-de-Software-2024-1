@@ -332,21 +332,23 @@ export default {
             const opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             return new Date(fecha).toLocaleDateString('es-ES', opciones);
         },
-        async sendDataToServer(urlsString) {
+        async sendDataToServer(tabs) {
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
-
             try {
                 const formattedTime = new Date().toLocaleTimeString(); // Obtener la hora actual formateada
-                console.log('Sending data to checkTabs:', { userId: user.value._id, tabs: tabs });
+                //console.log('Sending data to checkTabs:', { userId: user.value._id, tabs: tabs });
+                const tabsElements = tabs.map(tab => tab.url);
+                const tabstring = tabsElements.join(", ");
+                //console.log(tabstring);
 
-                const checkResponse = await axios.post('http://localhost:8080/checkTabs', { userId: user.value._id, tabs: tabs, time: formattedTime });
+                const checkResponse = await axios.post('http://localhost:8080/checkTabs1', { userId: user.value._id, tabs: tabs});
                 if (checkResponse.data.exists) {
                     console.log('Los datos ya existen en la base de datos, no se enviarán de nuevo.');
                     return;
                 }
 
-                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, tabs: tabs, time: formattedTime });
+                const processResponse = await axios.post('http://localhost:8080/processTabs', { userId: user.value._id, urls: tabstring, time: formattedTime });
                 console.log('Datos enviados al servidor correctamente:', processResponse.data);
             } catch (error) {
                 console.error('Error al enviar los datos al servidor:', error);

@@ -1711,16 +1711,24 @@ app.post('/processTabs', (req, res) => {
   const database = client.db('construccion');
   const collection = database.collection('Pestanas'); // Nombre de la colección en MongoDB
 
-  // Insertar documento con userId, URLs y timestamp en la colección
-  collection.insertOne({ userId, urls, timestamp })
-    .then(result => {
-      console.log('Datos guardados en MongoDB:', result.ops);
-      res.send('Datos recibidos y guardados en MongoDB');
-    })
-    .catch(err => {
-      console.error('Error al guardar datos en MongoDB:', err);
-      res.status(500).send('Error interno del servidor al guardar datos en MongoDB');
-    });
+  // Actualizar documento con userId, URLs y timestamp en la colección
+  collection.updateOne(
+    { userId: userId }, // Criterio de búsqueda: documento con el mismo userId
+    { $set: { urls: urls, timestamp: timestamp } }, // Campos a actualizar
+    { upsert: true } // Opción para insertar un nuevo documento si no existe ninguno que coincida
+  )
+  .then(result => {
+    if (result.matchedCount === 0) {
+      console.log('No se encontró el documento con el userId especificado, se creó uno nuevo.');
+    } else {
+      console.log('Documento con userId actualizado en MongoDB:', result);
+    }
+    res.send('Datos recibidos y actualizados en MongoDB');
+  })
+  .catch(err => {
+    console.error('Error al actualizar datos en MongoDB:', err);
+    res.status(500).send('Error interno del servidor al actualizar datos en MongoDB');
+  });
 });
 
 app.get('/obtenerUltimaEntrada/:userId', (req, res) => {
@@ -1729,6 +1737,7 @@ app.get('/obtenerUltimaEntrada/:userId', (req, res) => {
   // Consultar MongoDB para obtener la última entrada para este userId
   const database = client.db('construccion');
   const collection = database.collection('Pestanas'); // Nombre de la colección en MongoDB
+  console.log('Consultando última entrada para userId:', userId);
 
   collection.find({ userId }).sort({ timestamp: -1 }).limit(1).toArray()
     .then(entries => {
@@ -1746,7 +1755,7 @@ app.get('/obtenerUltimaEntrada/:userId', (req, res) => {
 });
 
 
-app.post('/checkTabs', (req, res) => {
+app.post('/checkTabs1', (req, res) => {
   const { userId, urls } = req.body;
   console.log('Checking data:', { userId, urls });
 
