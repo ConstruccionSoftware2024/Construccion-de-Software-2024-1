@@ -46,6 +46,14 @@
                         <button class="btn" @click="mostrarReportar = true">Reportar un Problema</button>
                     </div>
                 </div>
+                 <!-- Contenedor para agregar/eliminar alumnos -->
+                 <div class="section">
+                    <h2><i class="fa-solid fa-user-plus"></i> Gestionar Alumnos</h2>
+                    <div class="button-container">
+                        <button class="btn" @click="mostrarPopupAgregar = true">Agregar Alumno</button>
+                        <button class="btn" @click="mostrarPopupEliminar = true">Eliminar Alumno</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -88,11 +96,54 @@
                 <button @click="enviarRecurso" class="btn btn-modal">Añadir Recurso</button>
             </div>
         </div>
+
+
+        <!-- Popup para agregar alumno -->
+        <div v-if="mostrarPopupAgregar" class="modal">
+            <div class="modal-content stable-size">
+                <span class="close" @click="mostrarPopupAgregar = false">&times;</span>
+                <h3>Agregar Alumno</h3>
+                <p>Alumnos seleccionados: {{ seleccionados.length }} / {{ alumnosNoParticipantes.length }}</p>
+                <div class="alumno-lista">
+                    <div v-for="alumno in paginatedAlumnosNoParticipantes" :key="alumno._id" class="alumno-item">
+                        <input type="checkbox" :value="alumno._id" v-model="seleccionados"> {{ alumno.firstName }} {{
+                            alumno.lastName }}
+                    </div>
+                </div>
+                <div class="pagination">
+                    <button :disabled="currentPageAgregar === 1" @click="currentPageAgregar--">Anterior</button>
+                    <button :disabled="currentPageAgregar === totalPagesAgregar"
+                        @click="currentPageAgregar++">Siguiente</button>
+                </div>
+                <button @click="agregarAlumnos" class="btn btn-modal">Agregar</button>
+            </div>
+        </div>
+
+        <!-- Popup para eliminar alumno -->
+        <div v-if="mostrarPopupEliminar" class="modal">
+            <div class="modal-content stable-size">
+                <span class="close" @click="mostrarPopupEliminar = false">&times;</span>
+                <h3>Eliminar Alumno</h3>
+                <p>Alumnos seleccionados: {{ seleccionados.length }} / {{ alumnosParticipantes.length }}</p>
+                <div class="alumno-lista">
+                    <div v-for="alumno in paginatedAlumnosParticipantes" :key="alumno._id" class="alumno-item">
+                        <input type="checkbox" :value="alumno._id" v-model="seleccionados"> {{ alumno.firstName }} {{
+                            alumno.lastName }}
+                    </div>
+                </div>
+                <div class="pagination">
+                    <button :disabled="currentPageEliminar === 1" @click="currentPageEliminar--">Anterior</button>
+                    <button :disabled="currentPageEliminar === totalPagesEliminar"
+                        @click="currentPageEliminar++">Siguiente</button>
+                </div>
+                <button @click="eliminarAlumnos" class="btn btn-modal">Eliminar</button>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed} from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../back-end/src/store.js';
@@ -126,10 +177,12 @@ export default {
         const router = useRouter();
         const route = useRoute()
         const asignaturaId = route.params.id
-        const asignatura = ref('Nombre Ejemplo')
+        const asignatura = ref({});
         const mostrarPopup = ref(false)
         const mostrarReportar = ref(false)
         const mostrarPopupRecurso = ref(false)
+        const mostrarPopupAgregar = ref(false);
+        const mostrarPopupEliminar = ref(false);
         const nuevaPregunta = ref('')
         const nuevoRecurso = reactive({
             nombre: '',
@@ -139,8 +192,14 @@ export default {
             nombre: '',
             descripcion: ''
         })
-        const info = ref([])
-        const recursos = ref([])
+        const info = ref([]);
+        const recursos = ref([]);
+        const seleccionados = ref([]);
+        const alumnos = ref([]);
+
+        const currentPageAgregar = ref(1);
+        const currentPageEliminar = ref(1);
+        const itemsPerPage = 5;
 
         const formulario = reactive({
             nombre: '',
@@ -165,14 +224,100 @@ export default {
         const enviarRecurso = async () => {
             console.log('Enviando recurso:')
         }
+        const cargarSesiones = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8080/asignatura/${asignaturaId}`);
+                asignatura.value = response.data;
+                if (asignatura.value.sesiones) {
+                    const promises = asignatura.value.sesiones.map(sesionId =>
+                        axios.get(`http://localhost:8080/sesion/${sesionId}`)
+                    );
+
+                    const sesionResponses = await Promise.all(promises);
+
+                    sesiones.value = sesionResponses.map(response => response.data);
+
+                    console.log(sesiones);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        const cargarAlumnos = async () => {
+            try {
+                const response = await axios.get('http://localhost:8080/usuarios?rol=alumno');
+                alumnos.value = response.data;
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+            }
+        };
+        const alumnosNoParticipantes = computed(() => {
+            const participantesIds = new Set(asignatura.value.members.map(member => member.toString()));
+            return alumnos.value.filter(alumno => !participantesIds.has(alumno._id.toString()));
+        });
+
+        const alumnosParticipantes = computed(() => {
+            const participantesIds = new Set(asignatura.value.members.map(member => member.toString()));
+            return alumnos.value.filter(alumno => participantesIds.has(alumno._id.toString()));
+        });
+
+        const paginatedAlumnosNoParticipantes = computed(() => {
+            const start = (currentPageAgregar.value - 1) * itemsPerPage;
+            return alumnosNoParticipantes.value.slice(start, start + itemsPerPage);
+        });
+
+        const paginatedAlumnosParticipantes = computed(() => {
+            const start = (currentPageEliminar.value - 1) * itemsPerPage;
+            return alumnosParticipantes.value.slice(start, start + itemsPerPage);
+        });
+
+        const totalPagesAgregar = computed(() => {
+            return Math.ceil(alumnosNoParticipantes.value.length / itemsPerPage);
+        });
+
+        const totalPagesEliminar = computed(() => {
+            return Math.ceil(alumnosParticipantes.value.length / itemsPerPage);
+        });
+
+        const agregarAlumnos = async () => {
+            try {
+                for (const studentId of seleccionados.value) {
+                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/addStudent`, { studentId });
+                }
+                console.log('Alumnos agregados:', seleccionados.value);
+                mostrarPopupAgregar.value = false;
+                cargarSesiones();
+                seleccionados.value = [];
+            } catch (error) {
+                console.error('Error al agregar alumnos:', error);
+            }
+        };
+
+        const eliminarAlumnos = async () => {
+            try {
+                for (const studentId of seleccionados.value) {
+                    await axios.post(`http://localhost:8080/asignatura/${asignaturaId}/removeStudent`, { studentId });
+                }
+                console.log('Alumnos eliminados:', seleccionados.value);
+                mostrarPopupEliminar.value = false;
+                cargarSesiones();
+                seleccionados.value = [];
+            } catch (error) {
+                console.error('Error al eliminar alumnos:', error);
+            }
+        };
         onMounted(() => {
             cargarRecursos();
+            cargarAlumnos();
+            cargarSesiones();
         })
 
         return {
             asignatura,
             mostrarPopup,
             mostrarReportar,
+            mostrarPopupAgregar,
+            mostrarPopupEliminar,
             mostrarPopupRecurso,
             nuevaPregunta,
             nuevoRecurso,
@@ -185,7 +330,18 @@ export default {
             goToFaltas,
             goToListaAlumnos,
             goToContact,
-            enviarRecurso
+            enviarRecurso,
+            agregarAlumnos,
+            eliminarAlumnos,
+            seleccionados,
+            alumnosNoParticipantes,
+            alumnosParticipantes,
+            paginatedAlumnosNoParticipantes,
+            paginatedAlumnosParticipantes,
+            currentPageAgregar,
+            currentPageEliminar,
+            totalPagesAgregar,
+            totalPagesEliminar
         }
     },
     methods: {
@@ -292,10 +448,51 @@ export default {
 
 
 <style scoped>
+.pagination {
+    display: flex;
+    justify-content: space-between;
+}
+
+.pagination button {
+    background-color: var(--button-background-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    background-color: #b6b6b6;
+    cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: var(--button-hover-background-color);
+}
+
+.alumno-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.alumno-item input {
+    margin-right: 10px;
+}
+.alumno-lista {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
 
 .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
     cursor: pointer;
-    float: right;
+    font-size: 1.5rem;
 }
 
 .close:hover {
@@ -477,27 +674,23 @@ button.btn-cerrar:hover {
 
 .modal-content {
     background-color: var(--container-background-color);
-    padding: 2rem;
+    padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
-    width: 80%;
-    max-width: 500px;
+    width: 90%;
+    max-width: 400px;
+    height: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .modal-content h3 {
     margin-bottom: 1rem;
 }
 
-.modal-content input,
-.modal-content textarea {
-    width: 100%;
-    padding: 0.5rem;
-    background-color: var(--input-background-color);
-    margin-bottom: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
+
 
 .modal-content textarea {
     width: 100%;

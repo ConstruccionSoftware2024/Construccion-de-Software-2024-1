@@ -86,6 +86,97 @@ app.get('/asignaturas', async (req, res) => {
   }
 });
 
+app.post('/asignaturasCrear', async (req, res) => {
+  try {
+    const { title, description, section, profesorId, date, image } = req.body;
+
+    const newAsignatura = {
+      title,
+      description,
+      section,
+      image,
+      profesorId: new ObjectId(profesorId),
+      date,
+      members: [],
+      sesiones: []
+    };
+
+    const database = client.db('construccion');
+    const collection = database.collection('asignaturas');
+    const result = await collection.insertOne(newAsignatura);
+
+    res.status(201).json({ ...newAsignatura, _id: result.insertedId });
+  } catch (error) {
+    console.error('Error creating asignatura:', error);
+    res.status(500).send('Error creating asignatura');
+  }
+});
+
+app.post('/asignatura/:id/addStudent', async (req, res) => {
+  const { id } = req.params;
+  const { studentId } = req.body;
+
+  try {
+    const database = client.db('construccion');
+    const asignaturaCollection = database.collection('asignaturas');
+    const userCollection = database.collection('users');
+
+    // Convertir id y studentId a ObjectId
+    const asignaturaId = new ObjectId(id);
+    const estudianteId = new ObjectId(studentId);
+
+    const asignatura = await asignaturaCollection.findOne({ _id: asignaturaId });
+    if (!asignatura) {
+      return res.status(404).send('Asignatura no encontrada');
+    }
+
+    const usuario = await userCollection.findOne({ _id: estudianteId });
+    if (!usuario) {
+      return res.status(400).send('Alumno no encontrado');
+    }
+    if (usuario.rol === 'profesor') {
+      return res.status(400).send('No se puede agregar un profesor');
+    }
+    if (asignatura.members.some(member => member.equals(estudianteId))) {
+      return res.status(400).send('Alumno ya agregado');
+    }
+
+    asignatura.members.push(estudianteId);
+    await asignaturaCollection.updateOne({ _id: asignaturaId }, { $set: { members: asignatura.members } });
+
+    res.status(200).send(asignatura);
+  } catch (error) {
+    console.error('Error al agregar alumno:', error);
+    res.status(500).send('Error al agregar alumno');
+  }
+});
+
+app.post('/asignatura/:id/removeStudent', async (req, res) => {
+  const { id } = req.params;
+  const { studentId } = req.body;
+
+  try {
+    const database = client.db('construccion');
+    const asignaturaCollection = database.collection('asignaturas');
+    const asignaturaId = new ObjectId(id);
+    const estudianteId = new ObjectId(studentId);
+
+    const asignatura = await asignaturaCollection.findOne({ _id: asignaturaId });
+    if (!asignatura) {
+      return res.status(404).send('Asignatura no encontrada');
+    }
+
+    asignatura.members = asignatura.members.filter(member => !member.equals(estudianteId));
+    await asignaturaCollection.updateOne({ _id: asignaturaId }, { $set: { members: asignatura.members } });
+
+    res.status(200).send(asignatura);
+  } catch (error) {
+    console.error('Error al eliminar alumno:', error);
+    res.status(500).send('Error al eliminar alumno');
+  }
+});
+
+
 // Recuperar una asignatura segun id
 app.get('/asignatura/:id', async (req, res) => {
   try {
@@ -174,6 +265,19 @@ app.get('/faltas/:id', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+app.get('/usuarios', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const usuarios = await collection.find({ role: 'alumno' }).toArray();
+    res.send(usuarios);
+  } catch (error) {
+    console.error('Failed to fetch usuarios from database', error);
+    res.status(500).send('Failed to fetch usuarios from database');
+  }
+});
+
 
 
 app.post('/addFaltas/:id', async (req, res) => {
@@ -406,6 +510,48 @@ app.get('/sesionAsignatura/:id', async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch asignatura', error);
     res.status(500).send('Failed to fetch asignatura');
+  }
+});
+
+app.post('/asignaturas', async (req, res) => {
+  try {
+    const { title, description, section, profesorId, date } = req.body;
+    const file = req.file;
+
+    const newAsignatura = {
+      title,
+      description,
+      section,
+      image: '',
+      profesorId: new ObjectId(profesorId),
+      date,
+      members: [],
+      sesiones: [],
+      preguntas: []
+    };
+
+    const collection = db.collection('asignaturas');
+    const result = await collection.insertOne(newAsignatura);
+
+    if (file && result.insertedId) {
+      const uniqueId = uuidv4();
+      const storageReference = storageRef(storage, `asignaturasFotos/${uniqueId}`);
+
+      const snapshot = await uploadBytes(storageReference, file.buffer, { contentType: file.mimetype });
+      const imageUrl = await getDownloadURL(snapshot.ref);
+
+      await collection.updateOne(
+        { _id: result.insertedId },
+        { $set: { image: imageUrl } }
+      );
+
+      res.status(201).json(result.ops[0]);
+    } else {
+      res.status(201).json(result.ops[0]);
+    }
+  } catch (error) {
+    console.error('Error creating asignatura:', error);
+    res.status(500).send('Error creating asignatura');
   }
 });
 
@@ -874,41 +1020,54 @@ app.get('/sesion/:id', async (req, res) => {
   }
 })
 
-//obtener usuario especifico
 app.get('/user/:id', async (req, res) => {
   try {
-
-    const database = client.db('construccion')
-    const collection = database.collection('users')
-    const consulta = { _id: new ObjectId(req.params.id) }
-    const result = await collection.findOne(consulta)
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const consulta = { _id: new ObjectId(req.params.id) };
+    const result = await collection.findOne(consulta);
     if (result) {
-      res.send(result)
+      res.send(result);
     } else {
-      res.status(404).send('user not found')
+      res.status(404).send('Usuario no encontrado');
     }
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-})
+});
 
-// Actualizar datos usuario especifico
+// Ruta para actualizar un usuario por ID
 app.post('/user/:id', async (req, res) => {
   try {
-    const database = client.db('construccion')
-    const collection = database.collection('users')
-    const consulta = { _id: new ObjectId(req.params.id) }
-    const result = await collection.updateOne(consulta, { $set: req.body })
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const userId = new ObjectId(req.params.id);
+    const updateData = req.body;
+
+    // Obtener los datos actuales del usuario
+    const user = await collection.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).send('Usuario no encontrado');
+    }
+
+    // Combinar los datos antiguos con los nuevos
+    const updatedUser = { ...user, ...updateData };
+
+    // Actualizar el usuario en la base de datos
+    const result = await collection.updateOne(
+      { _id: userId },
+      { $set: updatedUser }
+    );
+
     if (result.modifiedCount === 1) {
-      res.send(result)
+      res.status(200).send('Usuario actualizado correctamente');
     } else {
-      res.status(404).send('Ususaio no encontrado')
+      res.status(404).send('Usuario no encontrado');
     }
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-}
-)
+});
 
 // Enviar una alerta a un usuario
 // Se guarda un mensaje de alerta en un array para el usuario

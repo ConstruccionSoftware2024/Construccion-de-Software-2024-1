@@ -248,7 +248,7 @@ const asignatura = ref({
     email: 'ejemplo@utalca.cl',
     proximaTarea: '10/10/2021',
     proximoExamen: '15/10/2021',
-    members: ['https://via.placeholder.com/24', 'https://via.placeholder.com/24', 'https://via.placeholder.com/24']
+    members: []
 });
 
 const problemas = ref({
@@ -347,6 +347,7 @@ async function recuperarAsignatura(id) {
             const sesionesPromesas = asignatura.value.sesiones.map(sesionId => recuperarSesiones(sesionId));
             const sesionesResultados = await Promise.all(sesionesPromesas);
             sesiones.value = sesionesResultados;
+            await recuperarFotosParticipantes();
         })
         .catch(error => {
             console.error(error);
@@ -363,6 +364,7 @@ async function recuperarProfesor(id) {
             console.error(error);
         });
 }
+
 async function recuperarFaltas(id) {
     await axios.get(`http://localhost:8080/faltas/${id}`)
         .then(response => {
@@ -376,6 +378,28 @@ async function recuperarFaltas(id) {
         .catch(error => {
             console.error(error);
         });
+}
+
+async function recuperarFotosParticipantes() {
+    const memberIds = asignatura.value.members;
+    const membersWithPhotos = await Promise.all(
+        memberIds.map(async memberId => {
+            try {
+                const response = await axios.get(`http://localhost:8080/user/${memberId}`);
+                return {
+                    id: memberId,
+                    foto: response.data.foto || defaultImage
+                };
+            } catch (error) {
+                console.error(`Error al recuperar la foto del miembro ${memberId}`, error);
+                return {
+                    id: memberId,
+                    foto: defaultImage
+                };
+            }
+        })
+    );
+    asignatura.value.members = membersWithPhotos;
 }
 
 function determinarRuta(id, rol) {
@@ -513,7 +537,6 @@ onMounted(async () => {
     recuperarPreguntas();
     window.addEventListener('click', closePopUp);
 });
-
 </script>
 
 <style scoped>
