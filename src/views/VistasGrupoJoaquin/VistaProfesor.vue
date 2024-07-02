@@ -53,22 +53,20 @@
                             {{ alumno.secondLastName }}
                         </td>
                         <td
-                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                            :class="{ 'row-red ban-text2': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
                             {{ alumno.status }}
                         </td>
                         <td v-if="!alumnosBaneados.includes(alumno.email)"
                             :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
-                            <button v-if=!isCancelada class="actionButton ban"
-                                @click="banExpStudent(alumno, accion = true)"
+                            <button class="actionButton ban" @click="openBanModal(alumno, true)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Banear</button>
                             <!-- Si "accion" es true se banea, si no, no -->
                             <button v-if=!isCancelada class="actionButton expel"
                                 @click="banExpStudent(alumno, accion = false)"
                                 :disabled="alumno.status !== 'Peligro' && alumno.status !== 'Advertencia'">Expulsar</button>
                             <!--<button class="actionButton notify" @click="notifyStudent(alumno)">Notificar</button>-->
-                            <BotonNotificar v-if=!isCancelada :participante="alumno" :session="sessionId" />
-                            <button class="actionButton view" @click="viewProcesses(alumno)"><i
-
+                            <BotonNotificar :participante="alumno" :session="sessionId" />
+                            <button class="actionButton view" @click="viewProcesses(alumno._id)"><i
                                     class="fas fa-eye"></i></button>
                         </td>
                         <td v-else :class="{ 'row-red ban-text': alumnosBaneados.includes(alumno.email) }"
@@ -79,6 +77,17 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <div v-if="showBanModal" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeBanModal">&times;</span>
+                <h2 style="font-size: 30px;"><b>Confirmar Baneo</b></h2>
+                <p>Razón del baneo:</p>
+                <textarea v-model="banReason" rows="4" cols="50"></textarea>
+                <br>
+                <button class="actionButton ban2" @click="banExpStudent(selectedStudent, banAccion)">Confirmar</button>
+                <button class="actionButton ban" @click="closeBanModal">Cancelar</button>
+            </div>
         </div>
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <div class="modal-content">
@@ -268,6 +277,9 @@ export default {
             users: [],
             asignaturas: [],
             searchQuery: '',
+            showBanModal: false,
+            banReason: '',
+            banAccion: null,
             isModalVisible: false,
             nombreApp: '',
             LinkApp: '',
@@ -528,10 +540,11 @@ export default {
                     if (!accion) {
                         this.alumnos = this.alumnos.filter(al => al !== student)
                     }
-                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion });
+                    const response = await axios.post('http://localhost:8080/banearExpulsar/' + this.sessionId, { email: student.email, userId: student._id, banear: accion, razonBan: student.email + ': ' + this.banReason });
 
                     if (response.status === 200) {
                         await this.alumnosbaneados(); // Actualiza alumnosBaneados después de cada acción
+                        this.closeBanModal();
                     } else {
                         throw new Error('Error al actualizar la lista de participantes');
                     }
@@ -542,6 +555,17 @@ export default {
             } else {
                 alert(`La acción de banear solo está disponible para estudiantes en estado de Peligro o Advertencia.`);
             }
+        },
+        openBanModal(student, accion) {
+            this.selectedStudent = student;
+            this.banAccion = accion;
+            this.showBanModal = true;
+        },
+        closeBanModal() {
+            this.showBanModal = false;
+            this.banReason = '';
+            this.selectedStudent = '';
+            this.banAccion = null;
         },
         notifyStudent(student) {
             alert(`Notificación enviada a ${student.firstName} ${student.lastName}.`);
@@ -1056,6 +1080,14 @@ th {
     background-color: var(--button-hover-background-color);
 }
 
+.actionButton.ban2 {
+    background-color: #E52B50;
+}
+
+.actionButton.ban2:hover {
+    background-color: red;
+}
+
 .actionButton.expel {
     color: var(--text-color);
     background-color: var(--table-button-color);
@@ -1183,6 +1215,10 @@ th {
 
 .ban-text {
     color: white;
+}
+
+.ban-text2 {
+    color: black;
 }
 
 .desban {
