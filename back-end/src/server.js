@@ -1208,7 +1208,7 @@ app.post('/email-alumno', async (req, res) => {
 
 // Guarda/actualiza los procesos en la base de datos
 
-app.post('/checkProcesos', async (req, res) => {
+app.post('/checkTabs', async (req, res) => {
   const { procesos, userId, sessionId } = req.body;
   const database = client.db('construccion');
   const collection = database.collection('procesos');

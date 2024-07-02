@@ -169,7 +169,7 @@ export default {
             const userStore = useUserStore();
             const user = computed(() => userStore.user);
             const userId = user.value._id;
-            axios.post('http://localhost:8080/checkProcesos', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
+            axios.post('http://localhost:8080/checkTabs', { userId: userId, sessionId: sessionId, procesos: procesos }) // Endpoint para verificar en el servidor
             //window.alert('Procesos guardados en DB');
         };
 
