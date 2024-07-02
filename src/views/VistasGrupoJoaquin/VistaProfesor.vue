@@ -4,14 +4,27 @@
             <h1>{{ nombreSesion }}</h1>
             <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
         </div>
-        <div class="dashboard">
-            <!--  <button @click="createSession">Crear Sesión</button> -->
-            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
-                Evaluación</button>
-            <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
-            <!--  <button @click="otherOptions">Otras Opciones</button> -->
+        <div class="dashboards">
+            <div class="dashboard">
+                <!--  <button @click="createSession">Crear Sesión</button> -->
+                <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+                <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+                <button v-if=!isCancleada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                    Evaluación</button>
+                <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
+                <!--  <button @click="otherOptions">Otras Opciones</button> -->
+            </div>
+            <div class="dashboard">
+                <select class="" required>
+                    <option value="default">Default</option>
+                    <!-- Añadir lista de configuraciones del profesor logeado-->
+                </select>
+                <button>
+                    <RouterLink to="/configuracion" class="link">
+                        Ver Configuraciones
+                    </RouterLink>
+                </button>
+            </div>
         </div>
         <div class="mainContainer">
             <div class="chartContainer">
@@ -893,14 +906,20 @@ export default {
     max-width: 1200px;
 }
 
+.dashboards {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .dashboard {
     padding-top: 10px;
     padding-bottom: 10px;
     display: flex;
+    gap: 5px;
 }
 
 .dashboard button {
-    margin-left: 5px;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -910,7 +929,22 @@ export default {
     font-size: 1rem;
 }
 
+.dashboard select {
+    padding: 10px 10px;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    background-color: var(--button-background-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
 .dashboard button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+.dashboard select:hover {
     background-color: var(--button-hover-background-color);
 }
 
@@ -1269,5 +1303,12 @@ th {
     /* Espacio entre los campos y los botones */
     display: flex;
     justify-content: center;
+}
+
+.link {
+    color: black;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
 </style>
