@@ -4,17 +4,20 @@
             <h1>{{ nombreSesion }}</h1>
             <h1 class="claseNumeroSesion">{{ sessionId }}</h1>
         </div>
-        <div class="dashboard">
-            <!--  <button @click="createSession">Crear Sesión</button> -->
-            <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
-            <button v-if=!isCancelada class="app" @click="añadir">Añadir Aplicación</button>
-            <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
-            <button v-if=isCancelada class="hero__cta" @click="descancelarSesion(idRuta)">Descancelar Sesion</button>
-            <button v-if=!isCancelada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
-                Evaluación</button>
+        <div class="dashboards">
+            <div class="dashboard">
+                <!--  <button @click="createSession">Crear Sesión</button> -->
+                <button v-if=!isCancelada class="hero__cta" @click="añadir">Añadir Alumno</button>
+                <button v-if=!isCancelada class="app" @click="añadir">Añadir Aplicación</button>
+                <button v-if=!isCancelada class="hero__cta" @click="cancelarSesion(idRuta)">Cancelar Sesion</button>
+                <button v-if=isCancelada class="hero__cta" @click="descancelarSesion(idRuta)">Descancelar
+                    Sesion</button>
+                <button v-if=!isCancelada class="hero__cta" @click="redirigirCrearEvaluacion(); menuOpen = false">Crear
+                    Evaluación</button>
 
-            <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
-            <!--  <button @click="otherOptions">Otras Opciones</button> -->
+                <!-- <button v-if=!isCancelada class="hero__cta" @click="peligrosidadAplicaciones">Agregar App Peligrosa</button> -->
+                <!--  <button @click="otherOptions">Otras Opciones</button> -->
+            </div>
             <div class="dashboard">
                 <select class="" required>
                     <option value="default">Default</option>
