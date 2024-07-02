@@ -51,8 +51,8 @@
                             {{ alumno.secondLastName }}
                         </td>
                         <td
-                            :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
-                            {{ alumno.status }}
+                        :class="{ 'row-red': alumnosBaneados.includes(alumno.email), 'peligro-text': alumno.status === 'Peligro', 'advertencia-text': alumno.status === 'Advertencia', 'normal-text': alumno.status === 'Normal' }">
+                        {{ alumno.status }}
                         </td>
                         <td v-if="!alumnosBaneados.includes(alumno.email)"
                             :class="{ 'row-red': alumnosBaneados.includes(alumno.email) }">
@@ -80,13 +80,8 @@
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>Datos de {{ selectedStudent.firstName }} {{ selectedStudent.lastName }} {{
                     selectedStudent.secondLastName }}</h2>
-                <h3>Últimas URLs</h3>
-                <ul>
-                    <li v-for="url in selectedStudent.latestUrls" :key="url">
-                        <a :href="url" target="_blank">{{ url }}</a>
-                    </li>
-                </ul>
-                <h3>Procesos</h3>
+                        
+                <h3>Procesos y Url´s</h3>
                 <ul>
                     <li v-for="app in selectedStudent.apps" :key="app.name">
                         <i class="fas fa-check-circle" :class="app.status"></i>{{ app }}
@@ -411,9 +406,9 @@ export default {
                 labels: ['Peligro', 'Advertencia', 'Normal'],
                 datasets: [{
                     data: [
-                        this.alumnos.filter(s => s.status === 'Peligro').length,
-                        this.alumnos.filter(s => s.status === 'Advertencia').length,
-                        this.alumnos.filter(s => s.status === 'Normal').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Peligro').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Advertencia').length,
+                        this.alumnos.filter(alumno => alumno.status === 'Normal').length,
                     ],
                     backgroundColor: ['#FF0000', '#f7d547', '#008000'],
                 }],
@@ -523,12 +518,21 @@ export default {
             }
 
             try {
+                 // Obtener URLs del estudiante
+                const responseUrls = await axios.get(`http://localhost:8080/obtenerUltimaEntrada/${userId}`);
+                if (!responseUrls.data || !responseUrls.data.urls) {
+                    throw new Error('No se recibieron URLs');
+                }
+                const urlList = responseUrls.data.urls.split(',');
                 const response = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
-                const prompt = `Dada la lista de procesos: ${response.data}\n Proporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code).`;
+                const prompt = `Dada la lista de procesos: ${response.data}\n Dada la lista de URLs: ${urlList}\nProporcione solamente los nombres de las aplicaciones (no de sistema) presentes entre estos procesos (nombre que aparece en el admin de tareas) y clasifique cada uno como 'bueno', 'malo' o 'intermedio' según la etica estudiantil y los procesos que ayuden a realizar trampa son malos por ejemplo: "Discord" ya que tiene chat con otros usuarios, indicando la clasificación entre paréntesis al lado del nombres. Devuelva la lista de procesos en un formato separado por comas. Seguir explicitamente este formato: proceso1 (bueno), proceso2 (malo), proceso3 (intermedio). Sin explicacion y mostrando los nombres conocidos (Visal Studio Code en vez de code)\n. Proporcione los URLs según su clasificación 'bueno', 'malo' o 'intermedio' según la ética estudiantil y los sitios que ayuden a realizar trampa son malos por ejemplo: "google.com" ya que permite hacer búsquedas, indicando la clasificación entre paréntesis al lado de los nombres. Devuelva la lista de URLs en un formato separado por comas. Seguir explícitamente este formato: url1 (bueno), url2 (malo), url3 (intermedio)\n.Al final del todo quiero una evaluación del alumno según las aplicaciones que tenga abierta, la evaluación deber ser segun 3 estados: Peligroso, Advertencia y Normal, sin la explicacion y procura cuidar el formato(esto incluye que no tenga carácteres especiales como por ej *)\n`;
 
                 const result = await model.generateContent(prompt);
                 const response2 = result.response;
-                const text = response2.text();
+                let text = response2.text()
+
+                // Separar la evaluación de la lista de procesos
+                 const [processesText, evaluation] = text.split(/(?=\bPeligro\b|\bAdvertencia\b|\bNormal\b)/);
 
                 // Convertir la lista separada por comas a un arreglo
                 const processNamesWithCategories = text.split(',').map(name => name.trim());
@@ -544,6 +548,19 @@ export default {
                 const lastEntry = urlsResponse.data;
                 const latestUrls = lastEntry.urls.split(','); // Convertir la cadena de URLs en un array
 
+                // Asignar la evaluación al estado del alumno
+                selectedStudent.status = evaluation.trim();
+
+                
+
+
+                // Actualizar el estado del alumno en el arreglo de alumnos
+                    const index = this.alumnos.findIndex(alumno => alumno._id === userId);
+                    if (index !== -1) {
+                        this.alumnos[index] = selectedStudent;
+                    }
+
+
                 // Hacer una solicitud para obtener los procesos para este userId
                 const processesResponse = await axios.get(`http://localhost:8080/obtenerProcesos/${userId}`);
                 const apps = processesResponse.data;
@@ -552,7 +569,12 @@ export default {
                     ...selectedStudent,
                     latestUrls, // Asignar el array de URLs
                     apps: uniqueProcessNamesWithCategories,
+                    status: evaluation.trim(),
                 };
+                console.log("Última URLs: ", latestUrls);
+                console.log("procesos: " + uniqueProcessNamesWithCategories.join(', '));
+                console.log("evaluación: " + evaluation.trim());
+
                 this.showModal = true;
 
                 return uniqueProcessNamesWithCategories;
