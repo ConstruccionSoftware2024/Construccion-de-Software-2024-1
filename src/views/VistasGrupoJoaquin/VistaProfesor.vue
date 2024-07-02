@@ -579,7 +579,7 @@ export default {
             //console.log("------>" + asignaturas)
             axios.get('http://localhost:8080/appPeligrosas/' + asignaturas)
                 .then(response => {
-                    console.log("Datos recibidos:", response.data);
+                    //console.log("Datos recibidos:", response.data);
                     this.appPeligrosas = response.data;
                 })
                 .catch(error => {
@@ -616,8 +616,9 @@ export default {
             });
             closeModal2.addEventListener('click', (e) => {
                 e.preventDefault();
+                //location.reload();
                 modal2.classList.remove('modal__añadir--show');
-                window.location.reload();
+
             });
             closeModal2_.addEventListener('click', (e) => {
                 e.preventDefault();
