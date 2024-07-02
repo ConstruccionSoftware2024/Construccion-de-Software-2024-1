@@ -909,6 +909,7 @@ app.post('/sesion', async (req, res) => {
       participantes: [],
       banlist: [],
       cancelada: false,
+      config: "667a05efbb7705789ce7d147", //configuración default
     }
     //console.log("enviando", newSession.nombre, newSession.descripcion)
     const result = await collection.insertOne(newSession)
@@ -1457,7 +1458,63 @@ app.get('/configs', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message)
   }
-})
+});
+
+app.get('/config/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion')
+    const collection = database.collection('configuraciones')
+    const config = await collection.findOne({ _id: req.params.id });
+    res.send(config)
+    console.log(config)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+});
+
+app.get('/userConfigs/:id', async (req, res) => {
+  try {
+    const database = client.db('construccion');
+    const collection = database.collection('users');
+    const result = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    if (result && result.configs) {
+      res.send(result.configs);
+    } else {
+      res.status(404).send('No se encontraron configuraciones para el usuario especificado.');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/configuracion/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amarillo, rojo, verde } = req.body;
+
+    if (!Array.isArray(amarillo) || !Array.isArray(rojo) || !Array.isArray(verde)) {
+      return res.status(400).send('Las listas amarillo, rojo y verde deben ser arreglos de strings.');
+    }
+
+    const database = client.db('construccion');
+    const collection = database.collection('configuraciones');
+
+    // Actualizar el objeto de configuración con el _id proporcionado
+    const resultado = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { amarillo, rojo, verde } }
+    );
+
+    if (resultado.matchedCount === 0) {
+      return res.status(404).send('Configuración no encontrada.');
+    }
+
+    res.send('Configuración actualizada con éxito.');
+  } catch (error) {
+    console.error('Error al actualizar la configuración:', error);
+    res.status(500).send('Error al actualizar la configuración');
+  }
+});
 
 app.put('/cancelarSesion/:id', async (req, res) => {
   try {
